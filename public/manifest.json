@@ -1,0 +1,14 @@
+{
+  "name": "OBRIZ — Nervous System Wellness",
+  "short_name": "OBRIZ",
+  "description": "Precision nervous system regulation for the woman who runs everything.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2D1B0E",
+  "theme_color": "#2D1B0E",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
