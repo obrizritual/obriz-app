@@ -429,7 +429,7 @@ function Onboarding({ onComplete }) {
             <h1 style={{fontSize:22,letterSpacing:14,color:B.gold,fontWeight:400,margin:"0 0 12px",fontFamily:F}}>OBRIZ</h1>
             <div style={{width:50,height:1,background:B.gold,margin:"0 auto 20px",opacity:0.4}}/>
             <p style={{fontSize:20,color:B.cream,fontWeight:400,fontFamily:F,margin:"0 0 12px",lineHeight:1.4}}>Your nervous system<br/>deserves precision.</p>
-            <p style={{fontSize:13,color:B.muted,fontStyle:"italic",lineHeight:1.5}}>Not another meditation app. A regulation system built for women who do too much and feel too deeply.</p>
+            <p style={{fontSize:13,color:B.muted,fontStyle:"italic",lineHeight:1.5}}>Not another meditation app. A regulation system for those who do too much and feel too deeply.</p>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:32}}>
             {["5 guided reset sessions","Micro-interventions in under 60 seconds","Daily nervous system tracking","Face ritual guides"].map((f,i)=>(
@@ -716,9 +716,13 @@ export default function ObrizApp() {
       </div>
       {sessions.map(s=>{
         const Icon=s.icon; const done=completedToday.includes(s.id); const rec=checkinDone&&checkinState?.recommended?.includes(s.id);
+        const premiumLocked = s.id===4 && !isPremium;
         return(
-          <button key={s.id} onClick={()=>startSession(s.id)} style={{width:"100%",background:B.card,border:`1px solid ${rec?B.borderActive:B.border}`,borderRadius:18,padding:"20px 18px",marginBottom:12,cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden"}}>
-            {rec&&<div style={{position:"absolute",top:14,right:14,fontSize:8,letterSpacing:1.5,color:B.gold,background:`${B.gold}15`,padding:"3px 8px",borderRadius:8,fontFamily:SF,textTransform:"uppercase"}}>Recommended</div>}
+          <button key={s.id} onClick={()=>{if(premiumLocked){setScreen("premium");}else{startSession(s.id);}}} style={{width:"100%",background:B.card,border:`1px solid ${rec?B.borderActive:B.border}`,borderRadius:18,padding:"20px 18px",marginBottom:12,cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",opacity:premiumLocked?0.7:1}}>
+            {premiumLocked&&<div style={{position:"absolute",top:14,right:14,display:"flex",alignItems:"center",gap:4,background:`${B.gold}12`,padding:"4px 10px",borderRadius:8}}>
+              <Lock size={9} color={B.gold}/><span style={{fontSize:8,letterSpacing:1.5,color:B.gold,fontFamily:SF,textTransform:"uppercase"}}>Premium</span>
+            </div>}
+            {!premiumLocked&&rec&&<div style={{position:"absolute",top:14,right:14,fontSize:8,letterSpacing:1.5,color:B.gold,background:`${B.gold}15`,padding:"3px 8px",borderRadius:8,fontFamily:SF,textTransform:"uppercase"}}>Recommended</div>}
             <div style={{display:"flex",alignItems:"flex-start",gap:14}}>
               <div style={{width:44,height:44,borderRadius:"50%",background:`${B.gold}12`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:2}}>
                 {done?<Check size={18} color="#5A8A5A"/>:<Icon size={18} color={B.gold}/>}
@@ -729,7 +733,7 @@ export default function ObrizApp() {
                 <p style={{fontSize:11,color:B.muted,margin:"0 0 10px",lineHeight:1.5,fontFamily:SF}}>{s.description}</p>
                 <div style={{display:"flex",alignItems:"center",gap:14}}>
                   <span style={{fontSize:11,color:B.muted,fontFamily:SF,display:"flex",alignItems:"center",gap:4}}><Clock size={11}/>{Math.ceil(s.duration/60)} min</span>
-                  <span style={{fontSize:11,color:B.gold,fontFamily:SF}}>Begin →</span>
+                  <span style={{fontSize:11,color:premiumLocked?B.muted:B.gold,fontFamily:SF}}>{premiumLocked?"Unlock →":"Begin →"}</span>
                 </div>
               </div>
             </div>
@@ -861,37 +865,38 @@ export default function ObrizApp() {
       <div style={{background:B.card,borderRadius:18,padding:"22px 20px",marginBottom:16,border:`1px solid ${B.border}`}}>
         <p style={{fontSize:10,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 16px"}}>Everything included</p>
         {[
-          "All 5 guided audio reset sessions",
-          "4 micro-interventions (free forever)",
-          "Gua Sha Sculpt ritual guide",
-          "Lymphatic Drainage ritual guide",
-          "Face Lifting ritual guide",
-          "Daily NS Score tracking",
-          "All future ritual guides & sessions",
-          "Priority access to new features"
+          {text:"4 guided audio reset sessions", free:true},
+          {text:"Post-Conflict Reset (exclusive)", free:false},
+          {text:"4 micro-interventions", free:true},
+          {text:"Gua Sha Sculpt ritual guide", free:true},
+          {text:"Lymphatic Drainage ritual guide", free:false},
+          {text:"Face Lifting ritual guide", free:false},
+          {text:"Daily NS Score tracking", free:true},
+          {text:"All future ritual guides & sessions", free:false},
+          {text:"Priority access to new features", free:false},
         ].map((f,i)=>(
           <div key={i} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-            <div style={{width:18,height:18,borderRadius:"50%",background:i<4?`#5A8A5A20`:`${B.gold}15`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-              <Check size={9} color={i<4?"#5A8A5A":B.gold}/>
+            <div style={{width:18,height:18,borderRadius:"50%",background:f.free?`#5A8A5A20`:`${B.gold}15`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              {f.free?<Check size={9} color={"#5A8A5A"}/>:<Crown size={9} color={B.gold}/>}
             </div>
-            <span style={{fontSize:12,color:i<4?B.creamMuted:B.cream,fontFamily:SF,textDecoration:i<4?"none":"none"}}>{f}{i<4?" ✓":""}</span>
+            <span style={{fontSize:12,color:f.free?B.creamMuted:B.cream,fontFamily:SF}}>{f.text}{f.free?" ✓":""}</span>
           </div>
         ))}
       </div>
 
       {/* Pricing */}
       <div style={{display:"flex",gap:12,marginBottom:20}}>
-        <a href="https://obriz.gumroad.com" target="_blank" rel="noopener noreferrer" style={{flex:1,background:B.card,borderRadius:16,padding:"20px 16px",textAlign:"center",border:`1px solid ${B.border}`,textDecoration:"none",cursor:"pointer"}}>
+        <button onClick={()=>{/* TODO: Stripe checkout monthly */alert("Stripe checkout coming soon — monthly plan");}} style={{flex:1,background:B.card,borderRadius:16,padding:"20px 16px",textAlign:"center",border:`1px solid ${B.border}`,cursor:"pointer"}}>
           <p style={{fontSize:26,color:B.cream,margin:"0 0 2px",fontFamily:SF,fontWeight:300}}>$9<span style={{fontSize:14,color:B.muted}}>.99</span></p>
           <p style={{fontSize:10,color:B.muted,margin:"0 0 8px",fontFamily:SF,textTransform:"uppercase",letterSpacing:1}}>per month</p>
           <div style={{background:`${B.gold}15`,borderRadius:12,padding:"8px",color:B.gold,fontSize:11,fontFamily:SF}}>Subscribe</div>
-        </a>
-        <a href="https://obriz.gumroad.com" target="_blank" rel="noopener noreferrer" style={{flex:1,background:B.card,borderRadius:16,padding:"20px 16px",textAlign:"center",border:`1px solid ${B.borderActive}`,textDecoration:"none",cursor:"pointer",position:"relative"}}>
+        </button>
+        <button onClick={()=>{/* TODO: Stripe checkout yearly */alert("Stripe checkout coming soon — yearly plan");}} style={{flex:1,background:B.card,borderRadius:16,padding:"20px 16px",textAlign:"center",border:`1px solid ${B.borderActive}`,cursor:"pointer",position:"relative"}}>
           <div style={{position:"absolute",top:-8,left:"50%",transform:"translateX(-50%)",background:B.goldGrad,padding:"3px 10px",borderRadius:10,fontSize:8,color:B.warmBlack,fontWeight:600,letterSpacing:1,fontFamily:SF,textTransform:"uppercase"}}>Save 59%</div>
           <p style={{fontSize:26,color:B.cream,margin:"0 0 2px",fontFamily:SF,fontWeight:300}}>$49</p>
           <p style={{fontSize:10,color:B.muted,margin:"0 0 8px",fontFamily:SF,textTransform:"uppercase",letterSpacing:1}}>per year</p>
           <div style={{background:B.goldGrad,borderRadius:12,padding:"8px",color:B.warmBlack,fontSize:11,fontFamily:SF,fontWeight:600}}>Best Value</div>
-        </a>
+        </button>
       </div>
 
       {/* Restore / Already premium */}
@@ -899,30 +904,6 @@ export default function ObrizApp() {
         <button onClick={()=>{setIsPremium(true);save('isPremium',true);}} style={{background:"none",border:"none",color:B.muted,fontSize:11,fontFamily:SF,cursor:"pointer",padding:8,textDecoration:"underline"}}>Already purchased? Restore access</button>
       </div>
 
-      {/* Products */}
-      <div style={{marginTop:28}}>
-        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:14,fontFamily:SF}}>Digital Products</p>
-        {[
-          {title:"The Reset Kit",subtitle:"5 Audio Sessions",price:"$34",tag:"CORE",url:"https://obriz.gumroad.com/l/vkfxw"},
-          {title:"NS Awareness Journal",subtitle:"30-Day Printable",price:"$17",tag:"POPULAR",url:"https://obriz.gumroad.com"},
-        ].map((p,i)=>(
-          <a key={i} href={p.url} target="_blank" rel="noopener noreferrer" style={{display:"block",background:B.card,border:`1px solid ${B.border}`,borderRadius:14,padding:"16px 18px",marginBottom:10,textDecoration:"none"}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-              <div>
-                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-                  <h3 style={{fontSize:14,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>{p.title}</h3>
-                  <span style={{fontSize:8,color:B.gold,background:`${B.gold}12`,padding:"2px 6px",borderRadius:6,fontFamily:SF,letterSpacing:1}}>{p.tag}</span>
-                </div>
-                <p style={{fontSize:11,color:B.muted,margin:0,fontFamily:SF}}>{p.subtitle}</p>
-              </div>
-              <div style={{display:"flex",alignItems:"center",gap:8}}>
-                <span style={{fontSize:16,color:B.cream,fontFamily:SF,fontWeight:300}}>{p.price}</span>
-                <ChevronRight size={14} color={B.muted}/>
-              </div>
-            </div>
-          </a>
-        ))}
-      </div>
     </div>
   );
 
