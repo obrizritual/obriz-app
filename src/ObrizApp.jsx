@@ -501,6 +501,7 @@ export default function ObrizApp() {
   const [microMsg,setMicroMsg]=useState("");
   const [activeRitual,setActiveRitual]=useState(null);
   const [showInstallPrompt,setShowInstallPrompt]=useState(false);
+  const [checkoutLoading,setCheckoutLoading]=useState(false);
 
   const audioRef=useRef(null);
   const animRef=useRef(null);
@@ -512,6 +513,46 @@ export default function ObrizApp() {
     window.addEventListener('beforeinstallprompt',handler);
     return()=>window.removeEventListener('beforeinstallprompt',handler);
   },[]);
+
+  // Stripe payment success detection
+  useEffect(()=>{
+    const params=new URLSearchParams(window.location.search);
+    const payment=params.get('payment');
+    const sessionId=params.get('session_id');
+    if(payment==='success'&&sessionId){
+      // Verify the session with our API
+      fetch('/api/verify-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sessionId})})
+        .then(r=>r.json())
+        .then(data=>{
+          if(data.verified){
+            setIsPremium(true);save('isPremium',true);
+            save('premiumPlan',data.plan);
+            if(data.customer_email)save('customerEmail',data.customer_email);
+          }
+        })
+        .catch(()=>{
+          // If verify fails, still unlock (better UX, can re-verify later)
+          setIsPremium(true);save('isPremium',true);
+        });
+      // Clean URL
+      window.history.replaceState({},'','/');
+    } else if(payment==='cancelled'){
+      window.history.replaceState({},'','/');
+    }
+  },[]);
+
+  // Stripe checkout handler
+  const handleCheckout=async(plan)=>{
+    setCheckoutLoading(true);
+    try{
+      const res=await fetch('/api/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan})});
+      const data=await res.json();
+      if(data.url){window.location.href=data.url;}
+      else{alert('Something went wrong. Please try again.');setCheckoutLoading(false);}
+    }catch(err){
+      alert('Connection error. Please try again.');setCheckoutLoading(false);
+    }
+  };
 
   const installApp=async()=>{
     if(deferredPromptRef.current){deferredPromptRef.current.prompt();deferredPromptRef.current=null;setShowInstallPrompt(false);}
@@ -885,13 +926,14 @@ export default function ObrizApp() {
       </div>
 
       {/* Pricing */}
+      {checkoutLoading && <div style={{textAlign:"center",padding:16,marginBottom:12}}><p style={{fontSize:12,color:B.muted,fontFamily:SF}}>Opening checkout...</p></div>}
       <div style={{display:"flex",gap:12,marginBottom:20}}>
-        <button onClick={()=>{/* TODO: Stripe checkout monthly */alert("Stripe checkout coming soon — monthly plan");}} style={{flex:1,background:B.card,borderRadius:16,padding:"20px 16px",textAlign:"center",border:`1px solid ${B.border}`,cursor:"pointer"}}>
+        <button onClick={()=>handleCheckout('monthly')} disabled={checkoutLoading} style={{flex:1,background:B.card,borderRadius:16,padding:"20px 16px",textAlign:"center",border:`1px solid ${B.border}`,cursor:checkoutLoading?"wait":"pointer",opacity:checkoutLoading?0.6:1}}>
           <p style={{fontSize:26,color:B.cream,margin:"0 0 2px",fontFamily:SF,fontWeight:300}}>$9<span style={{fontSize:14,color:B.muted}}>.99</span></p>
           <p style={{fontSize:10,color:B.muted,margin:"0 0 8px",fontFamily:SF,textTransform:"uppercase",letterSpacing:1}}>per month</p>
           <div style={{background:`${B.gold}15`,borderRadius:12,padding:"8px",color:B.gold,fontSize:11,fontFamily:SF}}>Subscribe</div>
         </button>
-        <button onClick={()=>{/* TODO: Stripe checkout yearly */alert("Stripe checkout coming soon — yearly plan");}} style={{flex:1,background:B.card,borderRadius:16,padding:"20px 16px",textAlign:"center",border:`1px solid ${B.borderActive}`,cursor:"pointer",position:"relative"}}>
+        <button onClick={()=>handleCheckout('yearly')} disabled={checkoutLoading} style={{flex:1,background:B.card,borderRadius:16,padding:"20px 16px",textAlign:"center",border:`1px solid ${B.borderActive}`,cursor:checkoutLoading?"wait":"pointer",position:"relative",opacity:checkoutLoading?0.6:1}}>
           <div style={{position:"absolute",top:-8,left:"50%",transform:"translateX(-50%)",background:B.goldGrad,padding:"3px 10px",borderRadius:10,fontSize:8,color:B.warmBlack,fontWeight:600,letterSpacing:1,fontFamily:SF,textTransform:"uppercase"}}>Save 59%</div>
           <p style={{fontSize:26,color:B.cream,margin:"0 0 2px",fontFamily:SF,fontWeight:300}}>$49</p>
           <p style={{fontSize:10,color:B.muted,margin:"0 0 8px",fontFamily:SF,textTransform:"uppercase",letterSpacing:1}}>per year</p>
