@@ -7,8 +7,31 @@
   "background_color": "#2D1B0E",
   "theme_color": "#2D1B0E",
   "orientation": "portrait",
+  "categories": ["health", "lifestyle", "wellness"],
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Daily Check-In",
+      "short_name": "Check-In",
+      "url": "/?tab=home",
+      "description": "Log how your nervous system feels right now"
+    },
+    {
+      "name": "Resets",
+      "short_name": "Resets",
+      "url": "/?tab=resets",
+      "description": "Audio-guided nervous system resets"
+    },
+    {
+      "name": "Rituals",
+      "short_name": "Rituals",
+      "url": "/?tab=rituals",
+      "description": "Face massage ritual guides"
+    }
   ]
 }

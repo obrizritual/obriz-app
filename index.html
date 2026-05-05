@@ -8,8 +8,18 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="OBRIZ" />
   <meta name="description" content="OBRIZ — Luxury Nervous System Wellness. Precision regulation for the woman who runs everything." />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="msapplication-TileColor" content="#2D1B0E" />
+  <meta name="msapplication-navbutton-color" content="#2D1B0E" />
+  <meta property="og:title" content="OBRIZ — Nervous System Wellness" />
+  <meta property="og:description" content="Precision nervous system regulation for the woman who runs everything." />
+  <meta property="og:type" content="website" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+  <!-- iOS splash screens — generic fallback -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>OBRIZ — Nervous System Wellness</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -17,6 +27,22 @@
     body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
     @media (display-mode: standalone) {
       body { padding-top: env(safe-area-inset-top); }
+    }
+    /* Splash / loading state before React hydrates */
+    #root:empty {
+      display: flex; align-items: center; justify-content: center;
+    }
+    #root:empty::after {
+      content: 'OBRIZ';
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 2.4rem;
+      letter-spacing: 0.25em;
+      color: #C49A4B;
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
     }
   </style>
 </head>
