@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, ShoppingBag, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Star, Crown, User, ChevronRight, Hand } from "lucide-react";
 
 /* ═══════════════════════════════════════════
-   Aubrise — Luxury Nervous System Wellness App
+   Rhei — Luxury Nervous System Wellness App
    v2.0 — Personalized + Ritual Guides + Premium
    ═══════════════════════════════════════════ */
 
@@ -426,7 +426,7 @@ function Onboarding({ onComplete }) {
       <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:B.darkGrad,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center"}}>
         <div style={{textAlign:"center",padding:"32px 28px",maxWidth:380}}>
           <div style={{marginBottom:40}}>
-            <h1 style={{fontSize:22,letterSpacing:14,color:B.gold,fontWeight:400,margin:"0 0 12px",fontFamily:F}}>Aubrise</h1>
+            <h1 style={{fontSize:22,letterSpacing:14,color:B.gold,fontWeight:400,margin:"0 0 12px",fontFamily:F}}>Rhei</h1>
             <div style={{width:50,height:1,background:B.gold,margin:"0 auto 20px",opacity:0.4}}/>
             <p style={{fontSize:20,color:B.cream,fontWeight:400,fontFamily:F,margin:"0 0 12px",lineHeight:1.4}}>Your nervous system<br/>deserves precision.</p>
             <p style={{fontSize:13,color:B.muted,fontStyle:"italic",lineHeight:1.5}}>Not another meditation app. A regulation system for those who do too much and feel too deeply.</p>
@@ -562,8 +562,8 @@ export default function ObrizApp() {
 
   const installApp=async()=>{
     if(deferredPromptRef.current){deferredPromptRef.current.prompt();deferredPromptRef.current=null;setShowInstallPrompt(false);}
-    else if(isIOS){alert("To add Aubrise to your home screen:\n\n1. Tap the Share button (square with arrow) at the bottom of Safari\n2. Scroll down and tap \"Add to Home Screen\"\n3. Tap \"Add\"");}
-    else{alert("To install Aubrise:\n\nOpen this page in Chrome or Safari, then use your browser menu to \"Add to Home Screen\" or \"Install App\".");}
+    else if(isIOS){alert("To add Rhei to your home screen:\n\n1. Tap the Share button (square with arrow) at the bottom of Safari\n2. Scroll down and tap \"Add to Home Screen\"\n3. Tap \"Add\"");}
+    else{alert("To install Rhei:\n\nOpen this page in Chrome or Safari, then use your browser menu to \"Add to Home Screen\" or \"Install App\".");}
   };
   const dismissInstall=()=>{setShowInstallPrompt(false);setInstallDismissed(true);save('installDismissed',true);};
 
@@ -650,7 +650,7 @@ export default function ObrizApp() {
   const renderHome=()=>(
     <div style={{padding:"56px 22px 120px"}}>
       <div style={{textAlign:"center",marginBottom:40}}>
-        <h1 style={{fontSize:20,letterSpacing:12,color:B.gold,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>Aubrise</h1>
+        <h1 style={{fontSize:20,letterSpacing:12,color:B.gold,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>Rhei</h1>
         <div style={{width:40,height:1,background:B.gold,margin:"12px auto",opacity:0.4}}/>
         <p style={{fontSize:22,fontWeight:400,color:B.cream,margin:"16px 0 0",fontFamily:F}}>{greetUser(userName)}</p>
         <p style={{fontSize:13,color:B.muted,marginTop:6,fontStyle:"italic"}}>Your nervous system is listening.</p>
@@ -663,7 +663,7 @@ export default function ObrizApp() {
           <Sparkles size={18} color={B.gold} style={{flexShrink:0}}/>
           <button onClick={installApp} style={{flex:1,background:"none",border:"none",cursor:"pointer",textAlign:"left",padding:0}}>
             <p style={{fontSize:13,color:B.cream,margin:0,fontFamily:SF}}>Add to Home Screen</p>
-            <p style={{fontSize:11,color:B.muted,margin:"2px 0 0",fontFamily:SF}}>{isIOS?"Tap here for instructions":"Open Aubrise like an app — one tap away"}</p>
+            <p style={{fontSize:11,color:B.muted,margin:"2px 0 0",fontFamily:SF}}>{isIOS?"Tap here for instructions":"Open Rhei like an app — one tap away"}</p>
           </button>
           <ArrowRight size={14} color={B.gold} style={{flexShrink:0}}/>
         </div>
@@ -908,7 +908,7 @@ export default function ObrizApp() {
     <div style={{padding:"56px 22px 120px"}}>
       <div style={{textAlign:"center",marginBottom:36}}>
         <Crown size={28} color={B.gold} style={{marginBottom:12}}/>
-        <h1 style={{fontSize:24,fontWeight:400,color:B.cream,margin:"0 0 6px",fontFamily:F}}>Aubrise Premium</h1>
+        <h1 style={{fontSize:24,fontWeight:400,color:B.cream,margin:"0 0 6px",fontFamily:F}}>Rhei Premium</h1>
         <p style={{fontSize:13,color:B.muted,fontStyle:"italic"}}>The complete nervous system + beauty ritual experience.</p>
       </div>
 
