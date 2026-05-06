@@ -5,8 +5,5 @@
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/((?!api|audio|svgs|assets|manifest\\.json|sw\\.js|icon-).*)", "destination": "/index.html" }
-  ],
-  "env": {
-    "STRIPE_SECRET_KEY": "@stripe-secret-key"
-  }
+  ]
 }
