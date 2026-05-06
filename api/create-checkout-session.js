@@ -15,22 +15,29 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { plan } = req.body; // 'monthly' or 'yearly'
+    const { plan, email } = req.body; // 'monthly' or 'yearly', optional email
 
     const priceData = plan === 'yearly'
-      ? { currency: 'usd', unit_amount: 4900, recurring: { interval: 'year' }, product_data: { name: 'Rhei Premium — Yearly', description: 'Full access to all ritual guides, exclusive resets, and future content' } }
-      : { currency: 'usd', unit_amount: 999, recurring: { interval: 'month' }, product_data: { name: 'Rhei Premium — Monthly', description: 'Full access to all ritual guides, exclusive resets, and future content' } };
+      ? { currency: 'usd', unit_amount: 4900, recurring: { interval: 'year' }, product_data: { name: 'RHEI Premium — Yearly', description: 'Full access to all ritual guides, exclusive resets, and future content' } }
+      : { currency: 'usd', unit_amount: 999, recurring: { interval: 'month' }, product_data: { name: 'RHEI Premium — Monthly', description: 'Full access to all ritual guides, exclusive resets, and future content' } };
 
     const origin = req.headers.origin || req.headers.referer?.replace(/\/$/, '') || 'https://rhei-app.vercel.app';
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionConfig = {
       mode: 'subscription',
       payment_method_types: ['card'],
       line_items: [{ price_data: priceData, quantity: 1 }],
       success_url: `${origin}/?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/?payment=cancelled`,
       metadata: { plan },
-    });
+    };
+
+    // Pre-fill email if the user is signed in
+    if (email) {
+      sessionConfig.customer_email = email;
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     return res.status(200).json({ url: session.url });
   } catch (err) {

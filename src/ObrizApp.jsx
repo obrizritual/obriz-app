@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, ShoppingBag, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Star, Crown, User, ChevronRight, Hand } from "lucide-react";
+import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, ShoppingBag, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Star, Crown, User, ChevronRight, Hand, Mail, LogOut } from "lucide-react";
+import { supabase } from "./supabaseClient";
 
 /* ═══════════════════════════════════════════
-   Rhei — Luxury Nervous System Wellness App
+   RHEI — Luxury Nervous System Wellness App
    v2.0 — Personalized + Ritual Guides + Premium
    ═══════════════════════════════════════════ */
 
@@ -426,7 +427,7 @@ function Onboarding({ onComplete }) {
       <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:B.darkGrad,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center"}}>
         <div style={{textAlign:"center",padding:"32px 28px",maxWidth:380}}>
           <div style={{marginBottom:40}}>
-            <h1 style={{fontSize:22,letterSpacing:14,color:B.gold,fontWeight:400,margin:"0 0 12px",fontFamily:F}}>Rhei</h1>
+            <h1 style={{fontSize:22,letterSpacing:14,color:B.gold,fontWeight:400,margin:"0 0 12px",fontFamily:F}}>RHEI</h1>
             <div style={{width:50,height:1,background:B.gold,margin:"0 auto 20px",opacity:0.4}}/>
             <p style={{fontSize:20,color:B.cream,fontWeight:400,fontFamily:F,margin:"0 0 12px",lineHeight:1.4}}>Your nervous system<br/>deserves precision.</p>
             <p style={{fontSize:13,color:B.muted,fontStyle:"italic",lineHeight:1.5}}>Not another meditation app. A regulation system for those who do too much and feel too deeply.</p>
@@ -506,6 +507,13 @@ export default function ObrizApp() {
   const [isStandalone]=useState(()=>window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true);
   const [checkoutLoading,setCheckoutLoading]=useState(false);
 
+  // Auth state (Supabase)
+  const [authUser,setAuthUser]=useState(null);
+  const [authLoading,setAuthLoading]=useState(!!supabase);
+  const [authEmail,setAuthEmail]=useState('');
+  const [authSent,setAuthSent]=useState(false);
+  const [authError,setAuthError]=useState('');
+
   const audioRef=useRef(null);
   const animRef=useRef(null);
   const deferredPromptRef=useRef(null);
@@ -519,6 +527,51 @@ export default function ObrizApp() {
     const timeout=setTimeout(()=>{if(!deferredPromptRef.current)setShowInstallPrompt(true);},2000);
     return()=>{window.removeEventListener('beforeinstallprompt',handler);clearTimeout(timeout);};
   },[isStandalone,installDismissed]);
+
+  // Supabase auth listener
+  useEffect(()=>{
+    if(!supabase) { setAuthLoading(false); return; }
+    supabase.auth.getSession().then(({data:{session}})=>{
+      setAuthUser(session?.user||null);
+      if(session?.user?.email){
+        // Check subscription in Supabase
+        fetch('/api/check-subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:session.user.email})})
+          .then(r=>r.json())
+          .then(data=>{ if(data.isPremium){setIsPremium(true);save('isPremium',true);save('premiumPlan',data.plan);} })
+          .catch(()=>{});
+        save('customerEmail',session.user.email);
+        if(!userName && session.user.user_metadata?.name){setUserName(session.user.user_metadata.name);save('userName',session.user.user_metadata.name);}
+      }
+      setAuthLoading(false);
+    });
+    const {data:{subscription:authSub}}=supabase.auth.onAuthStateChange((_event,session)=>{
+      setAuthUser(session?.user||null);
+      if(session?.user?.email){
+        fetch('/api/check-subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:session.user.email})})
+          .then(r=>r.json())
+          .then(data=>{ if(data.isPremium){setIsPremium(true);save('isPremium',true);} })
+          .catch(()=>{});
+        save('customerEmail',session.user.email);
+      }
+    });
+    return()=>authSub.unsubscribe();
+  },[]);
+
+  // Auth helpers
+  const signInWithEmail=async()=>{
+    if(!supabase||!authEmail.trim())return;
+    setAuthError('');setAuthSent(false);
+    try{
+      const {error}=await supabase.auth.signInWithOtp({email:authEmail.trim(),options:{emailRedirectTo:window.location.origin}});
+      if(error)setAuthError(error.message);
+      else setAuthSent(true);
+    }catch(e){setAuthError('Connection error. Try again.');}
+  };
+  const signOut=async()=>{
+    if(!supabase)return;
+    await supabase.auth.signOut();
+    setAuthUser(null);
+  };
 
   // Stripe payment success detection
   useEffect(()=>{
@@ -551,7 +604,8 @@ export default function ObrizApp() {
   const handleCheckout=async(plan)=>{
     setCheckoutLoading(true);
     try{
-      const res=await fetch('/api/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan})});
+      const userEmail=authUser?.email||load('customerEmail','');
+      const res=await fetch('/api/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan,email:userEmail||undefined})});
       const data=await res.json();
       if(data.url){window.location.href=data.url;}
       else{alert('Something went wrong. Please try again.');setCheckoutLoading(false);}
@@ -562,8 +616,8 @@ export default function ObrizApp() {
 
   const installApp=async()=>{
     if(deferredPromptRef.current){deferredPromptRef.current.prompt();deferredPromptRef.current=null;setShowInstallPrompt(false);}
-    else if(isIOS){alert("To add Rhei to your home screen:\n\n1. Tap the Share button (square with arrow) at the bottom of Safari\n2. Scroll down and tap \"Add to Home Screen\"\n3. Tap \"Add\"");}
-    else{alert("To install Rhei:\n\nOpen this page in Chrome or Safari, then use your browser menu to \"Add to Home Screen\" or \"Install App\".");}
+    else if(isIOS){alert("To add RHEI to your home screen:\n\n1. Tap the Share button (square with arrow) at the bottom of Safari\n2. Scroll down and tap \"Add to Home Screen\"\n3. Tap \"Add\"");}
+    else{alert("To install RHEI:\n\nOpen this page in Chrome or Safari, then use your browser menu to \"Add to Home Screen\" or \"Install App\".");}
   };
   const dismissInstall=()=>{setShowInstallPrompt(false);setInstallDismissed(true);save('installDismissed',true);};
 
@@ -650,7 +704,7 @@ export default function ObrizApp() {
   const renderHome=()=>(
     <div style={{padding:"56px 22px 120px"}}>
       <div style={{textAlign:"center",marginBottom:40}}>
-        <h1 style={{fontSize:20,letterSpacing:12,color:B.gold,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>Rhei</h1>
+        <h1 style={{fontSize:20,letterSpacing:12,color:B.gold,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>RHEI</h1>
         <div style={{width:40,height:1,background:B.gold,margin:"12px auto",opacity:0.4}}/>
         <p style={{fontSize:22,fontWeight:400,color:B.cream,margin:"16px 0 0",fontFamily:F}}>{greetUser(userName)}</p>
         <p style={{fontSize:13,color:B.muted,marginTop:6,fontStyle:"italic"}}>Your nervous system is listening.</p>
@@ -663,7 +717,7 @@ export default function ObrizApp() {
           <Sparkles size={18} color={B.gold} style={{flexShrink:0}}/>
           <button onClick={installApp} style={{flex:1,background:"none",border:"none",cursor:"pointer",textAlign:"left",padding:0}}>
             <p style={{fontSize:13,color:B.cream,margin:0,fontFamily:SF}}>Add to Home Screen</p>
-            <p style={{fontSize:11,color:B.muted,margin:"2px 0 0",fontFamily:SF}}>{isIOS?"Tap here for instructions":"Open Rhei like an app — one tap away"}</p>
+            <p style={{fontSize:11,color:B.muted,margin:"2px 0 0",fontFamily:SF}}>{isIOS?"Tap here for instructions":"Open RHEI like an app — one tap away"}</p>
           </button>
           <ArrowRight size={14} color={B.gold} style={{flexShrink:0}}/>
         </div>
@@ -908,7 +962,7 @@ export default function ObrizApp() {
     <div style={{padding:"56px 22px 120px"}}>
       <div style={{textAlign:"center",marginBottom:36}}>
         <Crown size={28} color={B.gold} style={{marginBottom:12}}/>
-        <h1 style={{fontSize:24,fontWeight:400,color:B.cream,margin:"0 0 6px",fontFamily:F}}>Rhei Premium</h1>
+        <h1 style={{fontSize:24,fontWeight:400,color:B.cream,margin:"0 0 6px",fontFamily:F}}>RHEI Premium</h1>
         <p style={{fontSize:13,color:B.muted,fontStyle:"italic"}}>The complete nervous system + beauty ritual experience.</p>
       </div>
 
@@ -956,7 +1010,24 @@ export default function ObrizApp() {
 
       {/* Restore / Already premium */}
       <div style={{textAlign:"center",marginTop:8}}>
-        <button onClick={()=>{setIsPremium(true);save('isPremium',true);}} style={{background:"none",border:"none",color:B.muted,fontSize:11,fontFamily:SF,cursor:"pointer",padding:8,textDecoration:"underline"}}>Already purchased? Restore access</button>
+        {supabase && !authUser ? (
+          <div style={{background:B.card,borderRadius:14,padding:"16px 18px",border:`1px solid ${B.border}`,textAlign:"center",marginTop:8}}>
+            <p style={{fontSize:11,color:B.muted,fontFamily:SF,margin:"0 0 10px"}}>Already purchased? Sign in to restore access.</p>
+            <div style={{display:"flex",gap:8,maxWidth:340,margin:"0 auto"}}>
+              <input type="email" placeholder="your@email.com" value={authEmail} onChange={e=>setAuthEmail(e.target.value)} onKeyDown={e=>e.key==='Enter'&&signInWithEmail()} style={{flex:1,background:B.bgDeep,border:`1px solid ${B.border}`,borderRadius:8,padding:"8px 12px",color:B.cream,fontSize:12,fontFamily:SF,outline:"none"}}/>
+              <button onClick={signInWithEmail} style={{background:`${B.gold}15`,border:`1px solid ${B.border}`,borderRadius:8,padding:"8px 14px",cursor:"pointer",color:B.gold,fontSize:11,fontFamily:SF,whiteSpace:"nowrap"}}>Sign in</button>
+            </div>
+            {authSent && <p style={{fontSize:11,color:"#5A8A5A",fontFamily:SF,margin:"8px 0 0"}}>Check your email for a sign-in link.</p>}
+            {authError && <p style={{fontSize:11,color:"#C4786A",fontFamily:SF,margin:"8px 0 0"}}>{authError}</p>}
+          </div>
+        ) : (
+          <button onClick={()=>{
+            if(authUser?.email){
+              fetch('/api/check-subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:authUser.email})})
+                .then(r=>r.json()).then(data=>{if(data.isPremium){setIsPremium(true);save('isPremium',true);}else{alert('No active subscription found for this email.');}}).catch(()=>alert('Could not verify. Try again.'));
+            } else {setIsPremium(true);save('isPremium',true);}
+          }} style={{background:"none",border:"none",color:B.muted,fontSize:11,fontFamily:SF,cursor:"pointer",padding:8,textDecoration:"underline"}}>Already purchased? Restore access</button>
+        )}
       </div>
 
     </div>
@@ -1015,9 +1086,9 @@ export default function ObrizApp() {
           ))}
         </div>
 
-        {/* Profile */}
+        {/* Profile & Account */}
         <div style={{background:B.card,borderRadius:14,padding:"16px 18px",border:`1px solid ${B.border}`,marginTop:16}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:authUser?12:0}}>
             <div style={{display:"flex",alignItems:"center",gap:12}}>
               <div style={{width:36,height:36,borderRadius:"50%",background:`${B.gold}15`,display:"flex",alignItems:"center",justifyContent:"center"}}>
                 <User size={16} color={B.gold}/>
@@ -1029,6 +1100,28 @@ export default function ObrizApp() {
             </div>
             <button onClick={()=>{const n=prompt("What should we call you?",userName);if(n!==null){setUserName(n);save('userName',n);}}} style={{background:"none",border:`1px solid ${B.border}`,borderRadius:8,padding:"6px 12px",cursor:"pointer",color:B.muted,fontSize:10,fontFamily:SF}}>Edit</button>
           </div>
+          {supabase && authUser && (
+            <div style={{borderTop:`1px solid ${B.border}`,paddingTop:12,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <Mail size={12} color={B.muted}/>
+                <span style={{fontSize:11,color:B.muted,fontFamily:SF}}>{authUser.email}</span>
+              </div>
+              <button onClick={signOut} style={{background:"none",border:`1px solid ${B.border}`,borderRadius:8,padding:"5px 10px",cursor:"pointer",color:B.muted,fontSize:10,fontFamily:SF,display:"flex",alignItems:"center",gap:4}}>
+                <LogOut size={10}/>Sign out
+              </button>
+            </div>
+          )}
+          {supabase && !authUser && (
+            <div style={{borderTop:`1px solid ${B.border}`,paddingTop:12,marginTop:12}}>
+              <p style={{fontSize:10,color:B.muted,fontFamily:SF,margin:"0 0 8px"}}>Sign in to sync your premium access across devices</p>
+              <div style={{display:"flex",gap:8}}>
+                <input type="email" placeholder="your@email.com" value={authEmail} onChange={e=>setAuthEmail(e.target.value)} onKeyDown={e=>e.key==='Enter'&&signInWithEmail()} style={{flex:1,background:B.bgDeep,border:`1px solid ${B.border}`,borderRadius:8,padding:"8px 12px",color:B.cream,fontSize:12,fontFamily:SF,outline:"none"}}/>
+                <button onClick={signInWithEmail} style={{background:`${B.gold}15`,border:`1px solid ${B.border}`,borderRadius:8,padding:"8px 14px",cursor:"pointer",color:B.gold,fontSize:11,fontFamily:SF,whiteSpace:"nowrap"}}>Sign in</button>
+              </div>
+              {authSent && <p style={{fontSize:11,color:"#5A8A5A",fontFamily:SF,margin:"8px 0 0"}}>Check your email for a sign-in link.</p>}
+              {authError && <p style={{fontSize:11,color:"#C4786A",fontFamily:SF,margin:"8px 0 0"}}>{authError}</p>}
+            </div>
+          )}
         </div>
       </div>
     );
