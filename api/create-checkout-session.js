@@ -18,8 +18,8 @@ module.exports = async (req, res) => {
     const { plan } = req.body; // 'monthly' or 'yearly'
 
     const priceData = plan === 'yearly'
-      ? { currency: 'usd', unit_amount: 4900, recurring: { interval: 'year' }, product_data: { name: 'OBRIZ Premium — Yearly', description: 'Full access to all ritual guides, exclusive resets, and future content' } }
-      : { currency: 'usd', unit_amount: 999, recurring: { interval: 'month' }, product_data: { name: 'OBRIZ Premium — Monthly', description: 'Full access to all ritual guides, exclusive resets, and future content' } };
+      ? { currency: 'usd', unit_amount: 4900, recurring: { interval: 'year' }, product_data: { name: 'Aubrise Premium — Yearly', description: 'Full access to all ritual guides, exclusive resets, and future content' } }
+      : { currency: 'usd', unit_amount: 999, recurring: { interval: 'month' }, product_data: { name: 'Aubrise Premium — Monthly', description: 'Full access to all ritual guides, exclusive resets, and future content' } };
 
     const origin = req.headers.origin || req.headers.referer?.replace(/\/$/, '') || 'https://obriz-app-oggk.vercel.app';
 
