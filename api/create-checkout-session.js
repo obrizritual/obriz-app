@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
       ? { currency: 'usd', unit_amount: 4900, recurring: { interval: 'year' }, product_data: { name: 'Rhei Premium — Yearly', description: 'Full access to all ritual guides, exclusive resets, and future content' } }
       : { currency: 'usd', unit_amount: 999, recurring: { interval: 'month' }, product_data: { name: 'Rhei Premium — Monthly', description: 'Full access to all ritual guides, exclusive resets, and future content' } };
 
-    const origin = req.headers.origin || req.headers.referer?.replace(/\/$/, '') || 'https://obriz-app-oggk.vercel.app';
+    const origin = req.headers.origin || req.headers.referer?.replace(/\/$/, '') || 'https://rhei-app.vercel.app';
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
