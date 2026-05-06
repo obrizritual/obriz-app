@@ -501,18 +501,24 @@ export default function ObrizApp() {
   const [microMsg,setMicroMsg]=useState("");
   const [activeRitual,setActiveRitual]=useState(null);
   const [showInstallPrompt,setShowInstallPrompt]=useState(false);
+  const [installDismissed,setInstallDismissed]=useState(()=>load('installDismissed',false));
+  const [isIOS]=useState(()=>/iPad|iPhone|iPod/.test(navigator.userAgent));
+  const [isStandalone]=useState(()=>window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true);
   const [checkoutLoading,setCheckoutLoading]=useState(false);
 
   const audioRef=useRef(null);
   const animRef=useRef(null);
   const deferredPromptRef=useRef(null);
 
-  // PWA install prompt
+  // PWA install prompt — show for both Android (beforeinstallprompt) and iOS (manual instructions)
   useEffect(()=>{
+    if(isStandalone||installDismissed)return; // Already installed or dismissed
     const handler=(e)=>{e.preventDefault();deferredPromptRef.current=e;setShowInstallPrompt(true);};
     window.addEventListener('beforeinstallprompt',handler);
-    return()=>window.removeEventListener('beforeinstallprompt',handler);
-  },[]);
+    // On iOS or if beforeinstallprompt doesn't fire within 2s, show manual install banner
+    const timeout=setTimeout(()=>{if(!deferredPromptRef.current)setShowInstallPrompt(true);},2000);
+    return()=>{window.removeEventListener('beforeinstallprompt',handler);clearTimeout(timeout);};
+  },[isStandalone,installDismissed]);
 
   // Stripe payment success detection
   useEffect(()=>{
@@ -556,7 +562,10 @@ export default function ObrizApp() {
 
   const installApp=async()=>{
     if(deferredPromptRef.current){deferredPromptRef.current.prompt();deferredPromptRef.current=null;setShowInstallPrompt(false);}
+    else if(isIOS){alert("To add OBRIZ to your home screen:\n\n1. Tap the Share button (square with arrow) at the bottom of Safari\n2. Scroll down and tap \"Add to Home Screen\"\n3. Tap \"Add\"");}
+    else{alert("To install OBRIZ:\n\nOpen this page in Chrome or Safari, then use your browser menu to \"Add to Home Screen\" or \"Install App\".");}
   };
+  const dismissInstall=()=>{setShowInstallPrompt(false);setInstallDismissed(true);save('installDismissed',true);};
 
   // Persist
   useEffect(()=>{save('completedToday',completedToday);},[completedToday]);
@@ -648,15 +657,16 @@ export default function ObrizApp() {
       </div>
 
       {/* Install prompt */}
-      {showInstallPrompt&&(
-        <button onClick={installApp} style={{width:"100%",background:`${B.gold}0D`,border:`1px solid ${B.borderActive}`,borderRadius:14,padding:"14px 16px",marginBottom:16,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"left"}}>
-          <Sparkles size={18} color={B.gold}/>
-          <div style={{flex:1}}>
+      {showInstallPrompt&&!isStandalone&&(
+        <div style={{width:"100%",background:`${B.gold}0D`,border:`1px solid ${B.borderActive}`,borderRadius:14,padding:"14px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:12,textAlign:"left",position:"relative"}}>
+          <button onClick={dismissInstall} style={{position:"absolute",top:8,right:8,background:"none",border:"none",cursor:"pointer",padding:4}}><X size={12} color={B.muted}/></button>
+          <Sparkles size={18} color={B.gold} style={{flexShrink:0}}/>
+          <button onClick={installApp} style={{flex:1,background:"none",border:"none",cursor:"pointer",textAlign:"left",padding:0}}>
             <p style={{fontSize:13,color:B.cream,margin:0,fontFamily:SF}}>Add to Home Screen</p>
-            <p style={{fontSize:11,color:B.muted,margin:"2px 0 0",fontFamily:SF}}>Open OBRIZ like an app — one tap away</p>
-          </div>
-          <ArrowRight size={14} color={B.gold}/>
-        </button>
+            <p style={{fontSize:11,color:B.muted,margin:"2px 0 0",fontFamily:SF}}>{isIOS?"Tap here for instructions":"Open OBRIZ like an app — one tap away"}</p>
+          </button>
+          <ArrowRight size={14} color={B.gold} style={{flexShrink:0}}/>
+        </div>
       )}
 
       {/* NS Score + Check-in */}
@@ -692,7 +702,7 @@ export default function ObrizApp() {
       {/* Suggested */}
       <div style={{marginBottom:28}}>
         <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:12,fontFamily:SF}}>{checkinDone?"Recommended for you":"Suggested reset"}</p>
-        <button onClick={()=>startSession(suggested.id)} style={{width:"100%",background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"26px 22px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden"}}>
+        <button onClick={()=>{const locked=suggested.id!==1&&!isPremium;if(locked){setScreen("premium");}else{startSession(suggested.id);}}} style={{width:"100%",background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"26px 22px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden"}}>
           <div style={{position:"absolute",top:-40,right:-40,width:180,height:180}}><Orb active={false} size={180}/></div>
           <div style={{position:"relative",zIndex:2}}>
             <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",margin:"0 0 10px",fontFamily:SF}}>{checkinDone?"Based on your check-in":`${timeCtx()} reset`}</p>
@@ -757,7 +767,7 @@ export default function ObrizApp() {
       </div>
       {sessions.map(s=>{
         const Icon=s.icon; const done=completedToday.includes(s.id); const rec=checkinDone&&checkinState?.recommended?.includes(s.id);
-        const premiumLocked = s.id===4 && !isPremium;
+        const premiumLocked = s.id!==1 && !isPremium;
         return(
           <button key={s.id} onClick={()=>{if(premiumLocked){setScreen("premium");}else{startSession(s.id);}}} style={{width:"100%",background:B.card,border:`1px solid ${rec?B.borderActive:B.border}`,borderRadius:18,padding:"20px 18px",marginBottom:12,cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",opacity:premiumLocked?0.7:1}}>
             {premiumLocked&&<div style={{position:"absolute",top:14,right:14,display:"flex",alignItems:"center",gap:4,background:`${B.gold}12`,padding:"4px 10px",borderRadius:8}}>
@@ -906,8 +916,11 @@ export default function ObrizApp() {
       <div style={{background:B.card,borderRadius:18,padding:"22px 20px",marginBottom:16,border:`1px solid ${B.border}`}}>
         <p style={{fontSize:10,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 16px"}}>Everything included</p>
         {[
-          {text:"4 guided audio reset sessions", free:true},
-          {text:"Post-Conflict Reset (exclusive)", free:false},
+          {text:"Morning Reset (free forever)", free:true},
+          {text:"Pre-Meeting Reset", free:false},
+          {text:"The Transition Reset", free:false},
+          {text:"Post-Conflict Reset", free:false},
+          {text:"General Reset", free:false},
           {text:"4 micro-interventions", free:true},
           {text:"Gua Sha Sculpt ritual guide", free:true},
           {text:"Lymphatic Drainage ritual guide", free:false},
