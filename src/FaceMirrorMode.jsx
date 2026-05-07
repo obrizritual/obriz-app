@@ -67,7 +67,7 @@ const OVERLAY_TO_ILLUS = {
 // ─────────────────────────────────────────────────────────────────────────────
 export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, isPremium }) {
 
-  const [phase,       setPhase]       = useState("permission"); // permission|scan|checkin|results|mirror|complete
+  const [phase,       setPhase]       = useState("checkin"); // checkin|results|mirror|complete
   const [scanStep,    setScanStep]    = useState(0);            // 0-2 scan status message index
   const [scanPct,     setScanPct]     = useState(0);            // 0-100 progress bar
   const [chosenZone,  setChosenZone]  = useState(null);         // which zone user tapped
@@ -327,10 +327,26 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
     }, 400);
   };
 
-  const startRitual = (ritual) => {
+  const startRitual = async (ritual) => {
     setActiveRitual(ritual);
     setStepIdx(0);
     setPhase("mirror");
+    // Open camera now — only when ritual actually starts
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode:"user", width:{ ideal:640 }, height:{ ideal:480 } },
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+        const vw = videoRef.current.videoWidth  || 640;
+        const vh = videoRef.current.videoHeight || 480;
+        if (canvasRef.current) { canvasRef.current.width = vw; canvasRef.current.height = vh; }
+        setCameraReady(true);
+        loadMP().catch(() => {});
+      }
+    } catch { /* camera denied — mirror still works without it */ }
   };
 
   const nextStep = () => {
@@ -453,24 +469,26 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
               {zone.id === "full" ? "A complete reset for your face." : `Your ${zone.label.toLowerCase()} needs attention.`}
             </h2>
           </div>
-          {/* Tension visual */}
+          {/* Editorial insight */}
           <div style={{ background:B.card, borderRadius:18, padding:"20px", marginBottom:16, border:B.border }}>
-            <p style={{ fontSize:9, letterSpacing:2, color:B.gold, textTransform:"uppercase", fontFamily:SF, margin:"0 0 16px" }}>Tension Profile</p>
-            {[
-              { label:"Jaw & neck",         val: chosenZone==="jaw"      ? 78 : chosenZone==="full" ? 62 : 22, color:"#C4786A" },
-              { label:"Brow & forehead",    val: chosenZone==="brow"     ? 78 : chosenZone==="full" ? 56 : 22, color:"#A08BAA" },
-              { label:"Under-eye & cheeks", val: chosenZone==="undereye" ? 78 : chosenZone==="full" ? 58 : 22, color:"#8A9BAF" },
-            ].map((z,i) => (
-              <div key={i} style={{ marginBottom: i<2 ? 13 : 0 }}>
-                <div style={{ display:"flex", justifyContent:"space-between", marginBottom:4 }}>
-                  <span style={{ fontSize:12, color:B.creamMuted, fontFamily:SF }}>{z.label}</span>
-                  <span style={{ fontSize:11, color: z.val > 50 ? z.color : "#5A8A5A", fontFamily:SF, fontWeight:500 }}>{z.val > 50 ? "Elevated" : "Relaxed"}</span>
-                </div>
-                <div style={{ width:"100%", height:4, background:"rgba(196,154,75,0.1)", borderRadius:2 }}>
-                  <div style={{ width:`${z.val}%`, height:"100%", background: z.val > 50 ? z.color : "#5A8A5A", borderRadius:2, opacity:0.75, transition:"width 1s ease" }}/>
-                </div>
+            <p style={{ fontSize:9, letterSpacing:2, color:B.gold, textTransform:"uppercase", fontFamily:SF, margin:"0 0 12px" }}>Your Focus Today</p>
+            <div style={{ display:"flex", alignItems:"center", gap:14, marginBottom:14 }}>
+              <div style={{ width:48, height:48, borderRadius:12, background:"rgba(196,154,75,0.08)", border:B.border, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <FaceGuideIllustration zone={zone.illustration} size={36}/>
               </div>
-            ))}
+              <div>
+                <p style={{ fontSize:16, color:B.cream, fontWeight:400, margin:"0 0 2px", fontFamily:F }}>{zone.label}</p>
+                <p style={{ fontSize:12, color:B.muted, margin:0, fontFamily:SF }}>{zone.desc}</p>
+              </div>
+            </div>
+            <p style={{ fontSize:13, color:B.creamMuted, margin:0, fontFamily:SF, lineHeight:1.65, fontStyle:"italic" }}>
+              {{
+                jaw:      "The jaw is where stress lives first. The masseter and mandibular chain hold tension long after the moment has passed — often for days. Your ritual targets exactly this.",
+                brow:     "The corrugator and frontalis muscles furrow and hold without you noticing. Your ritual works the temporal fascia and brow line to release what accumulated here.",
+                undereye: "The orbital area is the first to show fatigue, fluid, and held emotion. Your ritual drains the lymphatic pathways that run through this zone and restore clarity.",
+                full:     "A complete reset. Your ritual moves through every zone — jaw, cheeks, orbital, forehead — in sequence. The full arc of release.",
+              }[chosenZone] || "Your ritual is built around what you're holding today."}
+            </p>
           </div>
           {/* Recommended ritual */}
           <div style={{ background:B.card, borderRadius:18, padding:"20px", marginBottom:20, border:"1px solid rgba(196,154,75,0.3)" }}>
