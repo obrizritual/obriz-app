@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, ShoppingBag, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Star, Crown, User, ChevronRight, Hand, Mail, LogOut, Camera } from "lucide-react";
 import { supabase } from "./supabaseClient";
 import FaceMirrorMode from "./FaceMirrorMode";
+import FaceGuideIllustration from "./FaceGuideIllustration";
 
 /* ═══════════════════════════════════════════
    RHEI — Luxury Nervous System Wellness App
@@ -389,19 +390,26 @@ function RitualPlayer({ ritual, onClose }) {
           {ritual.steps.map((_,i)=>(<div key={i} style={{width:i===step?20:8,height:4,borderRadius:2,background:i<step?B.gold:i===step?B.goldLight:`${B.gold}20`,transition:"all 0.4s"}}/>))}
         </div>
 
-        {/* Timer ring */}
-        <div style={{position:"relative",width:160,height:160,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:32}}>
-          <Ring progress={pct} size={160} sw={3}/>
-          <div style={{textAlign:"center",zIndex:2}}>
-            <span style={{fontSize:36,color:B.cream,fontWeight:300,display:"block",fontFamily:SF}}>{timeLeft}</span>
-            <span style={{fontSize:9,color:B.muted,letterSpacing:1.5,textTransform:"uppercase",fontFamily:SF}}>seconds</span>
+        {/* Face illustration + timer */}
+        <div style={{position:"relative",width:"100%",display:"flex",justifyContent:"center",alignItems:"center",marginBottom:16}}>
+          {/* Timer ring top-right of illustration */}
+          <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <FaceGuideIllustration zone={currentStep.zone||"full"} size={170}/>
+            {/* Floating timer pill */}
+            <div style={{position:"absolute",bottom:8,right:-8,background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"5px 12px",display:"flex",alignItems:"center",gap:6,boxShadow:`0 4px 16px ${B.warmBlack}60`}}>
+              <div style={{position:"relative",width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                <Ring progress={pct} size={28} sw={2.5}/>
+                <span style={{fontSize:9,color:B.cream,fontWeight:500,zIndex:2,fontFamily:SF}}>{timeLeft}</span>
+              </div>
+              <span style={{fontSize:9,color:B.muted,letterSpacing:1.5,textTransform:"uppercase",fontFamily:SF}}>sec</span>
+            </div>
           </div>
         </div>
 
         {/* Instruction */}
         <h3 style={{fontSize:20,color:B.cream,fontWeight:400,fontFamily:F,marginBottom:8,textAlign:"center"}}>{currentStep.title}</h3>
         {currentStep.direction && <p style={{fontSize:11,color:B.gold,fontFamily:SF,margin:"0 0 12px",background:`${B.gold}12`,padding:"4px 12px",borderRadius:20,letterSpacing:1}}>{currentStep.direction}</p>}
-        <p style={{fontSize:13,color:B.creamMuted,fontFamily:SF,lineHeight:1.6,textAlign:"center",maxWidth:320,margin:"0 0 32px"}}>{currentStep.instruction}</p>
+        <p style={{fontSize:13,color:B.creamMuted,fontFamily:SF,lineHeight:1.6,textAlign:"center",maxWidth:320,margin:"0 0 28px"}}>{currentStep.instruction}</p>
 
         {/* Controls */}
         <div style={{display:"flex",gap:12,marginTop:"auto"}}>

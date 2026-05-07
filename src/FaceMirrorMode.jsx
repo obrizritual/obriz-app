@@ -357,9 +357,10 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
   const canvasRef  = useRef(null);
   const streamRef  = useRef(null);
   const fmRef      = useRef(null);
-  const rafRef     = useRef(null);
-  const stepTmrRef = useRef(null);
-  const pulseRef   = useRef(null);
+  const rafRef       = useRef(null);
+  const stepTmrRef   = useRef(null);
+  const pulseRef     = useRef(null);
+  const scanTmrRef   = useRef(null);   // fallback timeout if MediaPipe stalls
 
   // Refs to avoid stale closures in rAF callbacks
   const phaseRef       = useRef("permission");
@@ -388,6 +389,7 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
       cancelAnimationFrame(rafRef.current);
       clearInterval(stepTmrRef.current);
       clearInterval(pulseRef.current);
+      clearTimeout(scanTmrRef.current);
       if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
       if (fmRef.current) try { fmRef.current.close(); } catch {}
     };
@@ -498,6 +500,7 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
           setScanProgress(pct);
 
           if (scanCountRef.current >= 30) {
+            clearTimeout(scanTmrRef.current);
             const result = analyzeTension(scanFramesRef.current);
             const rec    = pickRitual(result, rituals);
             setTension(result);
@@ -517,6 +520,18 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
       };
       rafRef.current = requestAnimationFrame(loop);
       setPhase("scanning");
+
+      // ── Fallback: if MediaPipe stalls or no face detected after 9s, skip ahead ──
+      scanTmrRef.current = setTimeout(() => {
+        if (phaseRef.current !== "scanning") return;
+        const result = scanFramesRef.current.length > 3
+          ? analyzeTension(scanFramesRef.current)
+          : { jawTension: 58, browTension: 42, puffiness: 36 };
+        const rec = pickRitual(result, rituals);
+        setTension(result);
+        setRecommended(rec);
+        setPhase("results");
+      }, 9000);
 
     } catch (err) {
       // Camera denied or MediaPipe failed — graceful fallback
@@ -638,11 +653,19 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
       {/* Bottom progress */}
       <div style={{ position:"absolute", bottom:60, left:0, right:0, padding:"0 40px", textAlign:"center", zIndex:4 }}>
         <div style={{ width:"100%", height:2, background:"rgba(196,154,75,0.15)", borderRadius:1, marginBottom:14 }}>
-          <div style={{ width:`${scanProgress}%`, height:"100%", background:B.goldGrad, borderRadius:1, transition:"width 0.4s" }}/>
+          {scanProgress > 0
+            ? <div style={{ width:`${scanProgress}%`, height:"100%", background:B.goldGrad, borderRadius:1, transition:"width 0.4s" }}/>
+            : <div style={{ width:"30%", height:"100%", background:B.goldGrad, borderRadius:1, animation:"rhei-scan-shimmer 1.4s ease-in-out infinite" }}/>
+          }
         </div>
-        <p style={{ fontSize:13, color:B.cream, fontFamily:F }}>Mapping tension patterns...</p>
-        <p style={{ fontSize:11, color:B.muted, fontFamily:SF, marginTop:4 }}>{scanProgress}%</p>
+        <p style={{ fontSize:13, color:B.cream, fontFamily:F }}>
+          {scanProgress === 0 ? "Loading face model…" : "Mapping tension patterns…"}
+        </p>
+        <p style={{ fontSize:11, color:B.muted, fontFamily:SF, marginTop:4 }}>
+          {scanProgress === 0 ? "This takes a few seconds on first load" : `${scanProgress}%`}
+        </p>
       </div>
+      <style>{`@keyframes rhei-scan-shimmer{0%{margin-left:0;width:30%}50%{margin-left:35%;width:30%}100%{margin-left:70%;width:30%}}`}</style>
     </div>
   );
 
