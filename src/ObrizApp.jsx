@@ -89,6 +89,48 @@ const rituals = [
       { title: "Integration Hold", duration: 30, instruction: "Cup your entire face gently. Hold with light lifting pressure for 10 seconds. Release slowly. Feel the difference.", zone: "full" },
     ]
   },
+  {
+    id: "buccal", title: "Buccal Release", subtitle: "The $400 facial, at home",
+    duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg",
+    description: "The most talked-about technique in luxury facial therapy. Targets deep jaw and cheek muscles that no surface massage can reach. Visibly releases tension and defines the jawline.",
+    tools: "Clean hands · facial oil",
+    steps: [
+      { title: "Activate the Masseter", duration: 45, instruction: "Place fingertips on your jaw hinge — where your jaw opens and closes. Apply firm circular pressure inward and upward. You're reaching the deepest layer of the masseter muscle.", zone: "jawline", direction: "○ Circular inward" },
+      { title: "Cheek Muscle Press", duration: 50, instruction: "Move to your cheeks. Press firmly against the bone and hold for 3 seconds, then slowly drag upward toward the cheekbone. Feel the buccinator release under your fingers.", zone: "cheeks", direction: "↑ Press and drag" },
+      { title: "Deep Cheek Release", duration: 45, instruction: "Using knuckle pressure, press into the fleshy part of each cheek between cheekbone and jaw. Hold 5 seconds, release, repeat along the line. You may feel surprising tension here.", zone: "cheeks", direction: "— Hold and release" },
+      { title: "Jaw Decompression", duration: 60, instruction: "Interlock fingers under your chin. Apply gentle upward traction while slowly tilting your head back slightly. Hold 5 seconds. This decompresses the jaw joint — you may hear a subtle release.", zone: "jawline", direction: "↑ Gentle traction" },
+      { title: "TMJ Integration", duration: 40, instruction: "Return to the jaw hinge. Alternate between pressing and releasing rhythmically, allowing the joint to settle. Finish with three slow, wide jaw openings. Exhale on each open.", zone: "jawline", direction: "○ Press, breathe, release" },
+      { title: "Final Drain", duration: 40, instruction: "Long, slow strokes from behind the ears down the neck to the collarbone. Three passes each side. This drains everything the jaw just released into the lymphatic system.", zone: "neck", direction: "↓ Behind ear to collar" },
+    ]
+  },
+  {
+    id: "pre-event", title: "Pre-Event Glow", subtitle: "5 minutes to camera-ready",
+    duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg",
+    description: "The ritual for before a presentation, shoot, dinner, or any moment where you need to show up at your best. De-puffs, defines, and illuminates in exactly 5 minutes.",
+    tools: "Gua sha stone or clean fingertips · facial oil",
+    steps: [
+      { title: "Emergency Lymph Flush", duration: 30, instruction: "Five quick taps behind each ear, then sweep down both sides of the neck to the collarbone. This opens the lymphatic pathways before everything else. Non-negotiable first step.", zone: "nodes", direction: "↓ Neck flush" },
+      { title: "Under-Eye Depuff", duration: 45, instruction: "Using ring fingers or a cold tool — sweep from the inner corner outward under each eye with featherlight pressure. Three passes. You will see the difference before you finish.", zone: "undereye", direction: "→ Inner to outer" },
+      { title: "Cheekbone Define", duration: 45, instruction: "Hook fingertips under the cheekbone and sweep upward and outward in one fluid motion. Five passes each side, increasing firmness. This creates visible lift within seconds.", zone: "cheeks", direction: "↗ Hook and lift" },
+      { title: "Jawline Sculpt", duration: 45, instruction: "From center of chin, sweep firmly along the jawline to the ear. Five passes each side, increasing firmness each time. This defines the jaw instantly — the most visible single move.", zone: "jawline", direction: "→ Chin to ear" },
+      { title: "Forehead Smooth", duration: 30, instruction: "Three sweeping passes from the brow to the hairline. Lifts the brow and smooths expression lines before they set. Use the flat of the gua sha or all four fingers together.", zone: "forehead", direction: "↑ Brow to hairline" },
+      { title: "Set & Illuminate", duration: 30, instruction: "One complete pass from neck to forehead: neck drain, jawline out, cheekbone up, forehead lift. Light, fast, fluid. This seals everything. You are ready.", zone: "full", direction: "Complete seal" },
+    ]
+  },
+  {
+    id: "eye-revival", title: "Eye Revival", subtitle: "Brighten, lift, and open",
+    duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg",
+    description: "Targets the most emotionally visible area of your face. Reduces dark circles, releases crow's feet tension, and lifts hooded lids through precise orbital and pressure point work.",
+    tools: "Ring fingers · eye cream or serum",
+    steps: [
+      { title: "Orbital Lymph Drain", duration: 40, instruction: "Trace the full orbital bone three times — starting inner corner, under the eye, around outer corner, over the brow. Light as butterfly wings. This drains the entire orbital area.", zone: "undereye", direction: "○ Full orbital circle" },
+      { title: "Inner Corner Press", duration: 35, instruction: "Press the inner corner of each eye — the tear duct area — with your ring finger. Hold 5 seconds, breathe, release. This pressure point drains the congestion that causes dark circles.", zone: "undereye", direction: "● Hold 5 seconds" },
+      { title: "Crow's Foot Release", duration: 45, instruction: "Ring fingers at the outer corner of each eye. Tiny, gentle circular movements, the lightest possible pressure. You're releasing the orbicularis oculi muscle. This area holds more tension than most people realize.", zone: "undereye", direction: "○ Tiny circles" },
+      { title: "Upper Lid Drainage", duration: 40, instruction: "Eyes closed. Ring fingers on upper lids. Sweep from inner corner to outer corner — featherlight, three slow passes. You're moving fluid that pools here overnight.", zone: "undereye", direction: "→ Inner to outer lid" },
+      { title: "Brow Bone Activation", duration: 35, instruction: "Three pressure points along the brow bone: inner, middle, and outer edge. Press firmly for 5 seconds each. This releases the corrugator muscle — the one that creates the furrowed, heavy look.", zone: "brow", direction: "● Three points, 5s each" },
+      { title: "Final Orbital Sweep", duration: 45, instruction: "From the bridge of the nose, sweep outward under each eye to the temple, continue down in front of the ear to the jaw. The complete orbital drainage path. End here.", zone: "undereye", direction: "→ ↓ Sweep and drain" },
+    ]
+  },
 ];
 
 const fmt = (s) => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`;
@@ -331,7 +373,10 @@ function RitualPlayer({ ritual, onClose }) {
             <p style={{fontSize:13,color:B.muted,fontStyle:"italic",margin:"0 0 16px"}}>{ritual.subtitle}</p>
           </div>
           <div style={{width:"100%",height:220,borderRadius:20,background:B.card,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:24,overflow:"hidden"}}>
-            <img src={ritual.svgFile} alt={ritual.title} style={{width:"70%",height:"80%",objectFit:"contain",opacity:0.85}} onError={(e)=>{e.target.style.display='none';}}/>
+            <FaceGuideIllustration
+              zone={ritual.id==="gua-sha"?"jawline":ritual.id==="lymphatic"?"nodes":"cheeks"}
+              size={160}
+            />
           </div>
           <div style={{background:B.card,borderRadius:16,padding:18,border:`1px solid ${B.border}`,marginBottom:16}}>
             <p style={{fontSize:12,color:B.creamMuted,margin:0,lineHeight:1.6,fontFamily:SF}}>{ritual.description}</p>
@@ -959,27 +1004,41 @@ export default function ObrizApp() {
         </div>
       </button>
 
-      <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,marginBottom:12}}>Or choose your ritual</p>
+      {/* ── Occasion tags ── */}
+      <div style={{display:"flex",gap:8,marginBottom:20,overflowX:"auto",paddingBottom:4}}>
+        {[{label:"All",tag:null},{label:"Morning",tag:"morning"},{label:"Pre-Event",tag:"event"},{label:"Recovery",tag:"recovery"},{label:"Deep Work",tag:"deep"}].map((t,i)=>(
+          <div key={i} style={{flexShrink:0,background:i===0?B.card:"transparent",border:`1px solid ${i===0?B.borderActive:B.border}`,borderRadius:20,padding:"6px 14px",cursor:"pointer",fontSize:11,color:i===0?B.gold:B.muted,fontFamily:SF,letterSpacing:0.5,whiteSpace:"nowrap"}}>{t.label}</div>
+        ))}
+      </div>
 
-      {rituals.map(r=>{
+      {/* ── Ritual cards ── */}
+      {rituals.map((r,idx)=>{
         const locked = r.isPremium && !isPremium;
+        const zoneMap = {"gua-sha":"jawline","lymphatic":"nodes","face-lift":"cheeks","buccal":"jawline","pre-event":"full","eye-revival":"undereye"};
+        const tagMap  = {"gua-sha":"Sculpt","lymphatic":"Depuff","face-lift":"Lift","buccal":"Deep Release","pre-event":"Pre-Event","eye-revival":"Eye Focus"};
+        const timeMap = {"gua-sha":"Any time","lymphatic":"Morning","face-lift":"Evening","buccal":"Weekly","pre-event":"Before events","eye-revival":"Morning"};
         return (
-          <button key={r.id} onClick={()=>{if(locked){setScreen("premium");}else{setActiveRitual(r);}}} style={{width:"100%",background:B.card,border:`1px solid ${locked?B.border:B.borderActive}`,borderRadius:18,padding:"20px 18px",marginBottom:14,cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",opacity:locked?0.75:1}}>
-            {locked && <div style={{position:"absolute",top:14,right:14,display:"flex",alignItems:"center",gap:4,background:`${B.gold}12`,padding:"4px 10px",borderRadius:8}}>
-              <Lock size={10} color={B.gold}/><span style={{fontSize:8,letterSpacing:1.5,color:B.gold,fontFamily:SF,textTransform:"uppercase"}}>Premium</span>
+          <button key={r.id} onClick={()=>{if(locked){setScreen("premium");}else{setActiveRitual(r);}}}
+            style={{width:"100%",background:B.card,border:`1px solid ${locked?B.border:B.borderActive}`,borderRadius:20,padding:"18px 16px",marginBottom:12,cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",opacity:locked?0.72:1}}>
+            {locked && <div style={{position:"absolute",top:13,right:13,display:"flex",alignItems:"center",gap:4,background:`${B.gold}12`,padding:"3px 8px",borderRadius:7}}>
+              <Lock size={9} color={B.gold}/><span style={{fontSize:8,letterSpacing:1.5,color:B.gold,fontFamily:SF,textTransform:"uppercase"}}>Premium</span>
             </div>}
-            {!locked && !r.isPremium && <div style={{position:"absolute",top:14,right:14,fontSize:8,letterSpacing:1.5,color:"#5A8A5A",background:"#5A8A5A15",padding:"3px 8px",borderRadius:8,fontFamily:SF,textTransform:"uppercase"}}>Free</div>}
-            <div style={{display:"flex",alignItems:"center",gap:14}}>
-              <div style={{width:56,height:56,borderRadius:14,background:`${B.gold}08`,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,overflow:"hidden"}}>
-                <img src={r.svgFile} alt="" style={{width:40,height:40,objectFit:"contain",opacity:0.7}} onError={(e)=>{e.target.style.display='none';}}/>
+            {!locked&&!r.isPremium&&<div style={{position:"absolute",top:13,right:13,fontSize:8,letterSpacing:1.5,color:"#5A8A5A",background:"#5A8A5A15",padding:"3px 8px",borderRadius:7,fontFamily:SF,textTransform:"uppercase"}}>Free</div>}
+            <div style={{display:"flex",alignItems:"flex-start",gap:14}}>
+              {/* Illustration thumbnail */}
+              <div style={{width:60,height:60,borderRadius:14,background:`${B.gold}08`,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                <FaceGuideIllustration zone={zoneMap[r.id]||"full"} size={46}/>
               </div>
-              <div style={{flex:1}}>
-                <h3 style={{fontSize:16,color:B.cream,margin:"0 0 3px",fontWeight:400,fontFamily:F}}>{r.title}</h3>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
+                  <h3 style={{fontSize:16,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>{r.title}</h3>
+                </div>
                 <p style={{fontSize:12,color:B.goldMuted,margin:"0 0 6px",fontStyle:"italic"}}>{r.subtitle}</p>
-                <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <span style={{fontSize:11,color:B.muted,fontFamily:SF,display:"flex",alignItems:"center",gap:4}}><Clock size={11}/>{r.duration}</span>
-                  <span style={{fontSize:11,color:B.muted,fontFamily:SF}}>{r.steps.length} steps</span>
-                  <span style={{fontSize:11,color:locked?B.muted:B.gold,fontFamily:SF}}>{locked?"Unlock →":"Begin →"}</span>
+                <p style={{fontSize:11,color:B.muted,margin:"0 0 10px",lineHeight:1.5,fontFamily:SF,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{r.description}</p>
+                <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                  <span style={{fontSize:9,color:B.gold,fontFamily:SF,background:`${B.gold}10`,padding:"3px 8px",borderRadius:6,letterSpacing:0.5}}>{tagMap[r.id]}</span>
+                  <span style={{fontSize:9,color:B.muted,fontFamily:SF,background:"rgba(196,154,75,0.06)",padding:"3px 8px",borderRadius:6,letterSpacing:0.5}}>{timeMap[r.id]}</span>
+                  <span style={{fontSize:11,color:B.muted,fontFamily:SF,marginLeft:"auto",display:"flex",alignItems:"center",gap:4}}><Clock size={10}/>{r.duration}</span>
                 </div>
               </div>
             </div>
@@ -989,11 +1048,11 @@ export default function ObrizApp() {
 
       {/* Teaser */}
       {!isPremium && (
-        <div style={{background:`linear-gradient(135deg, ${B.card} 0%, #3A2516 100%)`,borderRadius:18,padding:"24px 20px",marginTop:8,border:`1px solid ${B.borderActive}`,textAlign:"center"}}>
-          <Crown size={24} color={B.gold} style={{marginBottom:10}}/>
-          <h3 style={{fontSize:16,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>Unlock All Rituals</h3>
-          <p style={{fontSize:12,color:B.muted,margin:"0 0 16px",fontFamily:SF,lineHeight:1.5}}>Get full access to every guided face ritual — gua sha, lymphatic drainage, face lifting, and all future guides.</p>
-          <button onClick={()=>setScreen("premium")} style={{background:B.goldGrad,border:"none",borderRadius:24,padding:"12px 28px",cursor:"pointer",color:B.warmBlack,fontSize:12,fontFamily:SF,letterSpacing:1,fontWeight:600}}>See Premium Plans</button>
+        <div style={{background:`linear-gradient(135deg, ${B.card} 0%, #3A2516 100%)`,borderRadius:18,padding:"24px 20px",marginTop:4,border:`1px solid ${B.borderActive}`,textAlign:"center"}}>
+          <Crown size={22} color={B.gold} style={{marginBottom:10}}/>
+          <h3 style={{fontSize:16,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>6 rituals. One subscription.</h3>
+          <p style={{fontSize:12,color:B.muted,margin:"0 0 16px",fontFamily:SF,lineHeight:1.55}}>Gua Sha, Lymphatic, Face Lift, Buccal Release, Pre-Event Glow, Eye Revival — plus every ritual added in future.</p>
+          <button onClick={()=>setScreen("premium")} style={{background:B.goldGrad,border:"none",borderRadius:24,padding:"12px 28px",cursor:"pointer",color:B.warmBlack,fontSize:12,fontFamily:SF,letterSpacing:1,fontWeight:600}}>Unlock All Rituals</button>
         </div>
       )}
     </div>
@@ -1021,6 +1080,9 @@ export default function ObrizApp() {
           {text:"Gua Sha Sculpt ritual guide", free:true},
           {text:"Lymphatic Drainage ritual guide", free:false},
           {text:"Face Lifting ritual guide", free:false},
+          {text:"Buccal Release ritual guide", free:false},
+          {text:"Pre-Event Glow ritual guide", free:false},
+          {text:"Eye Revival ritual guide", free:false},
           {text:"Daily NS Score tracking", free:true},
           {text:"All future ritual guides & sessions", free:false},
           {text:"Priority access to new features", free:false},
