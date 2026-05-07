@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, ShoppingBag, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Star, Crown, User, ChevronRight, Hand, Mail, LogOut } from "lucide-react";
+import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, ShoppingBag, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Star, Crown, User, ChevronRight, Hand, Mail, LogOut, Camera } from "lucide-react";
 import { supabase } from "./supabaseClient";
+import FaceMirrorMode from "./FaceMirrorMode";
 
 /* ═══════════════════════════════════════════
    RHEI — Luxury Nervous System Wellness App
@@ -501,6 +502,7 @@ export default function ObrizApp() {
   const [microDone,setMicroDone]=useState(false);
   const [microMsg,setMicroMsg]=useState("");
   const [activeRitual,setActiveRitual]=useState(null);
+  const [showMirrorMode,setShowMirrorMode]=useState(false);
   const [showInstallPrompt,setShowInstallPrompt]=useState(false);
   const [installDismissed,setInstallDismissed]=useState(()=>load('installDismissed',false));
   const [isIOS]=useState(()=>/iPad|iPhone|iPod/.test(navigator.userAgent));
@@ -675,6 +677,12 @@ export default function ObrizApp() {
 
   const openMicro=(id)=>{setMicroActive(id);setMicroDone(false);setMicroMsg("");};
   const closeMicro=()=>{setMicroActive(null);setMicroDone(false);};
+
+  const handleMirrorTransitionToReset=(sessionId)=>{
+    setShowMirrorMode(false);
+    startSession(sessionId);
+    setScreen("player");
+  };
   const completeMicro=(msg,scoreBoost)=>{setMicroDone(true);setMicroMsg(msg);setNsScore(s=>Math.min(100,s+scoreBoost));setScoreHistory(h=>[...h.slice(-6),Math.min(100,nsScore+scoreBoost)]);};
 
   const cur=activeSession?sessions.find(s=>s.id===activeSession):null;
@@ -913,11 +921,37 @@ export default function ObrizApp() {
   // ══════════ RITUALS ══════════
   const renderRituals=()=>(
     <div style={{padding:"56px 22px 120px"}}>
-      <div style={{textAlign:"center",marginBottom:36}}>
+      <div style={{textAlign:"center",marginBottom:28}}>
         <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,marginBottom:6}}>Face Rituals</p>
         <h1 style={{fontSize:22,fontWeight:400,color:B.cream,margin:0}}>Ritual Guides</h1>
         <p style={{fontSize:13,color:B.muted,marginTop:6,fontStyle:"italic"}}>Sculpt, de-puff, and lift — guided step by step.</p>
       </div>
+
+      {/* ── Smart Scan Hero Card ── */}
+      <button
+        onClick={()=>setShowMirrorMode(true)}
+        style={{width:"100%",background:`linear-gradient(135deg, ${B.card} 0%, #2A1A0C 100%)`,border:`1px solid ${B.borderActive}`,borderRadius:22,padding:"24px 22px",cursor:"pointer",textAlign:"left",marginBottom:20,position:"relative",overflow:"hidden"}}>
+        {/* Subtle orb bg */}
+        <div style={{position:"absolute",top:-30,right:-30,width:160,height:160,borderRadius:"50%",background:`radial-gradient(circle, ${B.gold}08 0%, transparent 70%)`}}/>
+        <div style={{position:"relative",zIndex:2}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+            <div style={{width:38,height:38,borderRadius:"50%",background:`${B.gold}12`,border:`1px solid ${B.gold}25`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              <Camera size={16} color={B.gold}/>
+            </div>
+            <div>
+              <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:0}}>New · Smart Face Scan</p>
+              <h3 style={{fontSize:16,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>Mirror Mode</h3>
+            </div>
+          </div>
+          <p style={{fontSize:12,color:B.creamMuted,margin:"0 0 14px",fontFamily:SF,lineHeight:1.55}}>RHEI reads your face, maps where you're holding tension today, and guides your ritual live — on your actual face.</p>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
+            <span style={{fontSize:11,color:B.gold,fontFamily:SF,fontWeight:500}}>Begin Smart Scan</span>
+            <ArrowRight size={12} color={B.gold}/>
+          </div>
+        </div>
+      </button>
+
+      <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,marginBottom:12}}>Or choose your ritual</p>
 
       {rituals.map(r=>{
         const locked = r.isPremium && !isPremium;
@@ -1194,6 +1228,7 @@ export default function ObrizApp() {
       {showCheckin&&renderCheckin()}
       {microActive&&renderMicro()}
       {activeRitual&&<RitualPlayer ritual={activeRitual} onClose={()=>setActiveRitual(null)}/>}
+      {showMirrorMode&&<FaceMirrorMode onClose={()=>setShowMirrorMode(false)} onTransitionToReset={handleMirrorTransitionToReset} rituals={rituals} isPremium={isPremium}/>}
       {/* Bottom Nav */}
       <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:`${B.bgDeep}F0`,backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`1px solid ${B.border}`,display:"flex",justifyContent:"space-around",padding:"11px 0 env(safe-area-inset-bottom, 26px)",paddingBottom:"max(env(safe-area-inset-bottom), 26px)",zIndex:50}}>
         {navBtn("home",Home,"Home")}
