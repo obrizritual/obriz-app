@@ -5,8 +5,8 @@ import FaceMirrorMode from "./FaceMirrorMode";
 import FaceGuideIllustration from "./FaceGuideIllustration";
 
 /* ═══════════════════════════════════════════
-   RHEI — Luxury Nervous System Wellness App
-   v2.0 — Personalized + Ritual Guides + Premium
+   RHEI — Your face is where your nervous system shows.
+   v3.0 — Face-first. Everything else follows.
    ═══════════════════════════════════════════ */
 
 const B = {
@@ -22,120 +22,138 @@ const B = {
 const F = "'Georgia','Times New Roman',serif";
 const SF = "system-ui,-apple-system,sans-serif";
 
-// ── Data ──
+// ── Audio Resets ──
 const sessions = [
-  { id:1, title:"Morning Reset", subtitle:"Before you reach for anything", duration:179, icon:Sun, description:"Regulates your cortisol awakening response. Sets your nervous system tone before the day begins.", technique:"Extended exhale breathing · Somatic grounding · Vagal humming", bestFor:"First minutes after waking", timeOfDay:"morning", audioFile:"/audio/morning-reset.mp3" },
-  { id:2, title:"Pre-Meeting Reset", subtitle:"Walk in composed, not wired", duration:200, icon:Shield, description:"Activates vagal tone and grounds your nervous system before high-stakes moments.", technique:"Physiological sigh · Somatic grounding · Cognitive reframe", bestFor:"5 minutes before any demanding interaction", timeOfDay:"any", audioFile:"/audio/pre-meeting-reset.mp3" },
-  { id:3, title:"The Transition", subtitle:"From performance to presence", duration:234, icon:Sunset, description:"Downregulates your nervous system during the shift from work to personal life.", technique:"Progressive release · Body scan · Identity unbinding", bestFor:"The commute home, or before walking through the door", timeOfDay:"evening", audioFile:"/audio/transition-reset.mp3" },
-  { id:4, title:"Post-Conflict Reset", subtitle:"Release what isn't yours to carry", duration:194, icon:Wind, description:"Releases physiological activation that lingers after stressful interactions.", technique:"Bilateral stimulation · Physiological sigh · Self-compassion", bestFor:"After difficult conversations or emotional labor", timeOfDay:"any", audioFile:"/audio/post-conflict-reset.mp3" },
-  { id:5, title:"General Reset", subtitle:"Your three-minute recalibration", duration:172, icon:RefreshCw, description:"The foundational nervous system reset. Use anytime, anywhere — your daily regulation anchor.", technique:"Diaphragmatic breathing · Body awareness · Vagal activation", bestFor:"Any moment you need to come back to yourself", timeOfDay:"any", audioFile:"/audio/general-reset.mp3" },
+  { id:1, title:"Morning", subtitle:"Before the day begins", duration:179, icon:Sun, description:"Your cortisol peaks in the first hour. This sets the tone before anything else can.", technique:"Extended exhale · Somatic grounding · Vagal humming", bestFor:"First minutes after waking", timeOfDay:"morning", audioFile:"/audio/morning-reset.mp3", occasion:"morning" },
+  { id:2, title:"Before", subtitle:"Walk in composed", duration:200, icon:Shield, description:"The body reads a high-stakes moment as threat. This returns it to choice.", technique:"Physiological sigh · Grounding · Cognitive anchor", bestFor:"Five minutes before anything that matters", timeOfDay:"any", audioFile:"/audio/pre-meeting-reset.mp3", occasion:"event" },
+  { id:3, title:"After", subtitle:"Come home to yourself", duration:234, icon:Sunset, description:"Performance mode lingers. This is the release valve between who you are at work and who you are at home.", technique:"Progressive release · Body scan · Identity shift", bestFor:"The commute. The threshold. Before you walk in.", timeOfDay:"evening", audioFile:"/audio/transition-reset.mp3", occasion:"evening" },
+  { id:4, title:"Release", subtitle:"Put down what isn't yours", duration:194, icon:Wind, description:"After a hard conversation, the body stays activated. This is how you actually leave it.", technique:"Bilateral stimulation · Physiological sigh · Self-return", bestFor:"After conflict, emotional labor, or anything that cost you", timeOfDay:"any", audioFile:"/audio/post-conflict-reset.mp3", occasion:"recovery" },
+  { id:5, title:"Return", subtitle:"Come back", duration:172, icon:RefreshCw, description:"The anchor. Anytime. Anywhere. Three minutes to find yourself again.", technique:"Diaphragmatic breathing · Body awareness · Vagal activation", bestFor:"Any moment you've lost the thread", timeOfDay:"any", audioFile:"/audio/general-reset.mp3", occasion:"any" },
 ];
 
 const nsStates = [
-  { id:"wired", label:"Wired", sublabel:"Activated, on edge, can't settle", icon:Zap, color:"#C4786A", recommended:[2,4], score:25 },
-  { id:"foggy", label:"Foggy", sublabel:"Disconnected, running on empty", icon:Brain, color:"#8A9BAF", recommended:[1,3], score:35 },
-  { id:"reactive", label:"Reactive", sublabel:"Emotions close to the surface", icon:Activity, color:"#A08BAA", recommended:[4,2], score:30 },
-  { id:"exhausted", label:"Exhausted", sublabel:"Tired but can't rest", icon:Moon, color:"#7A8B99", recommended:[5,3], score:20 },
-  { id:"steady", label:"Steady", sublabel:"Present but not quite settled", icon:Waves, color:"#8BAA8B", recommended:[1,5], score:60 },
-  { id:"composed", label:"Composed", sublabel:"Regulated and grounded", icon:Heart, color:"#5A8A5A", recommended:[1], score:85 },
+  { id:"wired", label:"Wired", sublabel:"Jaw tight. Edges up. Can't land.", icon:Zap, color:"#C4786A", recommended:[2,4], ritualId:"gua-sha", score:25 },
+  { id:"foggy", label:"Heavy", sublabel:"Face puffy. Running on empty.", icon:Brain, color:"#8A9BAF", recommended:[1,3], ritualId:"lymphatic", score:35 },
+  { id:"reactive", label:"Raw", sublabel:"Everything close to the surface.", icon:Activity, color:"#A08BAA", recommended:[4,2], ritualId:"buccal", score:30 },
+  { id:"exhausted", label:"Depleted", sublabel:"Drained but can't rest.", icon:Moon, color:"#7A8B99", recommended:[5,3], ritualId:"eye-revival", score:20 },
+  { id:"steady", label:"Present", sublabel:"Here. Almost settled.", icon:Waves, color:"#8BAA8B", recommended:[1,5], ritualId:"gua-sha", score:60 },
+  { id:"composed", label:"Clear", sublabel:"Arrived.", icon:Heart, color:"#5A8A5A", recommended:[1], ritualId:"gua-sha", score:85 },
 ];
 
 // ── Ritual Guide Data ──
 const rituals = [
   {
-    id: "gua-sha", title: "Gua Sha Sculpt", subtitle: "Define your natural bone structure",
+    id: "gua-sha", title: "The Sculptor", subtitle: "Define what stress has softened",
     duration: "8 min", isPremium: false, svgFile: "/svgs/gua-sha-zones.svg",
-    description: "A sculpting routine that follows the natural contours of your face. Reduces puffiness, defines jawline and cheekbones.",
-    tools: "Gua sha stone or clean fingers",
+    description: "Your jawline is where you've been clenching. Your cheekbones are where stress accumulates. This moves everything held there — defines, lifts, and releases in one arc.",
+    tools: "Gua sha stone or clean fingers · facial oil",
+    occasion: "morning", audioFollowUp: 1,
     steps: [
-      { title: "Warm & Prepare", duration: 30, instruction: "Apply a few drops of facial oil. Warm the gua sha tool between your palms for a moment.", zone: "full" },
-      { title: "Neck Drainage", duration: 45, instruction: "Starting behind the ears, use long downward strokes along each side of the neck to open lymphatic pathways.", zone: "neck", direction: "↓ Downward strokes" },
-      { title: "Jawline Sculpting", duration: 60, instruction: "Place the tool at the center of your chin. Sweep firmly along the jawline toward the ear. Repeat 5 times each side.", zone: "jawline", direction: "→ Outward from chin" },
-      { title: "Cheek Lifting", duration: 60, instruction: "Start at the corner of your mouth. Sweep upward across the cheekbone toward the temple. Firm, slow pressure.", zone: "cheeks", direction: "↗ Upward & outward" },
-      { title: "Under-Eye Drainage", duration: 45, instruction: "Very gentle pressure only. Sweep from the inner corner of the eye outward along the orbital bone. Featherlight.", zone: "undereye", direction: "→ Gentle outward" },
-      { title: "Brow Smoothing", duration: 45, instruction: "Start between your brows. Sweep outward along the brow bone toward the temple. Release tension in the frontalis muscle.", zone: "brow", direction: "→ Outward to temple" },
-      { title: "Forehead Lifting", duration: 60, instruction: "Starting at the eyebrows, sweep upward toward the hairline. Alternate between center and sides.", zone: "forehead", direction: "↑ Upward to hairline" },
-      { title: "Final Integration", duration: 30, instruction: "Return to the neck. Three long, slow drainage strokes from behind each ear down to the collarbone.", zone: "neck", direction: "↓ Final drainage" },
+      { title: "Ground yourself first", duration: 30, instruction: "Oil your hands. Warm the stone between your palms until it disappears into heat. One slow breath before you touch your face.", zone: "full" },
+      { title: "Open the path", duration: 45, instruction: "Start behind the ear — where your jaw tension drains. Long, slow strokes down each side of your neck. You're making space for what's about to release.", zone: "neck", direction: "↓ Ear to collarbone" },
+      { title: "Find your jaw", duration: 60, instruction: "Start at the center of your chin. Feel the line of your jaw — that ridge where you've been holding everything. Sweep firmly outward toward the ear. Five times each side.", zone: "jawline", direction: "→ Outward from chin" },
+      { title: "Lift the cheek", duration: 60, instruction: "From the corner of your mouth, sweep upward across your cheekbone toward the temple. Slow, deliberate pressure. You're asking the muscle to let go.", zone: "cheeks", direction: "↗ Up and outward" },
+      { title: "The lightest touch", duration: 45, instruction: "Under your eye — lightest touch you own. From inner corner outward along the bone. This area holds what you haven't said yet. Gentle.", zone: "undereye", direction: "→ Inner to outer" },
+      { title: "Between your brows", duration: 45, instruction: "Between your brows is where concentration lives. Sweep outward toward the temple. Feel the muscle soften as you go.", zone: "brow", direction: "→ Brow to temple" },
+      { title: "Sweep upward", duration: 60, instruction: "Brows to hairline. Center, then sides. Your forehead holds more than you think. Sweep it up.", zone: "forehead", direction: "↑ Up to hairline" },
+      { title: "Let it drain", duration: 30, instruction: "Back to the neck. Three long strokes from behind each ear down to the collarbone. You've done the work. Let it go.", zone: "neck", direction: "↓ Final release" },
     ]
   },
   {
-    id: "lymphatic", title: "Lymphatic Drainage", subtitle: "De-puff and restore natural glow",
+    id: "lymphatic", title: "The Revival", subtitle: "Restore what fatigue has taken",
     duration: "6 min", isPremium: true, svgFile: "/svgs/lymphatic-paths.svg",
-    description: "Follows the lymphatic system's natural pathways to reduce fluid retention, decrease puffiness, and promote detoxification.",
-    tools: "Clean fingertips — no tools needed",
+    description: "When your face reads tired before you feel it — swollen, dull, drawn — this is the reason. Fluid has pooled where it should move. The Revival moves it.",
+    tools: "Clean fingertips only — no tools",
+    occasion: "morning", audioFollowUp: 5,
     steps: [
-      { title: "Activate Lymph Nodes", duration: 30, instruction: "Place fingertips behind each ear where the skull meets the neck. Apply gentle pulsing pressure 10 times.", zone: "nodes" },
-      { title: "Open the Neck", duration: 45, instruction: "Using flat fingers, stroke down each side of the neck from ear to collarbone. Light pressure — you're moving fluid, not muscle.", zone: "neck", direction: "↓ Ear to collarbone" },
-      { title: "Drain the Forehead", duration: 40, instruction: "Place all fingers across your forehead. Sweep outward from center to temples, then down in front of the ears.", zone: "forehead", direction: "→ then ↓" },
-      { title: "Orbital Drainage", duration: 45, instruction: "Using ring fingers, trace the orbital bone from inner corner of eye, under the eye to outer corner, then up and over the brow back to start.", zone: "orbital", direction: "○ Circular path" },
-      { title: "Cheek Drainage", duration: 45, instruction: "Starting beside the nose, sweep outward across the cheeks toward the ears. Follow the natural drainage pathways.", zone: "cheeks", direction: "→ Nose to ears" },
-      { title: "Mandibular Line", duration: 40, instruction: "Trace the jawline from chin to ear with gentle sweeping pressure. This clears the mandibular lymph chain.", zone: "jawline", direction: "→ Chin to ear" },
-      { title: "Final Flush", duration: 45, instruction: "Repeat the neck strokes from step 2. Finish with gentle pressure on the collarbone nodes for 10 counts.", zone: "neck", direction: "↓ Complete drainage" },
+      { title: "Start here", duration: 30, instruction: "Find the groove behind each ear where your skull meets your neck. Press gently and pulse. Ten times. This is where everything begins.", zone: "nodes" },
+      { title: "Open the path", duration: 45, instruction: "Flat fingers down each side of the neck. Light — you're not working muscle, you're asking fluid to move. Ear to collarbone. Twice.", zone: "neck", direction: "↓ Ear to collarbone" },
+      { title: "The forehead", duration: 40, instruction: "All fingers across your forehead. Sweep outward toward the temples, then down in front of the ears. You're draining what accumulated while you were thinking.", zone: "forehead", direction: "→ then ↓" },
+      { title: "Around the eye", duration: 45, instruction: "Ring fingers only. Under the eye from inner corner outward, up and over the brow, back to start. A full slow circle. This is where fatigue shows first.", zone: "orbital", direction: "○ Full orbital" },
+      { title: "Across the cheek", duration: 45, instruction: "Beside the nose, sweep outward toward the ears. The skin here remembers every hard day. Move it gently.", zone: "cheeks", direction: "→ Nose to ears" },
+      { title: "Along the jaw", duration: 40, instruction: "Trace your jaw from chin to ear. Gentle. This chain carries everything the jaw has been holding.", zone: "jawline", direction: "→ Chin to ear" },
+      { title: "End at the collar", duration: 45, instruction: "Return to the neck. Down from ear to collarbone. End at the collarbone — press and hold for ten counts. Everything goes here. Let it.", zone: "neck", direction: "↓ Final flush" },
     ]
   },
   {
-    id: "face-lift", title: "Face Lifting", subtitle: "Natural lift through targeted pressure",
+    id: "face-lift", title: "The Lift", subtitle: "Reclaim what gravity has borrowed",
     duration: "7 min", isPremium: true, svgFile: "/svgs/face-lifting-points.svg",
-    description: "Strategic pressure point activation combined with lifting techniques. Targets areas most affected by gravity and tension.",
-    tools: "Clean fingertips with facial oil",
+    description: "Gravity and tension pull down over time. Not through surgery — through muscle fatigue. The Lift works the pressure points that counteract the downward pull. You'll feel it immediately.",
+    tools: "Clean fingertips · facial oil",
+    occasion: "evening", audioFollowUp: 3,
     steps: [
-      { title: "Temple Activation", duration: 35, instruction: "Place fingertips on temples. Apply firm circular pressure for 10 rotations. This releases the temporal fascia.", zone: "temples" },
-      { title: "Brow Lift Points", duration: 45, instruction: "Find the bony ridge above your eyebrow. Press and hold at the inner, middle, and outer points for 5 seconds each. Then sweep upward.", zone: "brow", direction: "↑ Press & lift" },
-      { title: "Cheekbone Definition", duration: 50, instruction: "Hook fingertips under the cheekbone. Apply upward pressure while slightly opening the mouth. Hold 5 seconds, release. Repeat 5 times.", zone: "cheeks", direction: "↑ Hook & lift" },
-      { title: "Nasolabial Release", duration: 45, instruction: "Place index fingers beside each nostril. Sweep firmly outward and upward along the nasolabial fold toward the cheekbone.", zone: "nasolabial", direction: "↗ Outward & up" },
-      { title: "Jawline Sculpt", duration: 50, instruction: "Make a fist. Use your knuckles to sweep along the jawline from chin to ear with firm upward pressure.", zone: "jawline", direction: "→↑ Knuckle sweep" },
-      { title: "Marionette Lift", duration: 40, instruction: "Place fingers at the corners of your mouth. Press and sweep upward toward the cheekbone. Counteracts downward pull.", zone: "marionette", direction: "↑ Corner to cheek" },
-      { title: "Neck & Platysma", duration: 50, instruction: "Place both hands flat on the chest. Sweep upward along the front of the neck to the chin. Firms the platysma muscle.", zone: "neck", direction: "↑ Chest to chin" },
-      { title: "Integration Hold", duration: 30, instruction: "Cup your entire face gently. Hold with light lifting pressure for 10 seconds. Release slowly. Feel the difference.", zone: "full" },
+      { title: "The temples", duration: 35, instruction: "Fingertips on your temples. Firm, slow circles for ten rotations. The temporal fascia holds everything above it. Release it first.", zone: "temples" },
+      { title: "The brow bone", duration: 45, instruction: "Find the bony ridge above your eye. Three pressure points: inner, middle, outer. Hold each five seconds. Then sweep the whole thing upward.", zone: "brow", direction: "↑ Press, then lift" },
+      { title: "The cheekbone", duration: 50, instruction: "Hook your fingertips under the cheekbone. Lift upward while you open your mouth slightly. Hold five seconds. Release. Do it five times each side. Feel it.", zone: "cheeks", direction: "↑ Hook and lift" },
+      { title: "The nasolabial fold", duration: 45, instruction: "Beside each nostril. Sweep firmly outward and upward toward the cheekbone. You're redirecting the pull of the face upward.", zone: "nasolabial", direction: "↗ Out and up" },
+      { title: "The jawline", duration: 50, instruction: "Make a fist. Knuckles along the jaw from chin to ear — firm, slow, upward pressure. This lifts the whole lower face.", zone: "jawline", direction: "→↑ Knuckle sweep" },
+      { title: "The corners", duration: 40, instruction: "Fingers at the corners of your mouth. Press and sweep upward toward the cheekbone. This is what the marionette lines are asking for.", zone: "marionette", direction: "↑ Corner to cheek" },
+      { title: "The neck", duration: 50, instruction: "Both hands flat on your chest. Sweep upward along the front of the neck to the chin. The platysma — the muscle that pulls the jaw down — releases here.", zone: "neck", direction: "↑ Chest to chin" },
+      { title: "Hold it", duration: 30, instruction: "Cup your entire face in your palms. Light lifting pressure. Hold ten seconds. Release slowly. Notice the difference.", zone: "full" },
     ]
   },
   {
-    id: "buccal", title: "Buccal Release", subtitle: "The $400 facial, at home",
+    id: "buccal", title: "The Release", subtitle: "Reach what no surface massage can",
     duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg",
-    description: "The most talked-about technique in luxury facial therapy. Targets deep jaw and cheek muscles that no surface massage can reach. Visibly releases tension and defines the jawline.",
+    description: "The jaw holds more than you know. The Release targets the deep muscles no gua sha stone reaches — the masseter, the buccinator, the TMJ. This is where years of holding live.",
     tools: "Clean hands · facial oil",
+    occasion: "recovery", audioFollowUp: 4,
     steps: [
-      { title: "Activate the Masseter", duration: 45, instruction: "Place fingertips on your jaw hinge — where your jaw opens and closes. Apply firm circular pressure inward and upward. You're reaching the deepest layer of the masseter muscle.", zone: "jawline", direction: "○ Circular inward" },
-      { title: "Cheek Muscle Press", duration: 50, instruction: "Move to your cheeks. Press firmly against the bone and hold for 3 seconds, then slowly drag upward toward the cheekbone. Feel the buccinator release under your fingers.", zone: "cheeks", direction: "↑ Press and drag" },
-      { title: "Deep Cheek Release", duration: 45, instruction: "Using knuckle pressure, press into the fleshy part of each cheek between cheekbone and jaw. Hold 5 seconds, release, repeat along the line. You may feel surprising tension here.", zone: "cheeks", direction: "— Hold and release" },
+      { title: "The jaw hinge", duration: 45, instruction: "Press your fingertips into the hinge of your jaw — where it opens and closes. Apply firm, slow circles inward and upward. You're reaching the muscle that's been clenching since before you noticed.", zone: "jawline", direction: "○ Inward and up" },
+      { title: "The cheek", duration: 50, instruction: "Move to your cheeks. Press firmly against the bone. Hold three seconds, then drag slowly upward toward the cheekbone. Feel what releases under your fingers.", zone: "cheeks", direction: "↑ Hold, then lift" },
+      { title: "The deep hold", duration: 45, instruction: "Knuckle pressure into the fleshy center of each cheek — between cheekbone and jaw. Hold five seconds, release, move along the line. There will be more tension here than you expected.", zone: "cheeks", direction: "— Hold and release" },
       { title: "Jaw Decompression", duration: 60, instruction: "Interlock fingers under your chin. Apply gentle upward traction while slowly tilting your head back slightly. Hold 5 seconds. This decompresses the jaw joint — you may hear a subtle release.", zone: "jawline", direction: "↑ Gentle traction" },
       { title: "TMJ Integration", duration: 40, instruction: "Return to the jaw hinge. Alternate between pressing and releasing rhythmically, allowing the joint to settle. Finish with three slow, wide jaw openings. Exhale on each open.", zone: "jawline", direction: "○ Press, breathe, release" },
       { title: "Final Drain", duration: 40, instruction: "Long, slow strokes from behind the ears down the neck to the collarbone. Three passes each side. This drains everything the jaw just released into the lymphatic system.", zone: "neck", direction: "↓ Behind ear to collar" },
     ]
   },
   {
-    id: "pre-event", title: "Pre-Event Glow", subtitle: "5 minutes to camera-ready",
+    id: "pre-event", title: "Before", subtitle: "Show up at your best",
     duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg",
-    description: "The ritual for before a presentation, shoot, dinner, or any moment where you need to show up at your best. De-puffs, defines, and illuminates in exactly 5 minutes.",
+    description: "Before a presentation, shoot, dinner — anything that requires you at full capacity. Five minutes. The result is immediate and visible.",
     tools: "Gua sha stone or clean fingertips · facial oil",
+    occasion: "event", audioFollowUp: 2,
     steps: [
-      { title: "Emergency Lymph Flush", duration: 30, instruction: "Five quick taps behind each ear, then sweep down both sides of the neck to the collarbone. This opens the lymphatic pathways before everything else. Non-negotiable first step.", zone: "nodes", direction: "↓ Neck flush" },
-      { title: "Under-Eye Depuff", duration: 45, instruction: "Using ring fingers or a cold tool — sweep from the inner corner outward under each eye with featherlight pressure. Three passes. You will see the difference before you finish.", zone: "undereye", direction: "→ Inner to outer" },
-      { title: "Cheekbone Define", duration: 45, instruction: "Hook fingertips under the cheekbone and sweep upward and outward in one fluid motion. Five passes each side, increasing firmness. This creates visible lift within seconds.", zone: "cheeks", direction: "↗ Hook and lift" },
-      { title: "Jawline Sculpt", duration: 45, instruction: "From center of chin, sweep firmly along the jawline to the ear. Five passes each side, increasing firmness each time. This defines the jaw instantly — the most visible single move.", zone: "jawline", direction: "→ Chin to ear" },
-      { title: "Forehead Smooth", duration: 30, instruction: "Three sweeping passes from the brow to the hairline. Lifts the brow and smooths expression lines before they set. Use the flat of the gua sha or all four fingers together.", zone: "forehead", direction: "↑ Brow to hairline" },
-      { title: "Set & Illuminate", duration: 30, instruction: "One complete pass from neck to forehead: neck drain, jawline out, cheekbone up, forehead lift. Light, fast, fluid. This seals everything. You are ready.", zone: "full", direction: "Complete seal" },
+      { title: "Open the drain", duration: 30, instruction: "Five quick taps behind each ear, then sweep down both sides of the neck. Opens the lymphatic path before anything else moves. Do this first. Always.", zone: "nodes", direction: "↓ Neck first" },
+      { title: "The eyes", duration: 45, instruction: "Ring fingers or a cold tool. Under each eye, sweep from inner corner outward. Lightest touch. Three passes. You'll see the difference before you're done.", zone: "undereye", direction: "→ Inner to outer" },
+      { title: "The cheekbone", duration: 45, instruction: "Hook under the cheekbone. Sweep upward and outward in one fluid motion. Five passes each side, increasing firmness. Visible lift within seconds.", zone: "cheeks", direction: "↗ Hook and lift" },
+      { title: "The jaw", duration: 45, instruction: "From center of chin, sweep firmly along the jawline to the ear. Five passes each side. This is the most visible single move. Don't skip it.", zone: "jawline", direction: "→ Chin to ear" },
+      { title: "The forehead", duration: 30, instruction: "Three sweeping passes from brow to hairline. Lifts the brow. Smooths what's been furrowed. Use the flat of the tool or all four fingers together.", zone: "forehead", direction: "↑ Brow to hairline" },
+      { title: "You're ready", duration: 30, instruction: "One complete pass: neck down, jaw out, cheek up, forehead up. Light, fast, fluid. This seals it.", zone: "full", direction: "The seal" },
     ]
   },
   {
-    id: "eye-revival", title: "Eye Revival", subtitle: "Brighten, lift, and open",
+    id: "eye-revival", title: "The Eye", subtitle: "Return light to where it's been lost",
     duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg",
-    description: "Targets the most emotionally visible area of your face. Reduces dark circles, releases crow's feet tension, and lifts hooded lids through precise orbital and pressure point work.",
+    description: "The eye area is where fatigue reads before you feel it — dark, puffy, heavy. The Eye drains what's pooled there and releases the tension that makes the lid drop and the brow furrow.",
     tools: "Ring fingers · eye cream or serum",
+    occasion: "morning", audioFollowUp: 5,
     steps: [
-      { title: "Orbital Lymph Drain", duration: 40, instruction: "Trace the full orbital bone three times — starting inner corner, under the eye, around outer corner, over the brow. Light as butterfly wings. This drains the entire orbital area.", zone: "undereye", direction: "○ Full orbital circle" },
-      { title: "Inner Corner Press", duration: 35, instruction: "Press the inner corner of each eye — the tear duct area — with your ring finger. Hold 5 seconds, breathe, release. This pressure point drains the congestion that causes dark circles.", zone: "undereye", direction: "● Hold 5 seconds" },
-      { title: "Crow's Foot Release", duration: 45, instruction: "Ring fingers at the outer corner of each eye. Tiny, gentle circular movements, the lightest possible pressure. You're releasing the orbicularis oculi muscle. This area holds more tension than most people realize.", zone: "undereye", direction: "○ Tiny circles" },
-      { title: "Upper Lid Drainage", duration: 40, instruction: "Eyes closed. Ring fingers on upper lids. Sweep from inner corner to outer corner — featherlight, three slow passes. You're moving fluid that pools here overnight.", zone: "undereye", direction: "→ Inner to outer lid" },
-      { title: "Brow Bone Activation", duration: 35, instruction: "Three pressure points along the brow bone: inner, middle, and outer edge. Press firmly for 5 seconds each. This releases the corrugator muscle — the one that creates the furrowed, heavy look.", zone: "brow", direction: "● Three points, 5s each" },
-      { title: "Final Orbital Sweep", duration: 45, instruction: "From the bridge of the nose, sweep outward under each eye to the temple, continue down in front of the ear to the jaw. The complete orbital drainage path. End here.", zone: "undereye", direction: "→ ↓ Sweep and drain" },
+      { title: "The full orbit", duration: 40, instruction: "Trace the full orbital bone — inner corner, under the eye, outer corner, over the brow, back to start. Three full slow circles. Light as you've ever touched anything.", zone: "undereye", direction: "○ Full orbital circle" },
+      { title: "The tear duct", duration: 35, instruction: "Press your ring finger into the inner corner of each eye. Hold five seconds. Breathe. Release. This is where dark circles drain from. Press it.", zone: "undereye", direction: "● Hold 5 seconds" },
+      { title: "The outer corner", duration: 45, instruction: "Ring fingers at the outer corner of each eye. Tiny, gentle circles. Lightest possible pressure. The orbicularis oculi muscle holds more tension here than you know.", zone: "undereye", direction: "○ Tiny circles" },
+      { title: "The upper lid", duration: 40, instruction: "Eyes closed. Ring fingers on your upper lids. Sweep from inner corner to outer — featherlight, three slow passes. You're moving what's been pooling here while you slept.", zone: "undereye", direction: "→ Inner to outer lid" },
+      { title: "The brow bone", duration: 35, instruction: "Three pressure points along the brow bone: inner, middle, outer edge. Press firmly, five seconds each. This releases the corrugator — the muscle that pulls the brow down and makes the eye look heavy.", zone: "brow", direction: "● Three points" },
+      { title: "The drain", duration: 45, instruction: "From the bridge of the nose, sweep under each eye to the temple, then down in front of the ear to the jaw. The complete orbital drainage path. End here and feel what's shifted.", zone: "undereye", direction: "→ ↓ Full drain" },
     ]
   },
 ];
 
 const fmt = (s) => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`;
 const greetUser = (name) => { const h=new Date().getHours(); const g=h<12?"Good morning":h<17?"Good afternoon":"Good evening"; return name?`${g}, ${name}`:g; };
+const greetShort = () => { const h=new Date().getHours(); if(h<10)return"This morning"; if(h<14)return"This midday"; if(h<18)return"This afternoon"; return"This evening"; };
 const timeCtx = () => { const h=new Date().getHours(); if(h<6)return"night"; if(h<10)return"morning"; if(h<14)return"midday"; if(h<18)return"afternoon"; if(h<21)return"evening"; return"night"; };
+// Recommend a ritual + audio arc based on state and time
+const getArc = (checkinState, tc) => {
+  if(checkinState) {
+    const r = rituals.find(x=>x.id===checkinState.ritualId) || rituals[0];
+    const a = sessions.find(x=>x.id===(r.audioFollowUp||1)) || sessions[0];
+    return { ritual:r, audio:a };
+  }
+  if(tc==="morning") return { ritual:rituals[0], audio:sessions[0] };
+  if(tc==="evening") return { ritual:rituals[2], audio:sessions[2] };
+  return { ritual:rituals[0], audio:sessions[4] };
+};
 const load = (k,fb) => { try { const v=localStorage.getItem(`obriz_${k}`); return v!==null?JSON.parse(v):fb; } catch{return fb;} };
 const save = (k,v) => { try{localStorage.setItem(`obriz_${k}`,JSON.stringify(v));}catch{} };
 
@@ -321,8 +339,8 @@ function GuideComplete({ message, onClose }) {
       <div style={{width:72,height:72,borderRadius:"50%",background:`${B.gold}15`,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:20,border:`1px solid ${B.gold}30`}}>
         <Check size={30} color={B.gold}/>
       </div>
-      <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>Reset complete</h2>
-      <p style={{fontSize:13,color:B.muted,fontStyle:"italic",margin:"0 0 8px",fontFamily:F}}>Your nervous system thanks you.</p>
+      <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>You showed up.</h2>
+      <p style={{fontSize:13,color:B.muted,fontStyle:"italic",margin:"0 0 8px",fontFamily:F}}>Your face, your nervous system — both listened.</p>
       <p style={{fontSize:12,color:B.gold,fontFamily:SF,margin:"0 0 32px"}}>{message}</p>
       <button onClick={onClose} style={{background:B.goldGrad,border:"none",borderRadius:28,padding:"13px 36px",cursor:"pointer",color:B.warmBlack,fontSize:13,fontFamily:SF,letterSpacing:1,fontWeight:500}}>Continue</button>
     </div>
@@ -397,7 +415,7 @@ function RitualPlayer({ ritual, onClose }) {
             <p style={{fontSize:10,color:B.gold,margin:"0 0 4px",fontFamily:SF,letterSpacing:1,textTransform:"uppercase"}}>You'll need</p>
             <p style={{fontSize:12,color:B.creamMuted,margin:0,fontFamily:SF}}>{ritual.tools}</p>
           </div>
-          <button onClick={()=>setStep(0)} style={{width:"100%",background:B.goldGrad,border:"none",borderRadius:28,padding:"16px",cursor:"pointer",color:B.warmBlack,fontSize:14,fontFamily:SF,letterSpacing:1,fontWeight:600,boxShadow:`0 6px 28px ${B.gold}30`}}>Begin Ritual</button>
+          <button onClick={()=>setStep(0)} style={{width:"100%",background:B.goldGrad,border:"none",borderRadius:28,padding:"16px",cursor:"pointer",color:B.warmBlack,fontSize:14,fontFamily:SF,letterSpacing:1,fontWeight:600,boxShadow:`0 6px 28px ${B.gold}30`}}>Begin</button>
         </div>
       </div>
     );
@@ -411,10 +429,10 @@ function RitualPlayer({ ritual, onClose }) {
           <div style={{width:80,height:80,borderRadius:"50%",background:`${B.gold}15`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px",border:`1px solid ${B.gold}30`}}>
             <Sparkles size={32} color={B.gold}/>
           </div>
-          <h2 style={{fontSize:24,color:B.cream,fontWeight:400,margin:"0 0 8px",fontFamily:F}}>Ritual Complete</h2>
-          <p style={{fontSize:14,color:B.muted,fontStyle:"italic",margin:"0 0 6px",fontFamily:F}}>You showed up for yourself.</p>
-          <p style={{fontSize:12,color:B.gold,fontFamily:SF,margin:"0 0 36px"}}>{ritual.title} · {ritual.duration}</p>
-          <button onClick={onClose} style={{background:B.goldGrad,border:"none",borderRadius:28,padding:"14px 40px",cursor:"pointer",color:B.warmBlack,fontSize:14,fontFamily:SF,letterSpacing:1,fontWeight:500}}>Done</button>
+          <h2 style={{fontSize:24,color:B.cream,fontWeight:400,margin:"0 0 8px",fontFamily:F}}>You showed up.</h2>
+          <p style={{fontSize:14,color:B.muted,fontStyle:"italic",margin:"0 0 6px",fontFamily:F}}>{ritual.title} — {ritual.duration}</p>
+          <p style={{fontSize:12,color:B.gold,fontFamily:SF,margin:"0 0 36px"}}>Your face held this. Now it's released.</p>
+          <button onClick={onClose} style={{background:B.goldGrad,border:"none",borderRadius:28,padding:"14px 40px",cursor:"pointer",color:B.warmBlack,fontSize:14,fontFamily:SF,letterSpacing:1,fontWeight:500}}>Continue</button>
         </div>
       </div>
     );
@@ -483,11 +501,11 @@ function Onboarding({ onComplete }) {
           <div style={{marginBottom:40}}>
             <h1 style={{fontSize:22,letterSpacing:14,color:B.gold,fontWeight:400,margin:"0 0 12px",fontFamily:F}}>RHEI</h1>
             <div style={{width:50,height:1,background:B.gold,margin:"0 auto 20px",opacity:0.4}}/>
-            <p style={{fontSize:20,color:B.cream,fontWeight:400,fontFamily:F,margin:"0 0 12px",lineHeight:1.4}}>Your nervous system<br/>deserves precision.</p>
-            <p style={{fontSize:13,color:B.muted,fontStyle:"italic",lineHeight:1.5}}>Not another meditation app. A regulation system for those who do too much and feel too deeply.</p>
+            <p style={{fontSize:20,color:B.cream,fontWeight:400,fontFamily:F,margin:"0 0 12px",lineHeight:1.4}}>Your face is where<br/>your nervous system shows.</p>
+            <p style={{fontSize:13,color:B.muted,fontStyle:"italic",lineHeight:1.55}}>The tension in your jaw. The weight under your eyes. The furrow that won't release. RHEI works there — precisely.</p>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:32}}>
-            {["5 guided reset sessions","Micro-interventions in under 60 seconds","Daily nervous system tracking","Face ritual guides"].map((f,i)=>(
+            {["6 guided face rituals","Audio resets that follow each ritual","Quick interventions for any moment","Your face as the diagnostic surface"].map((f,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:10,textAlign:"left"}}>
                 <div style={{width:20,height:20,borderRadius:"50%",background:`${B.gold}15`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
                   <Check size={10} color={B.gold}/>
@@ -747,7 +765,7 @@ export default function ObrizApp() {
   const container={width:"100%",maxWidth:430,margin:"0 auto",minHeight:"100vh",background:B.darkGrad,color:B.cream,fontFamily:F,position:"relative",overflow:"hidden"};
 
   const navBtn=(id,Icon,label)=>{
-    const a=screen===id||(id==="library"&&screen==="player");
+    const a=screen===id||(id==="rituals"&&(screen==="player"||screen==="library"));
     return(
       <button key={id} onClick={()=>id!=="player"&&setScreen(id)} style={{background:"none",border:"none",display:"flex",flexDirection:"column",alignItems:"center",gap:4,cursor:"pointer",opacity:a?1:0.35,transition:"opacity 0.3s",padding:"0 6px"}}>
         <Icon size={19} color={a?B.gold:B.cream} strokeWidth={a?2:1.5}/>
@@ -761,153 +779,142 @@ export default function ObrizApp() {
     return <Onboarding onComplete={(name)=>{setUserName(name);setOnboarded(true);save('onboarded',true);}} />;
   }
 
-  // ══════════ HOME ══════════
-  const renderHome=()=>(
-    <div style={{padding:"56px 22px 120px"}}>
-      <div style={{textAlign:"center",marginBottom:40}}>
-        <h1 style={{fontSize:20,letterSpacing:12,color:B.gold,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>RHEI</h1>
-        <div style={{width:40,height:1,background:B.gold,margin:"12px auto",opacity:0.4}}/>
-        <p style={{fontSize:22,fontWeight:400,color:B.cream,margin:"16px 0 0",fontFamily:F}}>{greetUser(userName)}</p>
-        <p style={{fontSize:13,color:B.muted,marginTop:6,fontStyle:"italic"}}>Your nervous system is listening.</p>
+  // ══════════ TODAY ══════════
+  const renderHome=()=>{
+    const tc = timeCtx();
+    const arc = getArc(checkinDone?checkinState:null, tc);
+    const isFirstTime = totalSessions === 0;
+    const ritualLocked = arc.ritual.isPremium && !isPremium;
+
+    return (
+    <div style={{padding:"52px 22px 120px"}}>
+
+      {/* Header */}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:32}}>
+        <div>
+          <h1 style={{fontSize:18,letterSpacing:10,color:B.gold,fontWeight:400,margin:0,fontFamily:F}}>RHEI</h1>
+          <p style={{fontSize:13,color:B.muted,margin:"4px 0 0",fontStyle:"italic",fontFamily:F}}>Your face is where it shows.</p>
+        </div>
+        <button onClick={()=>setScreen("premium")} style={{background:"none",border:`1px solid ${B.border}`,borderRadius:20,padding:"6px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
+          <Crown size={12} color={isPremium?B.gold:B.muted}/>
+          <span style={{fontSize:10,color:isPremium?B.gold:B.muted,fontFamily:SF,letterSpacing:0.5}}>{isPremium?"Premium":"Unlock"}</span>
+        </button>
       </div>
 
       {/* Install prompt */}
       {showInstallPrompt&&!isStandalone&&(
-        <div style={{width:"100%",background:`${B.gold}0D`,border:`1px solid ${B.borderActive}`,borderRadius:14,padding:"14px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:12,textAlign:"left",position:"relative"}}>
+        <div style={{width:"100%",background:`${B.gold}08`,border:`1px solid ${B.borderActive}`,borderRadius:14,padding:"12px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:12,position:"relative"}}>
           <button onClick={dismissInstall} style={{position:"absolute",top:8,right:8,background:"none",border:"none",cursor:"pointer",padding:4}}><X size={12} color={B.muted}/></button>
-          <Sparkles size={18} color={B.gold} style={{flexShrink:0}}/>
           <button onClick={installApp} style={{flex:1,background:"none",border:"none",cursor:"pointer",textAlign:"left",padding:0}}>
-            <p style={{fontSize:13,color:B.cream,margin:0,fontFamily:SF}}>Add to Home Screen</p>
-            <p style={{fontSize:11,color:B.muted,margin:"2px 0 0",fontFamily:SF}}>{isIOS?"Tap here for instructions":"Open RHEI like an app — one tap away"}</p>
+            <p style={{fontSize:12,color:B.cream,margin:0,fontFamily:SF}}>Add to your home screen</p>
+            <p style={{fontSize:10,color:B.muted,margin:"2px 0 0",fontFamily:SF}}>Open RHEI like an app</p>
           </button>
-          <ArrowRight size={14} color={B.gold} style={{flexShrink:0}}/>
+          <ArrowRight size={13} color={B.gold} style={{flexShrink:0}}/>
         </div>
       )}
 
-      {/* NS Score + Check-in */}
-      <div style={{display:"flex",gap:14,marginBottom:24}}>
-        <div style={{flex:"0 0 auto",background:B.card,borderRadius:18,padding:"18px 20px",border:`1px solid ${B.border}`,display:"flex",flexDirection:"column",alignItems:"center"}}>
-          <p style={{fontSize:9,letterSpacing:2,color:B.muted,textTransform:"uppercase",fontFamily:SF,margin:"0 0 8px"}}>NS Score</p>
-          <NSScore score={nsScore} size={86}/>
-          <p style={{fontSize:10,color:nsScore>=70?"#5A8A5A":nsScore>=40?B.goldMuted:"#C4786A",margin:"6px 0 0",fontFamily:SF}}>
-            {nsScore>=70?"Regulated":nsScore>=40?"Settling":"Activated"}
-          </p>
-        </div>
-        <div style={{flex:1}}>
-          {!checkinDone?(
-            <button onClick={()=>setShowCheckin(true)} style={{width:"100%",height:"100%",background:B.card,border:`1px solid ${B.border}`,borderRadius:18,padding:"18px 16px",cursor:"pointer",textAlign:"left",display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
-              <div>
-                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
-                  <Activity size={15} color={B.gold}/><span style={{fontSize:12,color:B.cream,fontFamily:SF,fontWeight:500}}>Daily Check-In</span>
-                </div>
-                <p style={{fontSize:12,color:B.muted,margin:0,fontFamily:SF,lineHeight:1.4}}>Where is your nervous system right now?</p>
-              </div>
-              <div style={{display:"flex",alignItems:"center",gap:4,color:B.gold,fontSize:12,fontFamily:SF,marginTop:10}}><span>Begin</span><ArrowRight size={12}/></div>
-            </button>
-          ):(
-            <div style={{width:"100%",height:"100%",background:B.card,border:`1px solid ${B.border}`,borderRadius:18,padding:"18px 16px",display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
-              <div style={{display:"flex",alignItems:"center",gap:8}}><Check size={14} color="#5A8A5A"/><span style={{fontSize:12,color:B.cream,fontFamily:SF}}>Checked in</span></div>
-              <p style={{fontSize:13,color:B.creamMuted,margin:"8px 0 0",fontFamily:SF}}>Feeling <strong style={{color:B.cream}}>{checkinState?.label?.toLowerCase()}</strong></p>
-              <p style={{fontSize:11,color:B.muted,margin:"4px 0 0",fontFamily:SF}}>{checkinState?.recommended?.length} sessions recommended</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Suggested */}
-      <div style={{marginBottom:28}}>
-        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:12,fontFamily:SF}}>{checkinDone?"Recommended for you":"Suggested reset"}</p>
-        <button onClick={()=>{const locked=suggested.id!==1&&!isPremium;if(locked){setScreen("premium");}else{startSession(suggested.id);}}} style={{width:"100%",background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"26px 22px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden"}}>
-          <div style={{position:"absolute",top:-40,right:-40,width:180,height:180}}><Orb active={false} size={180}/></div>
+      {/* First ritual banner */}
+      {isFirstTime&&(
+        <div style={{background:`linear-gradient(135deg, ${B.card} 0%, #2A1A0C 100%)`,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"22px 20px",marginBottom:20,position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:-20,right:-20,width:120,height:120}}><Orb active={false} size={120}/></div>
           <div style={{position:"relative",zIndex:2}}>
-            <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",margin:"0 0 10px",fontFamily:SF}}>{checkinDone?"Based on your check-in":`${timeCtx()} reset`}</p>
-            <h2 style={{fontSize:21,color:B.cream,margin:"0 0 5px",fontWeight:400,fontFamily:F}}>{suggested.title}</h2>
-            <p style={{fontSize:13,color:B.muted,margin:"0 0 18px",fontStyle:"italic"}}>{suggested.subtitle}</p>
-            <div style={{display:"flex",alignItems:"center",gap:16}}>
-              <div style={{width:42,height:42,borderRadius:"50%",background:B.goldGrad,display:"flex",alignItems:"center",justifyContent:"center",boxShadow:`0 4px 20px ${B.gold}25`}}>
-                <Play size={16} color={B.warmBlack} fill={B.warmBlack} style={{marginLeft:2}}/>
+            <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 8px"}}>Start here</p>
+            <h2 style={{fontSize:20,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>Your First Ritual</h2>
+            <p style={{fontSize:12,color:B.muted,margin:"0 0 16px",fontFamily:SF,lineHeight:1.55}}>Before you explore anything else — do this. The Sculptor followed by Morning. You'll feel the difference before you finish.</p>
+            <button onClick={()=>{setActiveRitual(rituals[0]);}} style={{background:B.goldGrad,border:"none",borderRadius:22,padding:"11px 24px",cursor:"pointer",color:B.warmBlack,fontSize:12,fontFamily:SF,letterSpacing:1,fontWeight:600}}>Begin</button>
+          </div>
+        </div>
+      )}
+
+      {/* Face check-in */}
+      {!checkinDone?(
+        <button onClick={()=>setShowCheckin(true)} style={{width:"100%",background:B.card,border:`1px solid ${B.border}`,borderRadius:18,padding:"16px 18px",cursor:"pointer",textAlign:"left",marginBottom:20,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div>
+            <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 4px"}}>Before you begin</p>
+            <p style={{fontSize:14,color:B.cream,margin:0,fontFamily:F}}>How is your face today?</p>
+          </div>
+          <div style={{width:36,height:36,borderRadius:"50%",background:`${B.gold}12`,display:"flex",alignItems:"center",justifyContent:"center"}}>
+            <ArrowRight size={14} color={B.gold}/>
+          </div>
+        </button>
+      ):(
+        <div style={{background:B.card,border:`1px solid ${B.border}`,borderRadius:18,padding:"14px 18px",marginBottom:20,display:"flex",alignItems:"center",gap:12}}>
+          <div style={{width:8,height:8,borderRadius:"50%",background:checkinState?.color||B.gold,flexShrink:0}}/>
+          <div style={{flex:1}}>
+            <p style={{fontSize:13,color:B.cream,margin:0,fontFamily:SF}}>{checkinState?.label}</p>
+            <p style={{fontSize:11,color:B.muted,margin:"2px 0 0",fontFamily:SF}}>{checkinState?.sublabel}</p>
+          </div>
+          <button onClick={()=>{setCheckinDone(false);setCheckinState(null);setShowCheckin(true);}} style={{background:"none",border:`1px solid ${B.border}`,borderRadius:10,padding:"4px 10px",cursor:"pointer",color:B.muted,fontSize:10,fontFamily:SF}}>Change</button>
+        </div>
+      )}
+
+      {/* Today's arc — face ritual + audio */}
+      <div style={{marginBottom:24}}>
+        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:12,fontFamily:SF}}>
+          {checkinDone?"Your ritual today":greetShort()}
+        </p>
+
+        {/* Face ritual card */}
+        <button onClick={()=>{if(ritualLocked){setScreen("premium");}else{setActiveRitual(arc.ritual);}}}
+          style={{width:"100%",background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"22px 20px",cursor:"pointer",textAlign:"left",marginBottom:8,position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:-30,right:-30,width:160,height:160}}><Orb active={false} size={160}/></div>
+          {ritualLocked&&<div style={{position:"absolute",top:14,right:14,display:"flex",alignItems:"center",gap:4,background:`${B.gold}12`,padding:"3px 8px",borderRadius:7}}><Lock size={9} color={B.gold}/><span style={{fontSize:8,color:B.gold,fontFamily:SF,letterSpacing:1}}>PREMIUM</span></div>}
+          <div style={{position:"relative",zIndex:2}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+              <FaceGuideIllustration zone={arc.ritual.id==="gua-sha"?"jawline":arc.ritual.id==="lymphatic"?"nodes":arc.ritual.id==="face-lift"?"cheeks":arc.ritual.id==="buccal"?"jawline":arc.ritual.id==="pre-event"?"full":"undereye"} size={36}/>
+              <div>
+                <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:0}}>Face first</p>
+                <h2 style={{fontSize:20,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>{arc.ritual.title}</h2>
               </div>
-              <span style={{fontSize:12,color:B.muted,fontFamily:SF,display:"flex",alignItems:"center",gap:4}}><Clock size={12}/>{Math.ceil(suggested.duration/60)} min</span>
+            </div>
+            <p style={{fontSize:12,color:B.muted,margin:"0 0 14px",fontStyle:"italic",fontFamily:F}}>{arc.ritual.subtitle}</p>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <div style={{background:B.goldGrad,borderRadius:20,padding:"8px 20px",display:"flex",alignItems:"center",gap:6,boxShadow:`0 4px 16px ${B.gold}22`}}>
+                <span style={{fontSize:12,color:B.warmBlack,fontFamily:SF,fontWeight:600}}>Begin</span>
+              </div>
+              <span style={{fontSize:11,color:B.muted,fontFamily:SF}}>{arc.ritual.duration}</span>
             </div>
           </div>
         </button>
+
+        {/* Audio reset — second movement */}
+        <button onClick={()=>{const locked=arc.audio.id!==1&&!isPremium;if(locked){setScreen("premium");}else{startSession(arc.audio.id);}}}
+          style={{width:"100%",background:`${B.card}88`,border:`1px solid ${B.border}`,borderRadius:16,padding:"14px 18px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:14}}>
+          <div style={{width:36,height:36,borderRadius:"50%",background:`${B.gold}10`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+            <Play size={13} color={B.gold} fill={B.gold}/>
+          </div>
+          <div style={{flex:1}}>
+            <p style={{fontSize:9,letterSpacing:1.5,color:B.muted,textTransform:"uppercase",fontFamily:SF,margin:"0 0 2px"}}>Then · Audio reset</p>
+            <p style={{fontSize:14,color:B.cream,margin:0,fontFamily:F}}>{arc.audio.title}</p>
+            <p style={{fontSize:11,color:B.muted,margin:"1px 0 0",fontFamily:SF}}>{arc.audio.subtitle}</p>
+          </div>
+          <span style={{fontSize:10,color:B.muted,fontFamily:SF}}>{Math.ceil(arc.audio.duration/60)}m</span>
+        </button>
       </div>
 
-      {/* Micro-Interventions */}
-      <div style={{marginBottom:28}}>
-        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:12,fontFamily:SF}}>No headphones needed</p>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+      {/* When you only have a moment */}
+      <div style={{marginBottom:8}}>
+        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:12,fontFamily:SF}}>When you only have a moment</p>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
           {[
-            {id:"sigh",title:"Physiological Sigh",badge:"4 cycles",desc:"The fastest science-backed way to calm your nervous system."},
-            {id:"ground",title:"5-4-3-2-1 Ground",badge:"5 senses",desc:"Anchor to the present moment through each sense."},
-            {id:"jaw",title:"Jaw Release",badge:"3 holds",desc:"Release hidden tension. Activates your vagus nerve."},
-            {id:"tap",title:"Butterfly Tap",badge:"30 sec",desc:"Bilateral stimulation that calms the amygdala."},
+            {id:"sigh",title:"The Sigh",badge:"60 sec",desc:"Fastest nervous system reset that exists."},
+            {id:"jaw",title:"The Jaw",badge:"40 sec",desc:"Release where you've been holding everything."},
+            {id:"ground",title:"Ground",badge:"90 sec",desc:"Anchor to the present through your senses."},
+            {id:"tap",title:"Tap",badge:"30 sec",desc:"Bilateral reset. Calms the reactive mind."},
           ].map(mi=>(
-            <button key={mi.id} onClick={()=>openMicro(mi.id)} style={{background:B.card,border:`1px solid ${B.border}`,borderRadius:14,padding:"16px 14px",cursor:"pointer",textAlign:"left"}}>
-              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
-                <Timer size={13} color={B.gold}/>
-                <span style={{fontSize:9,color:B.gold,fontFamily:SF,background:`${B.gold}12`,padding:"2px 6px",borderRadius:6}}>{mi.badge}</span>
-              </div>
-              <p style={{fontSize:13,color:B.cream,margin:"0 0 3px",fontFamily:SF,fontWeight:500}}>{mi.title}</p>
-              <p style={{fontSize:11,color:B.muted,margin:0,fontFamily:SF,lineHeight:1.3}}>{mi.desc}</p>
+            <button key={mi.id} onClick={()=>openMicro(mi.id)} style={{background:B.card,border:`1px solid ${B.border}`,borderRadius:14,padding:"14px 12px",cursor:"pointer",textAlign:"left"}}>
+              <p style={{fontSize:9,color:B.gold,fontFamily:SF,background:`${B.gold}10`,padding:"2px 8px",borderRadius:6,display:"inline-block",marginBottom:8,letterSpacing:0.5}}>{mi.badge}</p>
+              <p style={{fontSize:13,color:B.cream,margin:"0 0 3px",fontFamily:F,fontWeight:400}}>{mi.title}</p>
+              <p style={{fontSize:11,color:B.muted,margin:0,fontFamily:SF,lineHeight:1.35}}>{mi.desc}</p>
             </button>
           ))}
         </div>
       </div>
-
-      {/* Stats */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:28}}>
-        {[{value:streak,label:"Streak",icon:Flame,color:"#C4786A"},{value:totalSessions,label:"Sessions",icon:Headphones,color:B.gold},{value:`${totalMinutes}m`,label:"Regulated",icon:Heart,color:"#5A8A5A"}].map((s,i)=>(
-          <div key={i} style={{background:B.card,borderRadius:14,padding:"16px 12px",textAlign:"center",border:`1px solid ${B.border}`}}>
-            <s.icon size={14} color={s.color} style={{marginBottom:6}}/><p style={{fontSize:20,color:B.cream,margin:"0 0 2px",fontFamily:SF,fontWeight:300}}>{s.value}</p>
-            <p style={{fontSize:9,color:B.muted,margin:0,letterSpacing:1,textTransform:"uppercase",fontFamily:SF}}>{s.label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Today's resets */}
-      <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:10,fontFamily:SF}}>Today's resets</p>
-      <div style={{display:"flex",gap:6,marginBottom:6}}>{sessions.map(s=><div key={s.id} style={{flex:1,height:3,borderRadius:2,background:completedToday.includes(s.id)?B.gold:`${B.gold}12`,transition:"background 0.5s"}}/>)}</div>
-      <p style={{fontSize:11,color:B.muted,fontFamily:SF}}>{completedToday.length} of 5</p>
     </div>
-  );
+  );};
 
-  // ══════════ LIBRARY ══════════
-  const renderLibrary=()=>(
-    <div style={{padding:"56px 22px 120px"}}>
-      <div style={{textAlign:"center",marginBottom:36}}>
-        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,marginBottom:6}}>Reset Library</p>
-        <h1 style={{fontSize:22,fontWeight:400,color:B.cream,margin:0}}>Your Sessions</h1>
-        <p style={{fontSize:13,color:B.muted,marginTop:6,fontStyle:"italic"}}>Precision regulation for every moment.</p>
-      </div>
-      {sessions.map(s=>{
-        const Icon=s.icon; const done=completedToday.includes(s.id); const rec=checkinDone&&checkinState?.recommended?.includes(s.id);
-        const premiumLocked = s.id!==1 && !isPremium;
-        return(
-          <button key={s.id} onClick={()=>{if(premiumLocked){setScreen("premium");}else{startSession(s.id);}}} style={{width:"100%",background:B.card,border:`1px solid ${rec?B.borderActive:B.border}`,borderRadius:18,padding:"20px 18px",marginBottom:12,cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",opacity:premiumLocked?0.7:1}}>
-            {premiumLocked&&<div style={{position:"absolute",top:14,right:14,display:"flex",alignItems:"center",gap:4,background:`${B.gold}12`,padding:"4px 10px",borderRadius:8}}>
-              <Lock size={9} color={B.gold}/><span style={{fontSize:8,letterSpacing:1.5,color:B.gold,fontFamily:SF,textTransform:"uppercase"}}>Premium</span>
-            </div>}
-            {!premiumLocked&&rec&&<div style={{position:"absolute",top:14,right:14,fontSize:8,letterSpacing:1.5,color:B.gold,background:`${B.gold}15`,padding:"3px 8px",borderRadius:8,fontFamily:SF,textTransform:"uppercase"}}>Recommended</div>}
-            <div style={{display:"flex",alignItems:"flex-start",gap:14}}>
-              <div style={{width:44,height:44,borderRadius:"50%",background:`${B.gold}12`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:2}}>
-                {done?<Check size={18} color="#5A8A5A"/>:<Icon size={18} color={B.gold}/>}
-              </div>
-              <div style={{flex:1}}>
-                <h3 style={{fontSize:16,color:B.cream,margin:"0 0 3px",fontWeight:400,fontFamily:F}}>{s.title}</h3>
-                <p style={{fontSize:12,color:B.goldMuted,margin:"0 0 8px",fontStyle:"italic"}}>{s.subtitle}</p>
-                <p style={{fontSize:11,color:B.muted,margin:"0 0 10px",lineHeight:1.5,fontFamily:SF}}>{s.description}</p>
-                <div style={{display:"flex",alignItems:"center",gap:14}}>
-                  <span style={{fontSize:11,color:B.muted,fontFamily:SF,display:"flex",alignItems:"center",gap:4}}><Clock size={11}/>{Math.ceil(s.duration/60)} min</span>
-                  <span style={{fontSize:11,color:premiumLocked?B.muted:B.gold,fontFamily:SF}}>{premiumLocked?"Unlock →":"Begin →"}</span>
-                </div>
-              </div>
-            </div>
-          </button>
-        );
-      })}
-    </div>
-  );
+  // ══════════ LIBRARY (hidden — absorbed into Rituals) ══════════
+  const renderLibrary=()=>renderRituals();
 
   // ══════════ PLAYER ══════════
   const renderPlayer=()=>{
@@ -916,9 +923,9 @@ export default function ObrizApp() {
       <div style={{padding:"36px 22px 120px",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center"}}>
         <button onClick={exitPlayer} style={{position:"absolute",top:18,left:18,background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:4,color:B.muted,fontFamily:SF,fontSize:12}}><ChevronLeft size={16}/><span>Back</span></button>
         <div style={{textAlign:"center",marginTop:36,marginBottom:36}}>
-          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,marginBottom:8}}>Now playing</p>
-          <h1 style={{fontSize:24,fontWeight:400,color:B.cream,margin:"0 0 4px"}}>{cur.title}</h1>
-          <p style={{fontSize:13,color:B.muted,fontStyle:"italic"}}>{cur.subtitle}</p>
+          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,marginBottom:8}}>Audio reset</p>
+          <h1 style={{fontSize:26,fontWeight:400,color:B.cream,margin:"0 0 4px",fontFamily:F}}>{cur.title}</h1>
+          <p style={{fontSize:13,color:B.muted,fontStyle:"italic",fontFamily:F}}>{cur.subtitle}</p>
         </div>
         <div style={{position:"relative",width:220,height:220,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:44}}>
           <Orb active={isPlaying} size={220}/><Ring progress={progress} size={220}/>
@@ -952,9 +959,9 @@ export default function ObrizApp() {
           <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:`${B.warmBlack}F2`,display:"flex",alignItems:"center",justifyContent:"center",zIndex:100}}>
             <div style={{textAlign:"center",padding:32,maxWidth:340}}>
               <div style={{width:72,height:72,borderRadius:"50%",background:`${B.gold}15`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 20px",border:`1px solid ${B.gold}30`}}><Check size={30} color={B.gold}/></div>
-              <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>Reset Complete</h2>
-              <p style={{fontSize:13,color:B.muted,fontStyle:"italic",margin:"0 0 8px"}}>Your nervous system thanks you{userName?`, ${userName}`:""}</p>
-              <p style={{fontSize:12,color:B.gold,fontFamily:SF,margin:"0 0 28px"}}>NS Score: {nsScore} (+8)</p>
+              <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>You showed up.</h2>
+              <p style={{fontSize:13,color:B.muted,fontStyle:"italic",margin:"0 0 8px",fontFamily:F}}>{cur.title}{userName?` · ${userName}`:""}</p>
+              <p style={{fontSize:12,color:B.gold,fontFamily:SF,margin:"0 0 28px"}}>{Math.ceil(cur.duration/60)} minutes for your nervous system</p>
               <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:24}}>
                 {[{v:`${Math.ceil(cur.duration/60)}m`,l:"Duration"},{v:completedToday.length,l:"Today"},{v:streak,l:"Streak"}].map((s,i)=>(
                   <div key={i} style={{background:B.card,borderRadius:12,padding:"12px 18px",border:`1px solid ${B.border}`}}>
@@ -975,9 +982,9 @@ export default function ObrizApp() {
   const renderRituals=()=>(
     <div style={{padding:"56px 22px 120px"}}>
       <div style={{textAlign:"center",marginBottom:28}}>
-        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,marginBottom:6}}>Face Rituals</p>
-        <h1 style={{fontSize:22,fontWeight:400,color:B.cream,margin:0}}>Ritual Guides</h1>
-        <p style={{fontSize:13,color:B.muted,marginTop:6,fontStyle:"italic"}}>Sculpt, de-puff, and lift — guided step by step.</p>
+        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,marginBottom:6}}>All Rituals</p>
+        <h1 style={{fontSize:22,fontWeight:400,color:B.cream,margin:0,fontFamily:F}}>Face first.</h1>
+        <p style={{fontSize:13,color:B.muted,marginTop:6,fontStyle:"italic",fontFamily:F}}>Then the audio reset follows. One arc.</p>
       </div>
 
       {/* ── Smart Scan Hero Card ── */}
@@ -1015,8 +1022,8 @@ export default function ObrizApp() {
       {rituals.map((r,idx)=>{
         const locked = r.isPremium && !isPremium;
         const zoneMap = {"gua-sha":"jawline","lymphatic":"nodes","face-lift":"cheeks","buccal":"jawline","pre-event":"full","eye-revival":"undereye"};
-        const tagMap  = {"gua-sha":"Sculpt","lymphatic":"Depuff","face-lift":"Lift","buccal":"Deep Release","pre-event":"Pre-Event","eye-revival":"Eye Focus"};
-        const timeMap = {"gua-sha":"Any time","lymphatic":"Morning","face-lift":"Evening","buccal":"Weekly","pre-event":"Before events","eye-revival":"Morning"};
+        const tagMap  = {"gua-sha":"Sculpting","lymphatic":"Drainage","face-lift":"Lifting","buccal":"Deep release","pre-event":"Pre-event","eye-revival":"Eye"};
+        const timeMap = {"gua-sha":"Any time","lymphatic":"Morning","face-lift":"Evening","buccal":"Recovery","pre-event":"Before anything that matters","eye-revival":"Morning"};
         return (
           <button key={r.id} onClick={()=>{if(locked){setScreen("premium");}else{setActiveRitual(r);}}}
             style={{width:"100%",background:B.card,border:`1px solid ${locked?B.border:B.borderActive}`,borderRadius:20,padding:"18px 16px",marginBottom:12,cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",opacity:locked?0.72:1}}>
@@ -1050,8 +1057,8 @@ export default function ObrizApp() {
       {!isPremium && (
         <div style={{background:`linear-gradient(135deg, ${B.card} 0%, #3A2516 100%)`,borderRadius:18,padding:"24px 20px",marginTop:4,border:`1px solid ${B.borderActive}`,textAlign:"center"}}>
           <Crown size={22} color={B.gold} style={{marginBottom:10}}/>
-          <h3 style={{fontSize:16,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>6 rituals. One subscription.</h3>
-          <p style={{fontSize:12,color:B.muted,margin:"0 0 16px",fontFamily:SF,lineHeight:1.55}}>Gua Sha, Lymphatic, Face Lift, Buccal Release, Pre-Event Glow, Eye Revival — plus every ritual added in future.</p>
+          <h3 style={{fontSize:16,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>The complete practice.</h3>
+          <p style={{fontSize:12,color:B.muted,margin:"0 0 16px",fontFamily:SF,lineHeight:1.55}}>The Sculptor · The Revival · The Lift · The Release · Before · The Eye — every ritual, every audio reset, everything added in future.</p>
           <button onClick={()=>setScreen("premium")} style={{background:B.goldGrad,border:"none",borderRadius:24,padding:"12px 28px",cursor:"pointer",color:B.warmBlack,fontSize:12,fontFamily:SF,letterSpacing:1,fontWeight:600}}>Unlock All Rituals</button>
         </div>
       )}
@@ -1063,26 +1070,26 @@ export default function ObrizApp() {
     <div style={{padding:"56px 22px 120px"}}>
       <div style={{textAlign:"center",marginBottom:36}}>
         <Crown size={28} color={B.gold} style={{marginBottom:12}}/>
-        <h1 style={{fontSize:24,fontWeight:400,color:B.cream,margin:"0 0 6px",fontFamily:F}}>RHEI Premium</h1>
-        <p style={{fontSize:13,color:B.muted,fontStyle:"italic"}}>The complete nervous system + beauty ritual experience.</p>
+        <h1 style={{fontSize:24,fontWeight:400,color:B.cream,margin:"0 0 6px",fontFamily:F}}>The full practice.</h1>
+        <p style={{fontSize:13,color:B.muted,fontStyle:"italic",fontFamily:F}}>Every ritual. Every reset. The complete arc.</p>
       </div>
 
       {/* What you get */}
       <div style={{background:B.card,borderRadius:18,padding:"22px 20px",marginBottom:16,border:`1px solid ${B.border}`}}>
         <p style={{fontSize:10,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 16px"}}>Everything included</p>
         {[
-          {text:"Morning Reset (free forever)", free:true},
-          {text:"Pre-Meeting Reset", free:false},
-          {text:"The Transition Reset", free:false},
-          {text:"Post-Conflict Reset", free:false},
-          {text:"General Reset", free:false},
-          {text:"4 micro-interventions", free:true},
-          {text:"Gua Sha Sculpt ritual guide", free:true},
-          {text:"Lymphatic Drainage ritual guide", free:false},
-          {text:"Face Lifting ritual guide", free:false},
-          {text:"Buccal Release ritual guide", free:false},
-          {text:"Pre-Event Glow ritual guide", free:false},
-          {text:"Eye Revival ritual guide", free:false},
+          {text:"Morning (audio reset, free forever)", free:true},
+          {text:"Before (audio reset)", free:false},
+          {text:"After (audio reset)", free:false},
+          {text:"Release (audio reset)", free:false},
+          {text:"Return (audio reset)", free:false},
+          {text:"4 quick interventions", free:true},
+          {text:"The Sculptor (face ritual)", free:true},
+          {text:"The Revival", free:false},
+          {text:"The Lift", free:false},
+          {text:"The Release", free:false},
+          {text:"Before", free:false},
+          {text:"The Eye", free:false},
           {text:"Daily NS Score tracking", free:true},
           {text:"All future ritual guides & sessions", free:false},
           {text:"Priority access to new features", free:false},
@@ -1137,57 +1144,62 @@ export default function ObrizApp() {
     </div>
   );
 
-  // ══════════ PROGRESS ══════════
+  // ══════════ JOURNEY ══════════
   const renderProgress=()=>{
-    const wd=["M","T","W","T","F","S","S"];
+    const recentRituals=[...rituals].filter(r=>completedToday.length>0||totalSessions>0);
     return(
       <div style={{padding:"56px 22px 120px"}}>
-        <div style={{textAlign:"center",marginBottom:36}}>
-          <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,marginBottom:6}}>Your Journey</p>
-          <h1 style={{fontSize:22,fontWeight:400,color:B.cream,margin:0}}>Progress</h1>
-          {userName && <p style={{fontSize:13,color:B.muted,marginTop:6,fontStyle:"italic"}}>Keep showing up, {userName}.</p>}
+        <div style={{marginBottom:32}}>
+          <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,marginBottom:6}}>Journey</p>
+          <h1 style={{fontSize:22,fontWeight:400,color:B.cream,margin:0,fontFamily:F}}>{userName||"Your practice"}</h1>
+          <p style={{fontSize:13,color:B.muted,marginTop:4,fontStyle:"italic",fontFamily:F}}>Your face is the record of what you've shown up for.</p>
         </div>
-        <div style={{background:B.card,borderRadius:18,padding:"22px 20px",marginBottom:16,border:`1px solid ${B.border}`}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
-            <div>
-              <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 6px"}}>Nervous System Score</p>
-              <div style={{display:"flex",alignItems:"baseline",gap:8}}>
-                <span style={{fontSize:36,color:B.cream,fontFamily:SF,fontWeight:300}}>{nsScore}</span>
-                <span style={{fontSize:12,color:"#5A8A5A",fontFamily:SF}}>{scoreHistory.length>1&&nsScore>scoreHistory[scoreHistory.length-2]?"↑ Improving":nsScore>=60?"Stable":"↓ Monitor"}</span>
-              </div>
-            </div>
-            <NSScore score={nsScore} size={70}/>
-          </div>
-          <div style={{display:"flex",alignItems:"end",gap:6,height:50,marginTop:8}}>
-            {scoreHistory.map((s,i)=>{const h=(s/100)*45;const col=s>=70?"#5A8A5A":s>=40?B.gold:"#C4786A";
-              return <div key={i} style={{flex:1}}><div style={{width:"100%",height:h,borderRadius:3,background:i===scoreHistory.length-1?col:`${col}50`,transition:"height 0.8s ease"}}/></div>;
-            })}
-          </div>
-          <p style={{fontSize:10,color:B.muted,fontFamily:SF,marginTop:8,textAlign:"center"}}>Last 7 check-ins</p>
-        </div>
-        <div style={{background:B.card,borderRadius:18,padding:"22px 20px",marginBottom:16,border:`1px solid ${B.border}`,textAlign:"center"}}>
-          <Flame size={22} color="#C4786A" style={{marginBottom:8}}/>
-          <p style={{fontSize:36,color:B.cream,margin:"0 0 4px",fontFamily:SF,fontWeight:300}}>{streak}</p>
-          <p style={{fontSize:9,color:B.muted,letterSpacing:2,textTransform:"uppercase",fontFamily:SF,margin:"0 0 18px"}}>Day streak</p>
-          <div style={{display:"flex",justifyContent:"center",gap:8}}>
-            {wd.map((d,i)=>(
-              <div key={i} style={{textAlign:"center"}}>
-                <div style={{width:30,height:30,borderRadius:"50%",background:i===new Date().getDay()-1||(i===6&&new Date().getDay()===0)?`${B.gold}25`:`${B.gold}08`,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:3,border:i<streak?`1px solid ${B.gold}30`:"none"}}>
-                  {i<streak&&<Check size={12} color={B.gold}/>}
+
+        {/* Tension tracking — face-focused bars */}
+        <div style={{background:B.card,borderRadius:18,padding:"20px",marginBottom:14,border:`1px solid ${B.border}`}}>
+          <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 14px"}}>Tension over time</p>
+          <div style={{marginBottom:12}}>
+            {[{label:"Jaw",key:"wired"},{label:"Under-eye",key:"foggy"},{label:"Brow",key:"reactive"}].map((z,i)=>(
+              <div key={i} style={{marginBottom:i<2?10:0}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                  <span style={{fontSize:11,color:B.creamMuted,fontFamily:SF}}>{z.label}</span>
+                  <span style={{fontSize:11,color:totalSessions>0?"#5A8A5A":B.muted,fontFamily:SF}}>{totalSessions>0?"Improving":"Start to track"}</span>
                 </div>
-                <span style={{fontSize:9,color:B.muted,fontFamily:SF}}>{d}</span>
+                <div style={{width:"100%",height:3,background:`${B.gold}10`,borderRadius:2}}>
+                  <div style={{width:totalSessions>0?`${Math.max(20,100-totalSessions*8)}%`:"80%",height:"100%",background:totalSessions>0?"#5A8A5A":"#C4786A",borderRadius:2,opacity:0.7,transition:"width 1s ease"}}/>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p style={{fontSize:10,color:B.muted,fontFamily:SF,margin:"8px 0 0"}}>Tracked from your check-ins and rituals</p>
+        </div>
+
+        {/* What you've done */}
+        <div style={{background:B.card,borderRadius:18,padding:"20px",marginBottom:14,border:`1px solid ${B.border}`}}>
+          <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 14px"}}>What you've done</p>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            {[{v:totalSessions,l:"Rituals completed"},{v:`${totalMinutes}m`,l:"Time invested"},{v:completedToday.length,l:"Today"},{v:streak>0?`${streak}d`:"—",l:"Days in a row"}].map((s,i)=>(
+              <div key={i} style={{textAlign:"left"}}>
+                <p style={{fontSize:26,color:B.cream,margin:"0 0 2px",fontFamily:SF,fontWeight:300}}>{s.v}</p>
+                <p style={{fontSize:10,color:B.muted,margin:0,fontFamily:SF}}>{s.l}</p>
               </div>
             ))}
           </div>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
-          {[{v:totalSessions,l:"Total Sessions",sub:"All time"},{v:`${totalMinutes}m`,l:"Regulated",sub:"All time"},{v:completedToday.length,l:"Today",sub:"of 5 sessions"},{v:"3m",l:"Avg Session",sub:"This week"}].map((s,i)=>(
-            <div key={i} style={{background:B.card,borderRadius:14,padding:"16px 14px",border:`1px solid ${B.border}`}}>
-              <p style={{fontSize:24,color:B.cream,margin:"0 0 4px",fontFamily:SF,fontWeight:300}}>{s.v}</p>
-              <p style={{fontSize:11,color:B.cream,margin:"0 0 2px",fontFamily:SF}}>{s.l}</p>
-              <p style={{fontSize:10,color:B.muted,margin:0,fontFamily:SF}}>{s.sub}</p>
+
+        {/* Photo journal placeholder */}
+        <div style={{background:B.card,borderRadius:18,padding:"20px",marginBottom:14,border:`1px solid ${B.border}`}}>
+          <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 8px"}}>Before & after</p>
+          <p style={{fontSize:12,color:B.muted,fontFamily:SF,lineHeight:1.55,margin:"0 0 14px"}}>The real measure isn't sessions — it's your face over time. Take a photo after each ritual. The change is visible within a week.</p>
+          <div style={{display:"flex",gap:10}}>
+            <div style={{flex:1,background:`${B.gold}06`,borderRadius:12,padding:"16px",textAlign:"center",border:`1px dashed ${B.border}`}}>
+              <p style={{fontSize:10,color:B.muted,fontFamily:SF,margin:0}}>Before</p>
             </div>
-          ))}
+            <div style={{flex:1,background:`${B.gold}06`,borderRadius:12,padding:"16px",textAlign:"center",border:`1px dashed ${B.border}`}}>
+              <p style={{fontSize:10,color:B.muted,fontFamily:SF,margin:0}}>After</p>
+            </div>
+          </div>
+          <p style={{fontSize:10,color:`${B.gold}80`,fontFamily:SF,margin:"10px 0 0",textAlign:"center"}}>Coming in next update</p>
         </div>
 
         {/* Profile & Account */}
@@ -1237,10 +1249,9 @@ export default function ObrizApp() {
       <div style={{width:"100%",maxWidth:390,padding:"32px 22px"}}>
         <button onClick={()=>{setShowCheckin(false);setSelectedCheckin(null);}} style={{position:"absolute",top:18,right:18,background:"none",border:"none",cursor:"pointer"}}><X size={18} color={B.muted}/></button>
         <div style={{textAlign:"center",marginBottom:24}}>
-          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,marginBottom:10}}>Nervous System Check-In</p>
-          <h2 style={{fontSize:20,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>How are you arriving{userName?`, ${userName}`:""}?</h2>
-          <p style={{fontSize:12,color:B.muted,fontStyle:"italic",marginBottom:4}}>No judgment. Just awareness.</p>
-          <p style={{fontSize:11,color:B.gold,fontFamily:SF,background:`${B.gold}0D`,display:"inline-block",padding:"4px 12px",borderRadius:20,marginTop:8}}>↓ Select one state below</p>
+          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,marginBottom:10}}>Your face today</p>
+          <h2 style={{fontSize:20,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>How is your face{userName?`, ${userName}`:""}?</h2>
+          <p style={{fontSize:12,color:B.muted,fontStyle:"italic",marginBottom:4}}>Your face holds the answer before you do.</p>
         </div>
         {nsStates.map(state=>{const Icon=state.icon; const selected=selectedCheckin?.id===state.id; return(
           <button key={state.id} onClick={()=>setSelectedCheckin(state)} style={{width:"100%",background:selected?`${state.color}15`:B.card,border:`2px solid ${selected?state.color:B.border}`,borderRadius:14,padding:"15px 16px",marginBottom:8,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"left",transition:"all 0.2s",position:"relative"}}>
@@ -1259,7 +1270,7 @@ export default function ObrizApp() {
           </button>
         );})}
         <button onClick={()=>{if(selectedCheckin) doCheckin(selectedCheckin);}} disabled={!selectedCheckin} style={{width:"100%",marginTop:12,background:selectedCheckin?B.goldGrad:`${B.gold}20`,border:"none",borderRadius:28,padding:"15px",cursor:selectedCheckin?"pointer":"not-allowed",color:selectedCheckin?B.warmBlack:B.muted,fontSize:14,fontFamily:SF,letterSpacing:1,fontWeight:600,opacity:selectedCheckin?1:0.4,transition:"all 0.3s"}}>
-          {selectedCheckin?`Continue as "${selectedCheckin.label}"`:"Select a state to continue"}
+          {selectedCheckin?`Build my ritual →`:"Choose to continue"}
         </button>
       </div>
     </div>
@@ -1299,13 +1310,11 @@ export default function ObrizApp() {
       {microActive&&renderMicro()}
       {activeRitual&&<RitualPlayer ritual={activeRitual} onClose={()=>setActiveRitual(null)}/>}
       {showMirrorMode&&<FaceMirrorMode onClose={()=>setShowMirrorMode(false)} onTransitionToReset={handleMirrorTransitionToReset} rituals={rituals} isPremium={isPremium}/>}
-      {/* Bottom Nav */}
+      {/* Bottom Nav — 3 tabs */}
       <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:`${B.bgDeep}F0`,backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`1px solid ${B.border}`,display:"flex",justifyContent:"space-around",padding:"11px 0 env(safe-area-inset-bottom, 26px)",paddingBottom:"max(env(safe-area-inset-bottom), 26px)",zIndex:50}}>
-        {navBtn("home",Home,"Home")}
-        {navBtn("library",Headphones,"Resets")}
+        {navBtn("home",Home,"Today")}
         {navBtn("rituals",Sparkles,"Rituals")}
-        {navBtn("premium",Crown,"Premium")}
-        {navBtn("progress",BarChart3,"Journey")}
+        {navBtn("progress",Heart,"Journey")}
       </div>
     </div>
   );
