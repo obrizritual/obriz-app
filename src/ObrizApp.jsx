@@ -42,18 +42,63 @@ const sessions = [
   { id:5, title:"General Reset", subtitle:"Return to yourself", duration:172, icon:RefreshCw, description:"The foundational reset. No specific trigger required — use it whenever you've drifted or tensed. Three minutes, anywhere.", technique:"Diaphragmatic breathing · Body awareness · Vagal activation", bestFor:"Any moment you need to come back to center", timeOfDay:"any", audioFile:"/audio/general-reset.mp3", occasion:"any" },
 ];
 
-// ── Face check-in states → recommended rituals ──
+// ── Face states — drives ritual + meditation recommendations ──
 const nsStates = [
-  { id:"jaw",      label:"Jaw & neck are tight",     sublabel:"Tension along the jaw, chin, or neck",       icon:Zap,   color:"#C4786A", ritualId:"buccal" },
-  { id:"brow",     label:"Brow & forehead feel tense",sublabel:"Pressure above the eyes or across temples",  icon:Brain, color:"#A08BAA", ritualId:"face-lift" },
-  { id:"undereye", label:"Under-eye area is puffy",   sublabel:"Swelling or heaviness around the eyes",      icon:Moon,  color:"#8A9BAF", ritualId:"lymphatic" },
-  { id:"full",     label:"All over / not sure",       sublabel:"General facial tension, or starting fresh",  icon:Waves, color:"#8BAA8B", ritualId:"gua-sha" },
+  { id:"puffy",   label:"Puffy and heavy",         sublabel:"Face feels swollen, especially around the eyes", icon:Moon,     color:"#8A9BAF", dominant:"puffy",   ritualId:"lymphatic",  meditationId:3, message:"Your face is holding fluid today. Let's drain and restore." },
+  { id:"tight",   label:"Tight and held",          sublabel:"Jaw clenching, forehead tension, face feels locked", icon:Zap, color:"#C4786A", dominant:"tight",   ritualId:"buccal",     meditationId:4, message:"Your face is locked. Time to release what you've been holding." },
+  { id:"flat",    label:"Flat and dull",           sublabel:"No tone, face looks tired or grey",              icon:Brain,    color:"#A08BAA", dominant:"flat",    ritualId:"face-lift",  meditationId:1, message:"Your face needs a lift. Let's restore tone and light." },
+  { id:"tired",   label:"Tired around the eyes",  sublabel:"Under-eye heaviness, brow feels low",            icon:Sunset,   color:"#7A8B99", dominant:"tired",   ritualId:"eye-revival",meditationId:5, message:"Your eyes are carrying it today. Let's ease that." },
+  { id:"general", label:"Just need a reset",       sublabel:"No specific concern — full face refresh",        icon:Waves,    color:"#8BAA8B", dominant:"general", ritualId:"gua-sha",    meditationId:2, message:"A full reset feels right. Let's begin." },
+];
+
+// ── Adaptive ritual generator — re-orders steps by face state ──
+const generateAdaptiveRitual = (ritual, faceState) => {
+  if (!ritual) return ritual;
+  if (!faceState) return ritual;
+  const dominant = faceState.dominant;
+  let steps = [...ritual.steps];
+  // Re-order: priority zones first based on dominant state
+  const priorityZones = {
+    puffy:   ["nodes","neck","undereye","orbital","cheeks"],
+    tight:   ["jawline","temples","full","marionette"],
+    flat:    ["cheeks","brow","forehead","nasolabial"],
+    tired:   ["undereye","orbital","brow","nodes"],
+    general: [],
+  };
+  const priority = priorityZones[dominant] || [];
+  if (priority.length > 0) {
+    const first = steps.filter(s => priority.includes(s.zone));
+    const rest  = steps.filter(s => !priority.includes(s.zone));
+    // Keep warm-up first if it exists
+    const warmup = rest.find(s => s.zone === "full" && steps.indexOf(s) === 0);
+    if (warmup) {
+      steps = [warmup, ...first, ...rest.filter(s=>s!==warmup)];
+    } else {
+      steps = [...first, ...rest];
+    }
+  }
+  // Slight duration variation (+/- 8%) so sessions never feel identical
+  const seed = Date.now() % 100;
+  const varied = steps.map((step, i) => ({
+    ...step,
+    duration: Math.round(step.duration * (0.93 + ((seed + i * 17) % 15) / 100)),
+  }));
+  return { ...ritual, steps: varied };
+};
+
+// ── Meditation check-in → maps to audio reset ──
+const meditationStates = [
+  { id:"wired",    label:"Wired / Tense",     sublabel:"Can't slow down, mind racing",           icon:Zap,      color:"#C4786A", sessionId:2 },
+  { id:"flat",     label:"Low / Drained",     sublabel:"Low energy, going through the motions",  icon:Brain,    color:"#8A9BAF", sessionId:1 },
+  { id:"stressed", label:"Stressed / Reactive",sublabel:"Overwhelmed or easily triggered",        icon:Activity, color:"#A08BAA", sessionId:4 },
+  { id:"tired",    label:"Tired / Depleted",  sublabel:"Exhausted but can't rest",               icon:Moon,     color:"#7A8B99", sessionId:3 },
+  { id:"okay",     label:"Just need to centre",sublabel:"Fine — want to check in and reset",       icon:Waves,    color:"#8BAA8B", sessionId:5 },
 ];
 
 // ── Ritual Guide Data ──
 const rituals = [
   {
-    id: "gua-sha", title: "Gua Sha Sculpt", subtitle: "Jawline, cheekbones, and neck drainage",
+    id: "gua-sha", title: "Sculpt & Define", subtitle: "Gua Sha — Jawline, cheekbones, and neck",
     duration: "8 min", isPremium: false, svgFile: "/svgs/gua-sha-zones.svg",
     description: "Firm sweeping strokes along the jawline and cheekbones to drain lymphatic fluid, reduce puffiness, and define bone structure. The most visibly immediate result of any ritual here. Uses a gua sha stone or clean fingers.",
     tools: "Gua sha stone or clean fingers · facial oil",
@@ -70,7 +115,7 @@ const rituals = [
     ]
   },
   {
-    id: "lymphatic", title: "Lymphatic Drainage", subtitle: "De-puff and restore circulation",
+    id: "lymphatic", title: "Depuff & Restore Glow", subtitle: "Lymphatic Drainage — restore circulation",
     duration: "6 min", isPremium: false, svgFile: "/svgs/lymphatic-paths.svg",
     description: "Light fingertip pressure along the lymphatic pathways to drain the fluid that causes morning puffiness, under-eye swelling, and dull skin. No tools needed. Results are visible immediately — especially effective in the morning.",
     tools: "Clean fingertips only — no tools needed",
@@ -86,7 +131,7 @@ const rituals = [
     ]
   },
   {
-    id: "face-lift", title: "Face Lifting", subtitle: "Targeted lift through pressure and technique",
+    id: "face-lift", title: "Lift & Firm", subtitle: "Face Lifting — pressure points and technique",
     duration: "7 min", isPremium: false, svgFile: "/svgs/face-lifting-points.svg",
     description: "Hook-and-lift technique on the cheekbones, brow bone presses, and knuckle sweeps along the jaw — targeting the specific points that gravity and tension pull downward. You'll feel the result while you're doing it.",
     tools: "Clean fingertips · facial oil",
@@ -103,7 +148,7 @@ const rituals = [
     ]
   },
   {
-    id: "buccal", title: "Jaw Release", subtitle: "Deep release for the jaw and cheek muscles",
+    id: "buccal", title: "Release & Decompress", subtitle: "Buccal Massage — deep jaw and cheek release",
     duration: "5 min", isPremium: false, svgFile: "/svgs/face-base.svg",
     description: "Targets the masseter and buccinator — the two muscles that hold the most stress tension in the face. Most people find far more tension here than expected. Hands only, no tools needed. Immediate release.",
     tools: "Clean hands · facial oil",
@@ -118,7 +163,7 @@ const rituals = [
     ]
   },
   {
-    id: "pre-event", title: "Pre-Event Glow", subtitle: "Quick definition and de-puff before anything important",
+    id: "pre-event", title: "Show Up Glowing", subtitle: "Pre-Event Ritual — define and depuff in 5 min",
     duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg",
     description: "Drains under-eye puffiness, defines the jawline, and lifts the cheekbone in five minutes. Designed for before a presentation, shoot, dinner, or any moment that requires you looking and feeling your best.",
     tools: "Gua sha stone or clean fingertips · facial oil",
@@ -133,7 +178,7 @@ const rituals = [
     ]
   },
   {
-    id: "eye-revival", title: "Eye Revival", subtitle: "Brighten and depuff the eye area",
+    id: "eye-revival", title: "Brighten & Open", subtitle: "Eye Revival — depuff and reduce dark circles",
     duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg",
     description: "Drains the orbital area using ring finger pressure points and sweeping motions. Reduces dark circles, depuffs the under-eye, and releases the corrugator — the muscle responsible for the heavy, hooded look. Ring fingers only.",
     tools: "Ring fingers · eye cream or serum",
@@ -441,8 +486,8 @@ function RitualPlayer({ ritual, onClose }) {
             <Sparkles size={32} color={B.gold}/>
           </div>
           <h2 style={{fontSize:24,color:B.cream,fontWeight:400,margin:"0 0 8px",fontFamily:F}}>You showed up.</h2>
-          <p style={{fontSize:14,color:B.muted,fontStyle:"italic",margin:"0 0 6px",fontFamily:F}}>{ritual.title} — {ritual.duration}</p>
-          <p style={{fontSize:12,color:B.gold,fontFamily:SF,margin:"0 0 36px"}}>Your face held this. Now it's released.</p>
+          <p style={{fontSize:15,color:B.creamMuted,fontStyle:"italic",margin:"0 0 6px",fontFamily:F}}>Your face is softer, more open, and more lifted.</p>
+          <p style={{fontSize:12,color:B.muted,fontFamily:SF,margin:"0 0 28px"}}>{ritual.title} · {ritual.duration}</p>
           <button onClick={onClose} style={{background:B.goldGrad,border:"none",borderRadius:28,padding:"14px 40px",cursor:"pointer",color:B.warmBlack,fontSize:14,fontFamily:SF,letterSpacing:1,fontWeight:500}}>Continue</button>
         </div>
       </div>
@@ -572,10 +617,16 @@ export default function ObrizApp() {
   const [streak,setStreak]=useState(()=>load('streak',1));
   const [totalSessions,setTotalSessions]=useState(()=>load('totalSessions',0));
   const [totalMinutes,setTotalMinutes]=useState(()=>load('totalMinutes',0));
+  // Face check-in
   const [checkinState,setCheckinState]=useState(null);
   const [showCheckin,setShowCheckin]=useState(false);
   const [checkinDone,setCheckinDone]=useState(false);
   const [selectedCheckin,setSelectedCheckin]=useState(null);
+  // Meditation check-in
+  const [medCheckinState,setMedCheckinState]=useState(null);
+  const [medCheckinDone,setMedCheckinDone]=useState(false);
+  const [selectedMedCheckin,setSelectedMedCheckin]=useState(null);
+  const [meditationStreak,setMeditationStreak]=useState(()=>load('meditationStreak',0));
   const [showComplete,setShowComplete]=useState(false);
   const [nsScore,setNsScore]=useState(()=>load('nsScore',50));
   const [scoreHistory,setScoreHistory]=useState(()=>load('scoreHistory',[45,42,48,52,55,50]));
@@ -707,6 +758,7 @@ export default function ObrizApp() {
   // Persist
   useEffect(()=>{save('completedToday',completedToday);},[completedToday]);
   useEffect(()=>{save('streak',streak);},[streak]);
+  useEffect(()=>{save('meditationStreak',meditationStreak);},[meditationStreak]);
   useEffect(()=>{save('totalSessions',totalSessions);},[totalSessions]);
   useEffect(()=>{save('totalMinutes',totalMinutes);},[totalMinutes]);
   useEffect(()=>{save('nsScore',nsScore);},[nsScore]);
@@ -728,7 +780,7 @@ export default function ObrizApp() {
       cancelAnimationFrame(animRef.current);setIsPlaying(false);setElapsed(a.duration);
       if(!completedToday.includes(id)){
         setCompletedToday(c=>[...c,id]);setTotalSessions(t=>t+1);setTotalMinutes(t=>t+Math.ceil(s.duration/60));
-        setNsScore(sc=>Math.min(100,sc+8));setScoreHistory(h=>[...h.slice(-6),Math.min(100,nsScore+8)]);
+        setMeditationStreak(n=>n+1);
       }
       setShowComplete(true);
     });
@@ -770,7 +822,7 @@ export default function ObrizApp() {
   const container={width:"100%",maxWidth:430,margin:"0 auto",minHeight:"100vh",background:B.darkGrad,color:B.cream,fontFamily:F,position:"relative",overflowX:"hidden",overflowY:"auto"};
 
   const navBtn=(id,Icon,label)=>{
-    const a=screen===id||(id==="rituals"&&(screen==="player"||screen==="library"));
+    const a=screen===id||(id==="rituals"&&(screen==="player"||screen==="library"))||(id==="meditations"&&screen==="meditations");
     return(
       <button key={id} onClick={()=>id!=="player"&&setScreen(id)} className="rhei-card"
         style={{background:"none",border:"none",display:"flex",flexDirection:"column",alignItems:"center",gap:5,cursor:"pointer",padding:"0 10px",position:"relative"}}>
@@ -793,13 +845,14 @@ export default function ObrizApp() {
     const isFirstTime = totalSessions === 0;
     const ritualLocked = arc.ritual.isPremium && !isPremium;
     const zoneMap = {"gua-sha":"jawline","lymphatic":"nodes","face-lift":"cheeks","buccal":"jawline","pre-event":"full","eye-revival":"undereye"};
-    const ritualZone = zoneMap[arc.ritual.id] || "full";
+    const ritualZone = zoneMap[arc.ritual.id]||"full";
+    const personalizedMsg = checkinState?.message || null;
 
     return (
     <div className="rhei-page" style={{padding:"56px 22px 120px"}}>
 
       {/* Header */}
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:32}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:28}}>
         <div>
           <h1 style={{fontSize:20,letterSpacing:12,color:B.gold,fontWeight:400,margin:"0 0 4px",fontFamily:F}}>RHEI</h1>
           <p style={{fontSize:22,fontWeight:400,color:B.cream,margin:0,fontFamily:F}}>{greetUser(userName)}</p>
@@ -821,88 +874,70 @@ export default function ObrizApp() {
         </div>
       )}
 
-      {/* Check-in */}
-      {!checkinDone?(
-        <button onClick={()=>setShowCheckin(true)}
-          style={{width:"100%",background:B.card,border:`1px solid ${B.border}`,borderRadius:18,padding:"18px 20px",cursor:"pointer",textAlign:"left",marginBottom:24,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div>
-            <p style={{fontSize:9,letterSpacing:2,color:B.muted,textTransform:"uppercase",fontFamily:SF,margin:"0 0 5px"}}>Before we begin</p>
-            <p style={{fontSize:18,color:B.cream,margin:"0 0 4px",fontFamily:F,fontWeight:400}}>How is your face feeling?</p>
-            <p style={{fontSize:12,color:B.muted,margin:0,fontFamily:SF,fontStyle:"italic"}}>Your answer shapes today's ritual.</p>
-          </div>
-          <div style={{width:36,height:36,borderRadius:"50%",background:`${B.gold}12`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-            <ArrowRight size={14} color={B.gold}/>
-          </div>
-        </button>
-      ):(
-        <button onClick={()=>{setCheckinDone(false);setCheckinState(null);setShowCheckin(true);}}
-          style={{width:"100%",background:`${B.gold}06`,border:`1px solid ${B.border}`,borderRadius:14,padding:"13px 18px",marginBottom:24,display:"flex",alignItems:"center",gap:12,cursor:"pointer",textAlign:"left"}}>
-          <div style={{width:8,height:8,borderRadius:"50%",background:checkinState?.color||B.gold,flexShrink:0}}/>
+      {/* Personalized state message OR first-visit prompt */}
+      {personalizedMsg ? (
+        <div style={{background:`${B.gold}08`,border:`1px solid ${B.border}`,borderRadius:14,padding:"14px 18px",marginBottom:22,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div style={{flex:1}}>
-            <p style={{fontSize:13,color:B.cream,margin:0,fontFamily:SF,fontWeight:500}}>{checkinState?.label}</p>
-            <p style={{fontSize:11,color:B.muted,margin:"1px 0 0",fontFamily:SF}}>{checkinState?.sublabel}</p>
+            <p style={{fontSize:13,color:B.cream,margin:0,fontFamily:F,fontWeight:400,fontStyle:"italic"}}>{personalizedMsg}</p>
           </div>
-          <span style={{fontSize:10,color:B.muted,fontFamily:SF}}>Change</span>
-        </button>
+          <button onClick={()=>{setCheckinDone(false);setCheckinState(null);}} style={{background:"none",border:"none",cursor:"pointer",color:B.muted,fontSize:10,fontFamily:SF,marginLeft:12,flexShrink:0}}>Change</button>
+        </div>
+      ) : (
+        <div style={{marginBottom:22}}>
+          <p style={{fontSize:13,color:B.muted,fontFamily:SF,fontStyle:"italic"}}>Your face reflects your nervous system — both work together.</p>
+        </div>
       )}
 
-      {/* Today's practice — face + nervous system as one arc */}
-      <div style={{marginBottom:28}}>
-        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:4,fontFamily:SF}}>{checkinDone?"Your practice today":greetShort()}</p>
-        <p style={{fontSize:11,color:B.muted,fontFamily:SF,fontStyle:"italic",marginBottom:14}}>Start with the face. Finish with the nervous system.</p>
-
-        {/* First time — "Your First Ritual" */}
-        {isFirstTime&&(
-          <div style={{background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"22px 20px",marginBottom:10,position:"relative",overflow:"hidden"}}>
-            <div style={{position:"absolute",top:-30,right:-30}}><Orb active={false} size={140}/></div>
-            <div style={{position:"relative",zIndex:2}}>
-              <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 8px"}}>Start here</p>
-              <h2 style={{fontSize:20,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>Your First Ritual</h2>
-              <p style={{fontSize:12,color:B.muted,margin:"0 0 16px",fontFamily:SF,lineHeight:1.55}}>Gua Sha Sculpt followed by the Morning Reset. Do this once and you'll understand exactly how RHEI works.</p>
-              <button onClick={()=>setActiveRitual(rituals[0])} style={{background:B.goldGrad,border:"none",borderRadius:22,padding:"11px 24px",cursor:"pointer",color:B.warmBlack,fontSize:12,fontFamily:SF,letterSpacing:1,fontWeight:600,boxShadow:`0 4px 20px ${B.gold}25`}}>Begin</button>
-            </div>
-          </div>
-        )}
-
-        {/* Face ritual card */}
-        <button onClick={()=>{if(ritualLocked){setScreen("premium");}else{setActiveRitual(arc.ritual);}}}
-          style={{width:"100%",background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"22px 20px",cursor:"pointer",textAlign:"left",marginBottom:4,position:"relative",overflow:"hidden"}}>
-          <div style={{position:"absolute",top:-40,right:-40,width:180,height:180}}><Orb active={false} size={180}/></div>
-          {ritualLocked&&<div style={{position:"absolute",top:14,right:14,display:"flex",alignItems:"center",gap:4,background:`${B.gold}12`,padding:"3px 8px",borderRadius:7}}><Lock size={9} color={B.gold}/><span style={{fontSize:8,letterSpacing:1.5,color:B.gold,fontFamily:SF,textTransform:"uppercase"}}>Premium</span></div>}
+      {/* ── Section 1: Face Ritual ── */}
+      <div style={{marginBottom:10}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+          <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,margin:0}}>Face Ritual</p>
+          <button onClick={()=>setScreen("rituals")} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:3,color:B.muted,fontSize:10,fontFamily:SF}}>
+            <span>All rituals</span><ArrowRight size={10}/>
+          </button>
+        </div>
+        <button onClick={()=>{if(ritualLocked){setScreen("premium");}else{setActiveRitual(generateAdaptiveRitual(arc.ritual,checkinState));}}}
+          style={{width:"100%",background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"20px 18px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:-40,right:-40,width:160,height:160}}><Orb active={false} size={160}/></div>
+          {ritualLocked&&<div style={{position:"absolute",top:13,right:13,display:"flex",alignItems:"center",gap:4,background:`${B.gold}12`,padding:"3px 8px",borderRadius:7}}><Lock size={9} color={B.gold}/><span style={{fontSize:8,letterSpacing:1,color:B.gold,fontFamily:SF}}>PREMIUM</span></div>}
           <div style={{position:"relative",zIndex:2}}>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-              <div style={{width:44,height:44,borderRadius:12,background:`${B.gold}08`,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                <FaceGuideIllustration zone={ritualZone} size={34}/>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+              <div style={{width:40,height:40,borderRadius:11,background:`${B.gold}08`,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                <FaceGuideIllustration zone={ritualZone} size={30}/>
               </div>
               <div>
-                <p style={{fontSize:8,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 2px"}}>Face Ritual</p>
-                <h2 style={{fontSize:20,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>{arc.ritual.title}</h2>
+                <h2 style={{fontSize:18,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>{arc.ritual.title}</h2>
+                <p style={{fontSize:11,color:B.muted,margin:"1px 0 0",fontFamily:SF}}>{arc.ritual.subtitle}</p>
               </div>
             </div>
-            <p style={{fontSize:12,color:B.muted,margin:"0 0 14px",fontFamily:SF}}>{arc.ritual.subtitle}</p>
-            <div style={{display:"flex",alignItems:"center",gap:14}}>
-              <div style={{background:B.goldGrad,borderRadius:22,padding:"9px 22px",boxShadow:`0 4px 20px ${B.gold}25`}}>
-                <span style={{fontSize:12,color:B.warmBlack,fontFamily:SF,fontWeight:600,letterSpacing:0.5}}>Begin</span>
+            <div style={{display:"flex",alignItems:"center",gap:12,marginTop:12}}>
+              <div style={{background:B.goldGrad,borderRadius:20,padding:"8px 20px",boxShadow:`0 4px 16px ${B.gold}22`}}>
+                <span style={{fontSize:12,color:B.warmBlack,fontFamily:SF,fontWeight:600}}>Begin ritual</span>
               </div>
-              <span style={{fontSize:11,color:B.muted,fontFamily:SF}}>{arc.ritual.duration} · {arc.ritual.steps.length} steps</span>
+              <span style={{fontSize:11,color:B.muted,fontFamily:SF}}>{arc.ritual.duration}</span>
             </div>
           </div>
         </button>
+      </div>
 
-        {/* Connector */}
-        <div style={{display:"flex",justifyContent:"center",height:10,alignItems:"center"}}>
-          <div style={{width:1,height:"100%",background:`rgba(196,154,75,0.2)`}}/>
+      {/* Bridge text */}
+      <p style={{fontSize:11,color:B.muted,fontFamily:SF,fontStyle:"italic",textAlign:"center",padding:"8px 0 12px"}}>Your face reflects your nervous system — both work together.</p>
+
+      {/* ── Section 2: Meditation ── */}
+      <div style={{marginBottom:28}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+          <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,margin:0}}>Meditation</p>
+          <button onClick={()=>setScreen("meditations")} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:3,color:B.muted,fontSize:10,fontFamily:SF}}>
+            <span>All meditations</span><ArrowRight size={10}/>
+          </button>
         </div>
-
-        {/* Nervous system reset */}
         <button onClick={()=>{const locked=arc.audio.id!==1&&!isPremium;if(locked){setScreen("premium");}else{startSession(arc.audio.id);}}}
-          style={{width:"100%",background:`${B.card}AA`,border:`1px solid ${B.border}`,borderRadius:16,padding:"14px 18px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:14}}>
-          <div style={{width:36,height:36,borderRadius:"50%",background:`${B.gold}10`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          style={{width:"100%",background:`${B.card}CC`,border:`1px solid ${B.border}`,borderRadius:16,padding:"14px 16px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:14}}>
+          <div style={{width:38,height:38,borderRadius:"50%",background:`${B.gold}10`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
             <Play size={13} color={B.gold} fill={B.gold} style={{marginLeft:2}}/>
           </div>
           <div style={{flex:1}}>
-            <p style={{fontSize:8,letterSpacing:2,color:B.muted,textTransform:"uppercase",fontFamily:SF,margin:"0 0 2px"}}>Nervous System Reset</p>
-            <p style={{fontSize:15,color:B.cream,margin:0,fontFamily:F}}>{arc.audio.title}</p>
+            <h3 style={{fontSize:15,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>{arc.audio.title}</h3>
             <p style={{fontSize:11,color:B.muted,margin:"1px 0 0",fontFamily:SF}}>{arc.audio.subtitle}</p>
           </div>
           <span style={{fontSize:10,color:B.muted,fontFamily:SF}}>{Math.ceil(arc.audio.duration/60)}m</span>
@@ -910,21 +945,21 @@ export default function ObrizApp() {
       </div>
 
       {/* Divider */}
-      <div style={{height:1,background:`rgba(196,154,75,0.08)`,marginBottom:24}}/>
+      <div style={{height:1,background:`rgba(196,154,75,0.08)`,marginBottom:22}}/>
 
-      {/* Quick interventions */}
+      {/* Quick relief */}
       <div style={{marginBottom:8}}>
         <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:12,fontFamily:SF}}>Quick relief</p>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
           {[
-            {id:"sigh",  title:"Physiological Sigh",  badge:"60 sec", desc:"Fastest nervous system reset. Double inhale, long exhale."},
-            {id:"jaw",   title:"Jaw Release",          badge:"40 sec", desc:"Release jaw tension through 3 sustained holds."},
-            {id:"ground",title:"5-4-3-2-1 Grounding",  badge:"90 sec", desc:"Anchor to the present using your five senses."},
-            {id:"tap",   title:"Butterfly Tap",        badge:"30 sec", desc:"Bilateral tapping that calms the nervous system."},
+            {id:"sigh",  title:"Physiological Sigh", badge:"60 sec", desc:"Fastest nervous system reset."},
+            {id:"jaw",   title:"Jaw Release",         badge:"40 sec", desc:"Release where you hold tension."},
+            {id:"ground",title:"5-4-3-2-1 Ground",   badge:"90 sec", desc:"Anchor to the present moment."},
+            {id:"tap",   title:"Butterfly Tap",       badge:"30 sec", desc:"Bilateral tapping, calms fast."},
           ].map(mi=>(
             <button key={mi.id} onClick={()=>openMicro(mi.id)}
-              style={{background:B.card,border:`1px solid ${B.border}`,borderRadius:14,padding:"14px 13px",cursor:"pointer",textAlign:"left"}}>
-              <p style={{fontSize:9,color:B.gold,fontFamily:SF,margin:"0 0 8px",background:`${B.gold}10`,display:"inline-block",padding:"2px 8px",borderRadius:5}}>{mi.badge}</p>
+              style={{background:B.card,border:`1px solid ${B.border}`,borderRadius:14,padding:"13px 12px",cursor:"pointer",textAlign:"left"}}>
+              <p style={{fontSize:9,color:B.gold,fontFamily:SF,margin:"0 0 7px",background:`${B.gold}10`,display:"inline-block",padding:"2px 7px",borderRadius:5}}>{mi.badge}</p>
               <p style={{fontSize:13,color:B.cream,margin:"0 0 3px",fontFamily:F,fontWeight:400}}>{mi.title}</p>
               <p style={{fontSize:11,color:B.muted,margin:0,fontFamily:SF,lineHeight:1.4}}>{mi.desc}</p>
             </button>
@@ -1000,54 +1035,63 @@ export default function ObrizApp() {
     );
   };
 
-  // ══════════ RITUALS ══════════
-  const renderRituals=()=>(
+  // ══════════ RITUALS — face check-in inline ══════════
+  const renderRituals=()=>{
+    const zoneMap = {"gua-sha":"jawline","lymphatic":"nodes","face-lift":"cheeks","buccal":"jawline","pre-event":"full","eye-revival":"undereye"};
+    const recommended = checkinDone && checkinState
+      ? rituals.find(r=>r.id===checkinState.ritualId)
+      : null;
+    return (
     <div style={{padding:"56px 22px 120px"}}>
-      <div style={{textAlign:"center",marginBottom:28}}>
-        <h1 style={{fontSize:22,fontWeight:400,color:B.cream,margin:"0 0 6px",fontFamily:F}}>Your Practices</h1>
-        <p style={{fontSize:13,color:B.muted,fontFamily:SF,lineHeight:1.5}}>Two approaches. One system. The face is where stress shows — these work on it from the outside and inside simultaneously.</p>
+      <div style={{marginBottom:24}}>
+        <h1 style={{fontSize:22,fontWeight:400,color:B.cream,margin:"0 0 4px",fontFamily:F}}>Face Rituals</h1>
+        <p style={{fontSize:13,color:B.muted,fontFamily:SF}}>Hands-on techniques that sculpt, drain, and lift.</p>
       </div>
 
-      {/* ── Face Rituals section ── */}
-      <div style={{marginBottom:14}}>
-        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:4,fontFamily:SF}}>Face Rituals</p>
-        <p style={{fontSize:12,color:B.muted,fontFamily:SF,lineHeight:1.5}}>Hands-on techniques that sculpt, drain, and lift. The face responds immediately — results are visible during the ritual itself.</p>
+      {/* ── Inline face check-in ── */}
+      <div style={{background:B.card,borderRadius:18,padding:"18px 18px 14px",marginBottom:20,border:`1px solid ${B.border}`}}>
+        <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 10px"}}>What are you noticing today?</p>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:checkinDone?12:0}}>
+          {nsStates.map(state=>{
+            const selected = checkinState?.id===state.id;
+            return (
+              <button key={state.id}
+                onClick={()=>{setCheckinState(state);setCheckinDone(true);}}
+                style={{background:selected?`${state.color}18`:B.bgDeep,border:`1.5px solid ${selected?state.color:B.border}`,borderRadius:12,padding:"10px 12px",cursor:"pointer",textAlign:"left",transition:"all 0.15s"}}>
+                <p style={{fontSize:12,color:selected?B.cream:B.creamMuted,margin:0,fontFamily:SF,fontWeight:selected?500:400}}>{state.label}</p>
+                <p style={{fontSize:10,color:B.muted,margin:"2px 0 0",fontFamily:SF,lineHeight:1.3}}>{state.sublabel}</p>
+              </button>
+            );
+          })}
+        </div>
+        {checkinDone && recommended && (
+          <div style={{display:"flex",alignItems:"center",gap:8,paddingTop:4,borderTop:`1px solid ${B.border}`}}>
+            <Sparkles size={12} color={B.gold}/>
+            <p style={{fontSize:12,color:B.gold,fontFamily:SF,margin:0}}>Recommended for you: <strong style={{color:B.cream}}>{recommended.title}</strong></p>
+          </div>
+        )}
       </div>
 
-
-      {/* ── Occasion tags ── */}
-      <div style={{display:"flex",gap:8,marginBottom:22,overflowX:"auto",paddingBottom:2}}>
-        {[{label:"All"},{label:"Morning"},{label:"Before"},{label:"Recovery"},{label:"Evening"}].map((t,i)=>(
-          <div key={i} style={{flexShrink:0,background:i===0?`rgba(196,154,75,0.08)`:"transparent",border:`1px solid ${i===0?B.borderActive:B.border}`,borderRadius:22,padding:"7px 16px",cursor:"pointer",fontSize:11,color:i===0?B.gold:B.muted,fontFamily:SF,letterSpacing:0.5,whiteSpace:"nowrap",transition:"all 0.2s"}}>{t.label}</div>
-        ))}
-      </div>
-
-      {/* ── Ritual cards — luxury ── */}
-      {rituals.map((r,idx)=>{
+      {/* ── Ritual cards ── */}
+      {rituals.map((r)=>{
         const locked = r.isPremium && !isPremium;
-        const zoneMap = {"gua-sha":"jawline","lymphatic":"nodes","face-lift":"cheeks","buccal":"jawline","pre-event":"full","eye-revival":"undereye"};
-        const timeMap = {"gua-sha":"Any time","lymphatic":"Morning","face-lift":"Evening","buccal":"Recovery","pre-event":"Before anything that matters","eye-revival":"Morning"};
+        const isRecommended = recommended?.id === r.id;
         return (
-          <button key={r.id} onClick={()=>{if(locked){setScreen("premium");}else{setActiveRitual(r);}}}
-            className="rhei-card"
-            style={{width:"100%",background:`linear-gradient(145deg, ${B.cardElevated} 0%, ${B.card} 55%, ${B.bgMid} 100%)`,border:`1px solid ${locked?B.border:B.borderSoft}`,borderRadius:22,padding:"20px 18px",marginBottom:12,cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",opacity:locked?0.65:1,boxShadow:locked?"none":B.cardShadow}}>
-            {/* Gold top line on unlocked */}
-            {!locked&&<div style={{position:"absolute",top:0,left:0,right:0,height:1,background:`linear-gradient(90deg, transparent, rgba(196,154,75,0.25), transparent)`}}/>}
-            {locked && <div style={{position:"absolute",top:14,right:14,display:"flex",alignItems:"center",gap:4,background:`rgba(196,154,75,0.08)`,border:`1px solid ${B.border}`,padding:"4px 10px",borderRadius:8}}>
-              <Lock size={8} color={B.goldMuted}/><span style={{fontSize:8,letterSpacing:1.5,color:B.goldMuted,fontFamily:SF,textTransform:"uppercase"}}>Premium</span>
-            </div>}
-            {!locked&&!r.isPremium&&<div style={{position:"absolute",top:14,right:14,fontSize:8,letterSpacing:1.5,color:"#5A8A5A",background:"rgba(90,138,90,0.12)",border:"1px solid rgba(90,138,90,0.2)",padding:"3px 8px",borderRadius:8,fontFamily:SF,textTransform:"uppercase"}}>Free</div>}
-            <div style={{display:"flex",alignItems:"flex-start",gap:14}}>
-              <div style={{width:64,height:64,borderRadius:18,background:`rgba(196,154,75,0.05)`,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                <FaceGuideIllustration zone={zoneMap[r.id]||"full"} size={50}/>
+          <button key={r.id} onClick={()=>{if(locked){setScreen("premium");}else{setActiveRitual(generateAdaptiveRitual(r,checkinState));}}}
+            style={{width:"100%",background:B.card,border:`1.5px solid ${isRecommended?B.borderActive:locked?B.border:B.border}`,borderRadius:20,padding:"18px 16px",marginBottom:10,cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",opacity:locked?0.6:1}}>
+            {isRecommended&&<div style={{position:"absolute",top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,rgba(196,154,75,0.4),transparent)`}}/>}
+            {locked&&<div style={{position:"absolute",top:13,right:13,display:"flex",alignItems:"center",gap:4,background:`${B.gold}10`,padding:"3px 8px",borderRadius:7}}><Lock size={8} color={B.goldMuted}/><span style={{fontSize:8,color:B.goldMuted,fontFamily:SF,letterSpacing:1}}>PREMIUM</span></div>}
+            {isRecommended&&<div style={{position:"absolute",top:13,right:13,background:`${B.gold}18`,border:`1px solid ${B.gold}40`,padding:"3px 10px",borderRadius:7}}><span style={{fontSize:8,color:B.gold,fontFamily:SF,letterSpacing:1}}>RECOMMENDED</span></div>}
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <div style={{width:52,height:52,borderRadius:14,background:`${B.gold}07`,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                <FaceGuideIllustration zone={zoneMap[r.id]||"full"} size={40}/>
               </div>
               <div style={{flex:1,minWidth:0}}>
-                <h3 style={{fontSize:18,color:B.cream,margin:"0 0 3px",fontWeight:400,fontFamily:F}}>{r.title}</h3>
-                <p style={{fontSize:12,color:B.goldMuted,margin:"0 0 8px",fontStyle:"italic",fontFamily:F}}>{r.subtitle}</p>
-                <p style={{fontSize:11,color:B.muted,margin:"0 0 12px",lineHeight:1.55,fontFamily:SF,display:"-webkit-box",WebkitLineClamp:2,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{r.description}</p>
+                <h3 style={{fontSize:16,color:B.cream,margin:"0 0 2px",fontWeight:400,fontFamily:F}}>{r.title}</h3>
+                <p style={{fontSize:11,color:B.goldMuted,margin:"0 0 6px",fontStyle:"italic"}}>{r.subtitle}</p>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:9,color:B.muted,fontFamily:SF,background:"rgba(196,154,75,0.05)",border:`1px solid ${B.border}`,padding:"3px 8px",borderRadius:6,letterSpacing:0.5}}>{timeMap[r.id]}</span>
-                  <span style={{fontSize:10,color:B.muted,fontFamily:SF,marginLeft:"auto",display:"flex",alignItems:"center",gap:3,opacity:0.7}}><Clock size={9}/>{r.duration}</span>
+                  <span style={{fontSize:10,color:B.muted,fontFamily:SF,display:"flex",alignItems:"center",gap:3}}><Clock size={9}/>{r.duration}</span>
+                  {!r.isPremium&&<span style={{fontSize:8,color:"#5A8A5A",background:"rgba(90,138,90,0.1)",border:"1px solid rgba(90,138,90,0.2)",padding:"2px 7px",borderRadius:5,letterSpacing:0.5}}>Free</span>}
                 </div>
               </div>
             </div>
@@ -1055,46 +1099,106 @@ export default function ObrizApp() {
         );
       })}
 
-      {/* ══ Nervous System Resets — prominent section ══ */}
-      <div style={{background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"20px 18px 10px",marginTop:8}}>
-        <div style={{marginBottom:16}}>
-          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 4px"}}>Nervous System Resets</p>
-          <p style={{fontSize:14,color:B.cream,fontFamily:F,fontWeight:400,margin:"0 0 4px"}}>Audio-guided regulation</p>
-          <p style={{fontSize:12,color:B.muted,fontFamily:SF,lineHeight:1.5,margin:0}}>3–4 min guided audio sessions. Regulate from the inside — pair with a face ritual or use on their own.</p>
-        </div>
-        {sessions.map(s=>{
-          const Icon=s.icon; const locked=s.id!==1&&!isPremium; const done=completedToday.includes(s.id);
-          return(
-            <button key={s.id} onClick={()=>{if(locked){setScreen("premium");}else{startSession(s.id);}}}
-              style={{width:"100%",background:B.bgDeep,border:`1px solid ${B.border}`,borderRadius:14,padding:"13px 15px",marginBottom:8,cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:12,position:"relative",opacity:locked?0.55:1}}>
-              <div style={{width:34,height:34,borderRadius:"50%",background:done?`rgba(90,138,90,0.18)`:`${B.gold}12`,border:`1px solid ${done?"rgba(90,138,90,0.3)":B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                {done?<Check size={12} color="#5A8A5A"/>:<Play size={11} color={B.gold} fill={B.gold} style={{marginLeft:2}}/>}
-              </div>
-              <div style={{flex:1}}>
-                <h3 style={{fontSize:14,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>{s.title}</h3>
-                <p style={{fontSize:11,color:B.muted,margin:"1px 0 0",fontFamily:SF}}>{s.subtitle}</p>
-              </div>
-              {locked
-                ? <Lock size={11} color={B.goldMuted}/>
-                : <span style={{fontSize:10,color:B.muted,fontFamily:SF}}>{Math.ceil(s.duration/60)}m</span>
-              }
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Teaser */}
-      {!isPremium && (
-        <div style={{background:`linear-gradient(145deg, ${B.cardElevated} 0%, ${B.card} 100%)`,borderRadius:22,padding:"28px 22px",marginTop:16,border:`1px solid ${B.borderActive}`,textAlign:"center",position:"relative",overflow:"hidden",boxShadow:B.goldGlow}}>
-          <div style={{position:"absolute",top:0,left:0,right:0,height:1,background:B.goldGrad}}/>
-          <Crown size={24} color={B.gold} style={{marginBottom:12,opacity:0.9}}/>
-          <h3 style={{fontSize:18,color:B.cream,fontWeight:400,margin:"0 0 8px",fontFamily:F}}>The complete practice.</h3>
-          <p style={{fontSize:12,color:B.muted,margin:"0 0 20px",fontFamily:SF,lineHeight:1.6}}>Pre-Event Glow · Eye Revival · all 5 nervous system resets — plus everything added in future.</p>
-          <button onClick={()=>setScreen("premium")} style={{background:B.goldGrad,border:"none",borderRadius:26,padding:"13px 32px",cursor:"pointer",color:B.warmBlack,fontSize:12,fontFamily:SF,letterSpacing:1.5,fontWeight:700,boxShadow:B.goldGlowSm}}>Unlock Premium</button>
+      {!isPremium&&(
+        <div style={{background:B.card,borderRadius:18,padding:"22px 20px",marginTop:8,border:`1px solid ${B.borderActive}`,textAlign:"center"}}>
+          <Crown size={20} color={B.gold} style={{marginBottom:10}}/>
+          <h3 style={{fontSize:16,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>Unlock premium rituals</h3>
+          <p style={{fontSize:12,color:B.muted,margin:"0 0 16px",fontFamily:SF,lineHeight:1.5}}>Pre-Event Glow and Eye Revival — plus everything added in future.</p>
+          <button onClick={()=>setScreen("premium")} style={{background:B.goldGrad,border:"none",borderRadius:22,padding:"11px 26px",cursor:"pointer",color:B.warmBlack,fontSize:12,fontFamily:SF,letterSpacing:1,fontWeight:600}}>Unlock Premium</button>
         </div>
       )}
     </div>
-  );
+  );};
+
+  // ══════════ MEDITATIONS — mood check-in + streak ══════════
+  const renderMeditations=()=>{
+    const recommendedSession = medCheckinDone && medCheckinState
+      ? sessions.find(s=>s.id===medCheckinState.sessionId)
+      : null;
+    return (
+    <div style={{padding:"56px 22px 120px"}}>
+      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:24}}>
+        <div>
+          <h1 style={{fontSize:22,fontWeight:400,color:B.cream,margin:"0 0 4px",fontFamily:F}}>Meditations</h1>
+          <p style={{fontSize:13,color:B.muted,fontFamily:SF}}>Audio-guided nervous system resets.</p>
+        </div>
+        {meditationStreak>0&&(
+          <div style={{background:B.card,border:`1px solid ${B.border}`,borderRadius:14,padding:"10px 14px",textAlign:"center"}}>
+            <p style={{fontSize:20,color:B.cream,margin:0,fontFamily:SF,fontWeight:300}}>{meditationStreak}</p>
+            <p style={{fontSize:9,color:B.muted,margin:"1px 0 0",textTransform:"uppercase",letterSpacing:1.5,fontFamily:SF}}>Streak</p>
+          </div>
+        )}
+      </div>
+
+      {/* ── Mood check-in ── */}
+      <div style={{background:B.card,borderRadius:18,padding:"18px 18px 14px",marginBottom:20,border:`1px solid ${B.border}`}}>
+        <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 10px"}}>How are you feeling today?</p>
+        <div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:medCheckinDone?12:0}}>
+          {meditationStates.map(state=>{
+            const selected = medCheckinState?.id===state.id;
+            return (
+              <button key={state.id}
+                onClick={()=>{setMedCheckinState(state);setMedCheckinDone(true);}}
+                style={{width:"100%",background:selected?`${state.color}15`:B.bgDeep,border:`1.5px solid ${selected?state.color:B.border}`,borderRadius:12,padding:"11px 14px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:10,transition:"all 0.15s"}}>
+                <div style={{width:8,height:8,borderRadius:"50%",background:state.color,flexShrink:0,opacity:selected?1:0.4}}/>
+                <div style={{flex:1}}>
+                  <p style={{fontSize:13,color:selected?B.cream:B.creamMuted,margin:0,fontFamily:SF,fontWeight:selected?500:400}}>{state.label}</p>
+                  <p style={{fontSize:10,color:B.muted,margin:"1px 0 0",fontFamily:SF}}>{state.sublabel}</p>
+                </div>
+                {selected&&<Check size={14} color={state.color}/>}
+              </button>
+            );
+          })}
+        </div>
+        {medCheckinDone && recommendedSession && (
+          <div style={{display:"flex",alignItems:"center",gap:8,paddingTop:4,borderTop:`1px solid ${B.border}`}}>
+            <Sparkles size={12} color={B.gold}/>
+            <p style={{fontSize:12,color:B.gold,fontFamily:SF,margin:0}}>Recommended: <strong style={{color:B.cream}}>{recommendedSession.title}</strong></p>
+          </div>
+        )}
+      </div>
+
+      {/* ── Session cards ── */}
+      {sessions.map(s=>{
+        const locked = s.id!==1&&!isPremium;
+        const done = completedToday.includes(s.id);
+        const isRec = recommendedSession?.id===s.id;
+        const Icon = s.icon;
+        return (
+          <button key={s.id} onClick={()=>{if(locked){setScreen("premium");}else{startSession(s.id);}}}
+            style={{width:"100%",background:B.card,border:`1.5px solid ${isRec?B.borderActive:B.border}`,borderRadius:18,padding:"16px 16px",marginBottom:10,cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:14,position:"relative",opacity:locked?0.6:1}}>
+            {isRec&&<div style={{position:"absolute",top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,rgba(196,154,75,0.4),transparent)`}}/>}
+            <div style={{width:44,height:44,borderRadius:"50%",background:done?`rgba(90,138,90,0.15)`:isRec?`${B.gold}15`:`${B.gold}10`,border:`1px solid ${done?"rgba(90,138,90,0.3)":B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              {done?<Check size={15} color="#5A8A5A"/>:<Play size={14} color={B.gold} fill={B.gold} style={{marginLeft:2}}/>}
+            </div>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
+                <h3 style={{fontSize:15,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>{s.title}</h3>
+                {isRec&&<span style={{fontSize:8,color:B.gold,background:`${B.gold}12`,border:`1px solid ${B.gold}30`,padding:"1px 6px",borderRadius:5,letterSpacing:0.5}}>For you</span>}
+              </div>
+              <p style={{fontSize:11,color:B.muted,margin:0,fontFamily:SF}}>{s.subtitle}</p>
+            </div>
+            <div style={{textAlign:"right",flexShrink:0}}>
+              {locked
+                ?<Lock size={12} color={B.goldMuted}/>
+                :<span style={{fontSize:10,color:B.muted,fontFamily:SF}}>{Math.ceil(s.duration/60)}m</span>
+              }
+              {s.id===1&&!locked&&<p style={{fontSize:8,color:"#5A8A5A",margin:"2px 0 0",fontFamily:SF}}>Free</p>}
+            </div>
+          </button>
+        );
+      })}
+
+      {!isPremium&&(
+        <div style={{background:B.card,borderRadius:18,padding:"20px",marginTop:8,border:`1px solid ${B.borderActive}`,textAlign:"center"}}>
+          <Crown size={20} color={B.gold} style={{marginBottom:10}}/>
+          <h3 style={{fontSize:16,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>Unlock all meditations</h3>
+          <p style={{fontSize:12,color:B.muted,margin:"0 0 16px",fontFamily:SF,lineHeight:1.5}}>4 more audio resets — Pre-Meeting, Evening, Post-Conflict, and Quick Reset.</p>
+          <button onClick={()=>setScreen("premium")} style={{background:B.goldGrad,border:"none",borderRadius:22,padding:"11px 26px",cursor:"pointer",color:B.warmBlack,fontSize:12,fontFamily:SF,letterSpacing:1,fontWeight:600}}>Unlock Premium</button>
+        </div>
+      )}
+    </div>
+  );};
 
   // ══════════ PREMIUM (replaces shop) ══════════
   const renderPremium=()=>(
@@ -1186,51 +1290,59 @@ export default function ObrizApp() {
           <p style={{fontSize:13,color:B.muted,marginTop:4,fontStyle:"italic",fontFamily:F}}>Your face is the record of what you've shown up for.</p>
         </div>
 
-        {/* Tension tracking — face-focused bars */}
-        <div style={{background:B.card,borderRadius:18,padding:"20px",marginBottom:14,border:`1px solid ${B.border}`}}>
-          <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 14px"}}>Tension over time</p>
-          <div style={{marginBottom:12}}>
-            {[{label:"Jaw",key:"wired"},{label:"Under-eye",key:"foggy"},{label:"Brow",key:"reactive"}].map((z,i)=>(
-              <div key={i} style={{marginBottom:i<2?10:0}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                  <span style={{fontSize:11,color:B.creamMuted,fontFamily:SF}}>{z.label}</span>
-                  <span style={{fontSize:11,color:totalSessions>0?"#5A8A5A":B.muted,fontFamily:SF}}>{totalSessions>0?"Improving":"Start to track"}</span>
+        {/* Progression — language not numbers */}
+        <div style={{background:B.card,borderRadius:18,padding:"22px 20px",marginBottom:14,border:`1px solid ${B.border}`}}>
+          <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 16px"}}>How your face is changing</p>
+          {totalSessions===0?(
+            <p style={{fontSize:13,color:B.muted,fontFamily:SF,fontStyle:"italic",lineHeight:1.6,margin:0}}>Complete your first ritual to begin tracking. The change is visible within a week of consistent practice.</p>
+          ):(
+            <div>
+              {[
+                { label:"Tension", text: totalSessions>=5 ? "Your jaw is releasing. Less holding between sessions." : totalSessions>=2 ? "Starting to soften." : "Your face is beginning to open.", color:"#5A8A5A" },
+                { label:"Puffiness", text: totalSessions>=4 ? "Drainage is improving. Mornings look clearer." : "Building your drainage habit.", color: totalSessions>=4?"#5A8A5A":B.muted },
+                { label:"Overall", text: totalSessions>=7 ? "You're becoming more balanced and more consistent." : totalSessions>=3 ? "A pattern is forming. Keep going." : "The ritual is working. You'll see it this week.", color: totalSessions>=7?"#5A8A5A":B.muted },
+              ].map((item,i)=>(
+                <div key={i} style={{marginBottom:i<2?14:0}}>
+                  <p style={{fontSize:10,color:B.muted,fontFamily:SF,margin:"0 0 3px",textTransform:"uppercase",letterSpacing:1}}>{item.label}</p>
+                  <p style={{fontSize:13,color:item.color,fontFamily:F,fontStyle:"italic",margin:0,lineHeight:1.5}}>{item.text}</p>
                 </div>
-                <div style={{width:"100%",height:3,background:`${B.gold}10`,borderRadius:2}}>
-                  <div style={{width:totalSessions>0?`${Math.max(20,100-totalSessions*8)}%`:"80%",height:"100%",background:totalSessions>0?"#5A8A5A":"#C4786A",borderRadius:2,opacity:0.7,transition:"width 1s ease"}}/>
-                </div>
-              </div>
-            ))}
-          </div>
-          <p style={{fontSize:10,color:B.muted,fontFamily:SF,margin:"8px 0 0"}}>Tracked from your check-ins and rituals</p>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* What you've done */}
+        {/* Sessions summary */}
         <div style={{background:B.card,borderRadius:18,padding:"20px",marginBottom:14,border:`1px solid ${B.border}`}}>
-          <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 14px"}}>What you've done</p>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-            {[{v:totalSessions,l:"Rituals completed"},{v:`${totalMinutes}m`,l:"Time invested"},{v:completedToday.length,l:"Today"},{v:streak>0?`${streak}d`:"—",l:"Days in a row"}].map((s,i)=>(
+          <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 14px"}}>Your practice</p>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+            {[
+              {v:totalSessions,l:"Rituals completed",sub:totalSessions===0?"Start today":totalSessions===1?"Your first — well done":"Keep building"},
+              {v:`${totalMinutes}m`,l:"Time invested",sub:totalMinutes>0?"In your face and nervous system":"Time well spent"},
+              {v:meditationStreak>0?`${meditationStreak}`:completedToday.length>0?"1":"—",l:"Meditation streak",sub:meditationStreak>1?"Consecutive sessions":"Complete one to start"},
+              {v:completedToday.length>0?"✓":"—",l:"Practiced today",sub:completedToday.length>0?"You showed up":"Your face is waiting"},
+            ].map((s,i)=>(
               <div key={i} style={{textAlign:"left"}}>
                 <p style={{fontSize:26,color:B.cream,margin:"0 0 2px",fontFamily:SF,fontWeight:300}}>{s.v}</p>
-                <p style={{fontSize:10,color:B.muted,margin:0,fontFamily:SF}}>{s.l}</p>
+                <p style={{fontSize:11,color:B.cream,margin:"0 0 1px",fontFamily:SF}}>{s.l}</p>
+                <p style={{fontSize:10,color:B.muted,margin:0,fontFamily:SF}}>{s.sub}</p>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Photo journal placeholder */}
+        {/* Photo journal */}
         <div style={{background:B.card,borderRadius:18,padding:"20px",marginBottom:14,border:`1px solid ${B.border}`}}>
           <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 8px"}}>Before & after</p>
-          <p style={{fontSize:12,color:B.muted,fontFamily:SF,lineHeight:1.55,margin:"0 0 14px"}}>The real measure isn't sessions — it's your face over time. Take a photo after each ritual. The change is visible within a week.</p>
+          <p style={{fontSize:12,color:B.muted,fontFamily:SF,lineHeight:1.55,margin:"0 0 14px"}}>The real measure is your face over time. Take a photo after each ritual — the change is visible within a week.</p>
           <div style={{display:"flex",gap:10}}>
-            <div style={{flex:1,background:`${B.gold}06`,borderRadius:12,padding:"16px",textAlign:"center",border:`1px dashed ${B.border}`}}>
+            <div style={{flex:1,background:`${B.gold}05`,borderRadius:12,padding:"20px 12px",textAlign:"center",border:`1px dashed ${B.border}`}}>
               <p style={{fontSize:10,color:B.muted,fontFamily:SF,margin:0}}>Before</p>
             </div>
-            <div style={{flex:1,background:`${B.gold}06`,borderRadius:12,padding:"16px",textAlign:"center",border:`1px dashed ${B.border}`}}>
+            <div style={{flex:1,background:`${B.gold}05`,borderRadius:12,padding:"20px 12px",textAlign:"center",border:`1px dashed ${B.border}`}}>
               <p style={{fontSize:10,color:B.muted,fontFamily:SF,margin:0}}>After</p>
             </div>
           </div>
-          <p style={{fontSize:10,color:`${B.gold}80`,fontFamily:SF,margin:"10px 0 0",textAlign:"center"}}>Coming in next update</p>
+          <p style={{fontSize:10,color:`${B.gold}60`,fontFamily:SF,margin:"10px 0 0",textAlign:"center"}}>Coming in next update</p>
         </div>
 
         {/* Profile & Account */}
@@ -1281,8 +1393,8 @@ export default function ObrizApp() {
         <button onClick={()=>{setShowCheckin(false);setSelectedCheckin(null);}} style={{position:"absolute",top:18,right:18,background:"none",border:"none",cursor:"pointer"}}><X size={18} color={B.muted}/></button>
         <div style={{textAlign:"center",marginBottom:24}}>
           <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,marginBottom:10}}>Face check-in</p>
-          <h2 style={{fontSize:20,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>How is your face feeling{userName?`, ${userName}`:""}?</h2>
-          <p style={{fontSize:12,color:B.muted,fontStyle:"italic",marginBottom:4}}>We'll recommend the right ritual for what you're holding.</p>
+          <h2 style={{fontSize:20,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>What are you noticing{userName?`, ${userName}`:""}?</h2>
+          <p style={{fontSize:12,color:B.muted,fontStyle:"italic",marginBottom:4}}>Your answer shapes today's ritual.</p>
         </div>
         {nsStates.map(state=>{const Icon=state.icon; const selected=selectedCheckin?.id===state.id; return(
           <button key={state.id} onClick={()=>setSelectedCheckin(state)} style={{width:"100%",background:selected?`${state.color}15`:B.card,border:`2px solid ${selected?state.color:B.border}`,borderRadius:14,padding:"15px 16px",marginBottom:8,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"left",transition:"all 0.2s",position:"relative"}}>
@@ -1332,18 +1444,20 @@ export default function ObrizApp() {
     <div style={container}>
       <style>{GLOBAL_CSS}</style>
       {screen==="home"&&renderHome()}
-      {screen==="library"&&renderLibrary()}
+      {screen==="library"&&renderRituals()}
       {screen==="player"&&renderPlayer()}
       {screen==="rituals"&&renderRituals()}
+      {screen==="meditations"&&renderMeditations()}
       {screen==="premium"&&renderPremium()}
       {screen==="progress"&&renderProgress()}
       {showCheckin&&renderCheckin()}
       {microActive&&renderMicro()}
       {activeRitual&&<RitualPlayer ritual={activeRitual} onClose={()=>setActiveRitual(null)}/>}
-      {/* Bottom Nav — 3 tabs */}
-      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:`rgba(12,7,4,0.92)`,backdropFilter:"blur(28px)",WebkitBackdropFilter:"blur(28px)",borderTop:`1px solid rgba(196,154,75,0.08)`,display:"flex",justifyContent:"space-around",padding:"14px 0 env(safe-area-inset-bottom, 24px)",paddingBottom:"max(env(safe-area-inset-bottom), 24px)",zIndex:50}}>
+      {/* Bottom Nav — 4 tabs */}
+      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:`${B.bgDeep}F2`,backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`1px solid ${B.border}`,display:"flex",justifyContent:"space-around",padding:"11px 0 env(safe-area-inset-bottom, 22px)",paddingBottom:"max(env(safe-area-inset-bottom), 22px)",zIndex:50}}>
         {navBtn("home",Home,"Today")}
         {navBtn("rituals",Sparkles,"Rituals")}
+        {navBtn("meditations",Headphones,"Meditate")}
         {navBtn("progress",Heart,"Journey")}
       </div>
     </div>
