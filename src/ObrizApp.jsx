@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, ShoppingBag, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Star, Crown, User, ChevronRight, Hand, Mail, LogOut, Camera } from "lucide-react";
+import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Crown, User, Hand, Mail, LogOut } from "lucide-react";
 import { supabase } from "./supabaseClient";
-import FaceMirrorMode from "./FaceMirrorMode";
 import FaceGuideIllustration from "./FaceGuideIllustration";
 
 /* ═══════════════════════════════════════════
@@ -11,12 +10,17 @@ import FaceGuideIllustration from "./FaceGuideIllustration";
 
 const B = {
   bg: "#2D1B0E", bgDeep: "#231408", card: "#3A2516", cardHover: "#45301E",
+  // aliases kept for compatibility
+  cardHigh: "#45301E", cardElevated: "#45301E", bgMid: "#231408",
   gold: "#C49A4B", goldLight: "#D4AD6A", goldMuted: "#A07D3A",
+  goldBright: "#D4AD6A", goldDim: "rgba(196,154,75,0.4)", goldGradSimple: "linear-gradient(135deg, #C49A4B 0%, #D4AD6A 50%, #C49A4B 100%)",
   cream: "#F2E8D9", creamMuted: "#C9B99F", muted: "#8A7560",
   white: "#FFFAF3", warmBlack: "#1A0F06",
-  border: "rgba(196,154,75,0.12)", borderActive: "rgba(196,154,75,0.3)",
+  border: "rgba(196,154,75,0.12)", borderSoft: "rgba(196,154,75,0.18)", borderActive: "rgba(196,154,75,0.3)",
   goldGrad: "linear-gradient(135deg, #C49A4B 0%, #D4AD6A 50%, #C49A4B 100%)",
   darkGrad: "linear-gradient(180deg, #2D1B0E 0%, #231408 100%)",
+  goldGlow: "0 6px 24px rgba(196,154,75,0.22)", goldGlowSm: "0 4px 16px rgba(196,154,75,0.18)",
+  cardShadow: "0 2px 12px rgba(26,15,6,0.4)",
 };
 const F  = "'Georgia','Times New Roman',serif";
 const SF = "system-ui,-apple-system,sans-serif";
@@ -38,13 +42,12 @@ const sessions = [
   { id:5, title:"General Reset", subtitle:"Return to yourself", duration:172, icon:RefreshCw, description:"The foundational reset. No specific trigger required — use it whenever you've drifted or tensed. Three minutes, anywhere.", technique:"Diaphragmatic breathing · Body awareness · Vagal activation", bestFor:"Any moment you need to come back to center", timeOfDay:"any", audioFile:"/audio/general-reset.mp3", occasion:"any" },
 ];
 
+// ── Face check-in states → recommended rituals ──
 const nsStates = [
-  { id:"wired",    label:"Wired",     sublabel:"Tense, can't settle, jaw tight",      icon:Zap,      color:"#C4786A", recommended:[2,4], ritualId:"gua-sha",    score:25 },
-  { id:"foggy",    label:"Flat",      sublabel:"Low energy, face heavy and drawn",     icon:Brain,    color:"#8A9BAF", recommended:[1,3], ritualId:"lymphatic",  score:35 },
-  { id:"reactive", label:"Reactive",  sublabel:"Emotions close to the surface",        icon:Activity, color:"#A08BAA", recommended:[4,2], ritualId:"buccal",     score:30 },
-  { id:"exhausted",label:"Depleted",  sublabel:"Drained but can't rest",               icon:Moon,     color:"#7A8B99", recommended:[5,3], ritualId:"eye-revival",score:20 },
-  { id:"steady",   label:"Steady",    sublabel:"Present, almost settled",              icon:Waves,    color:"#8BAA8B", recommended:[1,5], ritualId:"gua-sha",    score:60 },
-  { id:"composed", label:"Clear",     sublabel:"Grounded and here",                    icon:Heart,    color:"#5A8A5A", recommended:[1],   ritualId:"gua-sha",    score:85 },
+  { id:"jaw",      label:"Jaw & neck are tight",     sublabel:"Tension along the jaw, chin, or neck",       icon:Zap,   color:"#C4786A", ritualId:"buccal" },
+  { id:"brow",     label:"Brow & forehead feel tense",sublabel:"Pressure above the eyes or across temples",  icon:Brain, color:"#A08BAA", ritualId:"face-lift" },
+  { id:"undereye", label:"Under-eye area is puffy",   sublabel:"Swelling or heaviness around the eyes",      icon:Moon,  color:"#8A9BAF", ritualId:"lymphatic" },
+  { id:"full",     label:"All over / not sure",       sublabel:"General facial tension, or starting fresh",  icon:Waves, color:"#8BAA8B", ritualId:"gua-sha" },
 ];
 
 // ── Ritual Guide Data ──
@@ -68,7 +71,7 @@ const rituals = [
   },
   {
     id: "lymphatic", title: "Lymphatic Drainage", subtitle: "De-puff and restore circulation",
-    duration: "6 min", isPremium: true, svgFile: "/svgs/lymphatic-paths.svg",
+    duration: "6 min", isPremium: false, svgFile: "/svgs/lymphatic-paths.svg",
     description: "Light fingertip pressure along the lymphatic pathways to drain the fluid that causes morning puffiness, under-eye swelling, and dull skin. No tools needed. Results are visible immediately — especially effective in the morning.",
     tools: "Clean fingertips only — no tools needed",
     occasion: "morning", audioFollowUp: 5,
@@ -84,7 +87,7 @@ const rituals = [
   },
   {
     id: "face-lift", title: "Face Lifting", subtitle: "Targeted lift through pressure and technique",
-    duration: "7 min", isPremium: true, svgFile: "/svgs/face-lifting-points.svg",
+    duration: "7 min", isPremium: false, svgFile: "/svgs/face-lifting-points.svg",
     description: "Hook-and-lift technique on the cheekbones, brow bone presses, and knuckle sweeps along the jaw — targeting the specific points that gravity and tension pull downward. You'll feel the result while you're doing it.",
     tools: "Clean fingertips · facial oil",
     occasion: "evening", audioFollowUp: 3,
@@ -101,7 +104,7 @@ const rituals = [
   },
   {
     id: "buccal", title: "Jaw Release", subtitle: "Deep release for the jaw and cheek muscles",
-    duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg",
+    duration: "5 min", isPremium: false, svgFile: "/svgs/face-base.svg",
     description: "Targets the masseter and buccinator — the two muscles that hold the most stress tension in the face. Most people find far more tension here than expected. Hands only, no tools needed. Immediate release.",
     tools: "Clean hands · facial oil",
     occasion: "recovery", audioFollowUp: 4,
@@ -581,7 +584,6 @@ export default function ObrizApp() {
   const [microDone,setMicroDone]=useState(false);
   const [microMsg,setMicroMsg]=useState("");
   const [activeRitual,setActiveRitual]=useState(null);
-  const [showMirrorMode,setShowMirrorMode]=useState(false);
   const [showInstallPrompt,setShowInstallPrompt]=useState(false);
   const [installDismissed,setInstallDismissed]=useState(()=>load('installDismissed',false));
   const [isIOS]=useState(()=>/iPad|iPhone|iPod/.test(navigator.userAgent));
@@ -746,7 +748,7 @@ export default function ObrizApp() {
     cancelAnimationFrame(animRef.current);setIsPlaying(false);setActiveSession(null);setElapsed(0);setAudioDuration(0);setShowComplete(false);setScreen("library");
   };
 
-  const doCheckin=(state)=>{setCheckinState(state);setCheckinDone(true);setSelectedCheckin(null);setShowCheckin(false);setNsScore(state.score);setScoreHistory(h=>[...h.slice(-6),state.score]);};
+  const doCheckin=(state)=>{setCheckinState(state);setCheckinDone(true);setSelectedCheckin(null);setShowCheckin(false);};
 
   const getSuggested=()=>{
     if(checkinDone&&checkinState) return sessions.find(s=>s.id===checkinState.recommended[0]);
@@ -757,11 +759,6 @@ export default function ObrizApp() {
   const openMicro=(id)=>{setMicroActive(id);setMicroDone(false);setMicroMsg("");};
   const closeMicro=()=>{setMicroActive(null);setMicroDone(false);};
 
-  const handleMirrorTransitionToReset=(sessionId)=>{
-    setShowMirrorMode(false);
-    startSession(sessionId);
-    setScreen("player");
-  };
   const completeMicro=(msg,scoreBoost)=>{setMicroDone(true);setMicroMsg(msg);setNsScore(s=>Math.min(100,s+scoreBoost));setScoreHistory(h=>[...h.slice(-6),Math.min(100,nsScore+scoreBoost)]);};
 
   const cur=activeSession?sessions.find(s=>s.id===activeSession):null;
@@ -830,8 +827,8 @@ export default function ObrizApp() {
           style={{width:"100%",background:B.card,border:`1px solid ${B.border}`,borderRadius:18,padding:"18px 20px",cursor:"pointer",textAlign:"left",marginBottom:24,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div>
             <p style={{fontSize:9,letterSpacing:2,color:B.muted,textTransform:"uppercase",fontFamily:SF,margin:"0 0 5px"}}>Before we begin</p>
-            <p style={{fontSize:18,color:B.cream,margin:"0 0 4px",fontFamily:F,fontWeight:400}}>How are you right now?</p>
-            <p style={{fontSize:12,color:B.muted,margin:0,fontFamily:SF,fontStyle:"italic"}}>Your face reflects it. We'll build from there.</p>
+            <p style={{fontSize:18,color:B.cream,margin:"0 0 4px",fontFamily:F,fontWeight:400}}>How is your face feeling?</p>
+            <p style={{fontSize:12,color:B.muted,margin:0,fontFamily:SF,fontStyle:"italic"}}>Your answer shapes today's ritual.</p>
           </div>
           <div style={{width:36,height:36,borderRadius:"50%",background:`${B.gold}12`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
             <ArrowRight size={14} color={B.gold}/>
@@ -1017,29 +1014,6 @@ export default function ObrizApp() {
         <p style={{fontSize:12,color:B.muted,fontFamily:SF,lineHeight:1.5}}>Hands-on techniques that sculpt, drain, and lift. The face responds immediately — results are visible during the ritual itself.</p>
       </div>
 
-      {/* ── Smart Scan Hero Card ── */}
-      <button
-        onClick={()=>setShowMirrorMode(true)}
-        style={{width:"100%",background:`linear-gradient(135deg, ${B.card} 0%, #2A1A0C 100%)`,border:`1px solid ${B.borderActive}`,borderRadius:22,padding:"24px 22px",cursor:"pointer",textAlign:"left",marginBottom:20,position:"relative",overflow:"hidden"}}>
-        {/* Subtle orb bg */}
-        <div style={{position:"absolute",top:-30,right:-30,width:160,height:160,borderRadius:"50%",background:`radial-gradient(circle, ${B.gold}08 0%, transparent 70%)`}}/>
-        <div style={{position:"relative",zIndex:2}}>
-          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
-            <div style={{width:38,height:38,borderRadius:"50%",background:`${B.gold}12`,border:`1px solid ${B.gold}25`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-              <Camera size={16} color={B.gold}/>
-            </div>
-            <div>
-              <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:0}}>New · Smart Face Scan</p>
-              <h3 style={{fontSize:16,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>Mirror Mode</h3>
-            </div>
-          </div>
-          <p style={{fontSize:12,color:B.creamMuted,margin:"0 0 14px",fontFamily:SF,lineHeight:1.55}}>RHEI reads your face, maps where you're holding tension today, and guides your ritual live — on your actual face.</p>
-          <div style={{display:"flex",alignItems:"center",gap:6}}>
-            <span style={{fontSize:11,color:B.gold,fontFamily:SF,fontWeight:500}}>Begin Smart Scan</span>
-            <ArrowRight size={12} color={B.gold}/>
-          </div>
-        </div>
-      </button>
 
       {/* ── Occasion tags ── */}
       <div style={{display:"flex",gap:8,marginBottom:22,overflowX:"auto",paddingBottom:2}}>
@@ -1081,29 +1055,33 @@ export default function ObrizApp() {
         );
       })}
 
-      {/* Section: Nervous System Resets */}
-      <div style={{height:1,background:`rgba(196,154,75,0.08)`,margin:"8px 0 22px"}}/>
-      <div style={{marginBottom:16}}>
-        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:4,fontFamily:SF}}>Nervous System Resets</p>
-        <p style={{fontSize:12,color:B.muted,fontFamily:SF,lineHeight:1.5}}>Audio-guided resets that regulate from the inside. Pair with a face ritual, or use independently.</p>
+      {/* ══ Nervous System Resets — prominent section ══ */}
+      <div style={{background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"20px 18px 10px",marginTop:8}}>
+        <div style={{marginBottom:16}}>
+          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 4px"}}>Nervous System Resets</p>
+          <p style={{fontSize:14,color:B.cream,fontFamily:F,fontWeight:400,margin:"0 0 4px"}}>Audio-guided regulation</p>
+          <p style={{fontSize:12,color:B.muted,fontFamily:SF,lineHeight:1.5,margin:0}}>3–4 min guided audio sessions. Regulate from the inside — pair with a face ritual or use on their own.</p>
+        </div>
+        {sessions.map(s=>{
+          const Icon=s.icon; const locked=s.id!==1&&!isPremium; const done=completedToday.includes(s.id);
+          return(
+            <button key={s.id} onClick={()=>{if(locked){setScreen("premium");}else{startSession(s.id);}}}
+              style={{width:"100%",background:B.bgDeep,border:`1px solid ${B.border}`,borderRadius:14,padding:"13px 15px",marginBottom:8,cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:12,position:"relative",opacity:locked?0.55:1}}>
+              <div style={{width:34,height:34,borderRadius:"50%",background:done?`rgba(90,138,90,0.18)`:`${B.gold}12`,border:`1px solid ${done?"rgba(90,138,90,0.3)":B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                {done?<Check size={12} color="#5A8A5A"/>:<Play size={11} color={B.gold} fill={B.gold} style={{marginLeft:2}}/>}
+              </div>
+              <div style={{flex:1}}>
+                <h3 style={{fontSize:14,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>{s.title}</h3>
+                <p style={{fontSize:11,color:B.muted,margin:"1px 0 0",fontFamily:SF}}>{s.subtitle}</p>
+              </div>
+              {locked
+                ? <Lock size={11} color={B.goldMuted}/>
+                : <span style={{fontSize:10,color:B.muted,fontFamily:SF}}>{Math.ceil(s.duration/60)}m</span>
+              }
+            </button>
+          );
+        })}
       </div>
-      {sessions.map(s=>{
-        const Icon=s.icon; const locked=s.id!==1&&!isPremium; const done=completedToday.includes(s.id);
-        return(
-          <button key={s.id} onClick={()=>{if(locked){setScreen("premium");}else{startSession(s.id);}}}
-            className="rhei-card"
-            style={{width:"100%",background:`linear-gradient(145deg, ${B.cardHigh}88 0%, ${B.card}55 100%)`,border:`1px solid ${locked?B.border:B.border}`,borderRadius:16,padding:"14px 16px",marginBottom:8,cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:12,position:"relative",opacity:locked?0.6:1}}>
-            <div style={{width:36,height:36,borderRadius:"50%",background:done?`rgba(90,138,90,0.15)`:`rgba(196,154,75,0.07)`,border:`1px solid ${done?"rgba(90,138,90,0.3)":B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-              {done?<Check size={13} color="#5A8A5A"/>:<Play size={12} color={B.gold} fill={B.gold} style={{marginLeft:2}}/>}
-            </div>
-            <div style={{flex:1}}>
-              <h3 style={{fontSize:15,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>{s.title}</h3>
-              <p style={{fontSize:11,color:B.muted,margin:"1px 0 0",fontFamily:SF,fontStyle:"italic"}}>{s.subtitle}</p>
-            </div>
-            {locked?<Lock size={11} color={B.goldMuted}/>:<span style={{fontSize:10,color:B.muted,fontFamily:SF}}>{Math.ceil(s.duration/60)}m</span>}
-          </button>
-        );
-      })}
 
       {/* Teaser */}
       {!isPremium && (
@@ -1111,8 +1089,8 @@ export default function ObrizApp() {
           <div style={{position:"absolute",top:0,left:0,right:0,height:1,background:B.goldGrad}}/>
           <Crown size={24} color={B.gold} style={{marginBottom:12,opacity:0.9}}/>
           <h3 style={{fontSize:18,color:B.cream,fontWeight:400,margin:"0 0 8px",fontFamily:F}}>The complete practice.</h3>
-          <p style={{fontSize:12,color:B.muted,margin:"0 0 20px",fontFamily:SF,lineHeight:1.6}}>Lymphatic Drainage · Face Lifting · Deep Jaw Release · Pre-Event Glow · Eye Brightening · all 5 audio resets.</p>
-          <button onClick={()=>setScreen("premium")} style={{background:B.goldGrad,border:"none",borderRadius:26,padding:"13px 32px",cursor:"pointer",color:B.warmBlack,fontSize:12,fontFamily:SF,letterSpacing:1.5,fontWeight:700,boxShadow:B.goldGlowSm}} className="rhei-gold-shimmer">Unlock Everything</button>
+          <p style={{fontSize:12,color:B.muted,margin:"0 0 20px",fontFamily:SF,lineHeight:1.6}}>Pre-Event Glow · Eye Revival · all 5 nervous system resets — plus everything added in future.</p>
+          <button onClick={()=>setScreen("premium")} style={{background:B.goldGrad,border:"none",borderRadius:26,padding:"13px 32px",cursor:"pointer",color:B.warmBlack,fontSize:12,fontFamily:SF,letterSpacing:1.5,fontWeight:700,boxShadow:B.goldGlowSm}}>Unlock Premium</button>
         </div>
       )}
     </div>
@@ -1137,12 +1115,12 @@ export default function ObrizApp() {
           {text:"After Conflict Reset — audio", free:false},
           {text:"Quick Reset — audio", free:false},
           {text:"Physiological Sigh, Jaw Release, Grounding, Tap", free:true},
-          {text:"Gua Sha Sculpt — face ritual (free forever)", free:true},
-          {text:"Lymphatic Drainage", free:false},
-          {text:"Face Lifting", free:false},
-          {text:"Deep Jaw Release", free:false},
+          {text:"Gua Sha Sculpt", free:true},
+          {text:"Lymphatic Drainage", free:true},
+          {text:"Face Lifting", free:true},
+          {text:"Jaw Release", free:true},
           {text:"Pre-Event Glow", free:false},
-          {text:"Eye Brightening", free:false},
+          {text:"Eye Revival", free:false},
           {text:"Daily NS Score tracking", free:true},
           {text:"All future ritual guides & sessions", free:false},
           {text:"Priority access to new features", free:false},
@@ -1302,9 +1280,9 @@ export default function ObrizApp() {
       <div style={{width:"100%",maxWidth:390,padding:"32px 22px"}}>
         <button onClick={()=>{setShowCheckin(false);setSelectedCheckin(null);}} style={{position:"absolute",top:18,right:18,background:"none",border:"none",cursor:"pointer"}}><X size={18} color={B.muted}/></button>
         <div style={{textAlign:"center",marginBottom:24}}>
-          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,marginBottom:10}}>Daily check-in</p>
-          <h2 style={{fontSize:20,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>How are you right now{userName?`, ${userName}`:""}?</h2>
-          <p style={{fontSize:12,color:B.muted,fontStyle:"italic",marginBottom:4}}>Your answer shapes what we recommend — for your face and your nervous system.</p>
+          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,marginBottom:10}}>Face check-in</p>
+          <h2 style={{fontSize:20,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>How is your face feeling{userName?`, ${userName}`:""}?</h2>
+          <p style={{fontSize:12,color:B.muted,fontStyle:"italic",marginBottom:4}}>We'll recommend the right ritual for what you're holding.</p>
         </div>
         {nsStates.map(state=>{const Icon=state.icon; const selected=selectedCheckin?.id===state.id; return(
           <button key={state.id} onClick={()=>setSelectedCheckin(state)} style={{width:"100%",background:selected?`${state.color}15`:B.card,border:`2px solid ${selected?state.color:B.border}`,borderRadius:14,padding:"15px 16px",marginBottom:8,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"left",transition:"all 0.2s",position:"relative"}}>
@@ -1323,7 +1301,7 @@ export default function ObrizApp() {
           </button>
         );})}
         <button onClick={()=>{if(selectedCheckin) doCheckin(selectedCheckin);}} disabled={!selectedCheckin} style={{width:"100%",marginTop:12,background:selectedCheckin?B.goldGrad:`${B.gold}20`,border:"none",borderRadius:28,padding:"15px",cursor:selectedCheckin?"pointer":"not-allowed",color:selectedCheckin?B.warmBlack:B.muted,fontSize:14,fontFamily:SF,letterSpacing:1,fontWeight:600,opacity:selectedCheckin?1:0.4,transition:"all 0.3s"}}>
-          {selectedCheckin?`Build my ritual →`:"Choose to continue"}
+          {selectedCheckin?`Recommend my ritual →`:"Select to continue"}
         </button>
       </div>
     </div>
@@ -1362,7 +1340,6 @@ export default function ObrizApp() {
       {showCheckin&&renderCheckin()}
       {microActive&&renderMicro()}
       {activeRitual&&<RitualPlayer ritual={activeRitual} onClose={()=>setActiveRitual(null)}/>}
-      {showMirrorMode&&<FaceMirrorMode onClose={()=>setShowMirrorMode(false)} onTransitionToReset={handleMirrorTransitionToReset} rituals={rituals} isPremium={isPremium}/>}
       {/* Bottom Nav — 3 tabs */}
       <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:`rgba(12,7,4,0.92)`,backdropFilter:"blur(28px)",WebkitBackdropFilter:"blur(28px)",borderTop:`1px solid rgba(196,154,75,0.08)`,display:"flex",justifyContent:"space-around",padding:"14px 0 env(safe-area-inset-bottom, 24px)",paddingBottom:"max(env(safe-area-inset-bottom), 24px)",zIndex:50}}>
         {navBtn("home",Home,"Today")}
