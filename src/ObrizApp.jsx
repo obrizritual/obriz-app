@@ -405,7 +405,7 @@ function GuideComplete({ message, onClose }) {
 // ══════════════════════════════════════
 // RITUAL GUIDE PLAYER
 // ══════════════════════════════════════
-function RitualPlayer({ ritual, onClose }) {
+function RitualPlayer({ ritual, onClose, onComplete }) {
   const [step,setStep]=useState(-1); // -1 = overview
   const [timeLeft,setTimeLeft]=useState(0);
   const [paused,setPaused]=useState(false);
@@ -428,8 +428,10 @@ function RitualPlayer({ ritual, onClose }) {
   },[step,paused]);
 
   const nextStep = () => {
-    if(step+1 >= totalSteps) { setStep(totalSteps); } // completion
-    else setStep(s=>s+1);
+    if(step+1 >= totalSteps) {
+      setStep(totalSteps);
+      onComplete?.({ ritualType: ritual.id, totalDuration: ritual.steps.reduce((s,x)=>s+x.duration,0) });
+    } else setStep(s=>s+1);
   };
 
   const prevStep = () => { if(step > 0) setStep(s=>s-1); };
@@ -781,6 +783,8 @@ export default function ObrizApp() {
       if(!completedToday.includes(id)){
         setCompletedToday(c=>[...c,id]);setTotalSessions(t=>t+1);setTotalMinutes(t=>t+Math.ceil(s.duration/60));
         setMeditationStreak(n=>n+1);
+        // Persist to Supabase (fire and forget via helper)
+        completeSessionOnServer('meditation',null,Math.round(a.duration));
       }
       setShowComplete(true);
     });
@@ -800,7 +804,17 @@ export default function ObrizApp() {
     cancelAnimationFrame(animRef.current);setIsPlaying(false);setActiveSession(null);setElapsed(0);setAudioDuration(0);setShowComplete(false);setScreen("library");
   };
 
-  const doCheckin=(state)=>{setCheckinState(state);setCheckinDone(true);setSelectedCheckin(null);setShowCheckin(false);};
+  const doCheckin=(state)=>{
+    setCheckinState(state);setCheckinDone(true);setSelectedCheckin(null);setShowCheckin(false);
+    // Persist face state to Supabase (fire and forget)
+    if(supabase&&authUser){
+      supabase.from('face_states').insert({
+        user_id:       authUser.id,
+        dominant_state:state.dominant,
+        source:        'manual_checkin',
+      }).then(()=>{}).catch(()=>{});
+    }
+  };
 
   const getSuggested=()=>{
     if(checkinDone&&checkinState) return sessions.find(s=>s.id===checkinState.recommended[0]);
@@ -820,6 +834,25 @@ export default function ObrizApp() {
   const remaining=Math.max(0,effDur-elapsed);
 
   const container={width:"100%",maxWidth:430,margin:"0 auto",minHeight:"100vh",background:B.darkGrad,color:B.cream,fontFamily:F,position:"relative",overflowX:"hidden",overflowY:"auto"};
+
+  // ── Supabase session completion (async, fire-and-forget) ──
+  const completeSessionOnServer=(sessionType,ritualType,durationSecs,faceStateAfter)=>{
+    if(!supabase||!authUser) return;
+    supabase.auth.getSession().then(({data})=>{
+      const token=data.session?.access_token;
+      if(!token) return;
+      fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/complete-session`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+        body:JSON.stringify({
+          session_type:sessionType,
+          ritual_type:ritualType||undefined,
+          duration_seconds:durationSecs,
+          face_state_after:faceStateAfter||undefined,
+        }),
+      }).catch(()=>{});
+    }).catch(()=>{});
+  };
 
   const navBtn=(id,Icon,label)=>{
     const a=screen===id||(id==="rituals"&&(screen==="player"||screen==="library"))||(id==="meditations"&&screen==="meditations");
@@ -1452,7 +1485,15 @@ export default function ObrizApp() {
       {screen==="progress"&&renderProgress()}
       {showCheckin&&renderCheckin()}
       {microActive&&renderMicro()}
-      {activeRitual&&<RitualPlayer ritual={activeRitual} onClose={()=>setActiveRitual(null)}/>}
+      {activeRitual&&<RitualPlayer
+        ritual={activeRitual}
+        onClose={()=>setActiveRitual(null)}
+        onComplete={({ritualType,totalDuration})=>{
+          setTotalSessions(t=>t+1);
+          setTotalMinutes(t=>t+Math.ceil(totalDuration/60));
+          completeSessionOnServer('ritual',ritualType,totalDuration,checkinState?.dominant||null);
+        }}
+      />}
       {/* Bottom Nav — 4 tabs */}
       <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:`${B.bgDeep}F2`,backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`1px solid ${B.border}`,display:"flex",justifyContent:"space-around",padding:"11px 0 env(safe-area-inset-bottom, 22px)",paddingBottom:"max(env(safe-area-inset-bottom), 22px)",zIndex:50}}>
         {navBtn("home",Home,"Today")}
