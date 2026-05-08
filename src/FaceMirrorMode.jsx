@@ -21,10 +21,10 @@ const SF = "system-ui,-apple-system,sans-serif";
 
 // ── Zone → tension profile → ritual ──────────────────────────────────────────
 const ZONES = [
-  { id:"jaw",      label:"Jaw & neck",         desc:"Tightness along the jawline, chin, or neck", color:"#C4786A", zone:"jawline",  illustration:"jawline" },
-  { id:"brow",     label:"Brow & forehead",    desc:"Tension above the eyes or across the temples", color:"#A08BAA", zone:"brow",     illustration:"brow" },
-  { id:"undereye", label:"Under-eye & cheeks", desc:"Puffiness or heaviness under the eyes",        color:"#8A9BAF", zone:"undereye", illustration:"undereye" },
-  { id:"full",     label:"Full face",          desc:"General tension or not sure where to start",   color:B.gold,    zone:"full",    illustration:"full" },
+  { id:"jaw",      label:"Jaw & neck tight",     desc:"Clenching, tightness along the jaw, or tension in the neck", color:"#C4786A", zone:"jawline",  illustration:"jawline" },
+  { id:"brow",     label:"Brow & forehead tense", desc:"Furrowed brow, forehead tension, or pressure above the eyes", color:"#A08BAA", zone:"brow",     illustration:"brow" },
+  { id:"undereye", label:"Puffy under-eye",        desc:"Swelling, dark circles, or heaviness under and around the eyes", color:"#8A9BAF", zone:"undereye", illustration:"undereye" },
+  { id:"full",     label:"All over / not sure",    desc:"General face tension, or I'm not sure where to start", color:B.gold,    zone:"full",    illustration:"full" },
 ];
 
 const ZONE_TO_RITUAL = {
