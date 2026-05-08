@@ -10,89 +10,49 @@ import FaceGuideIllustration from "./FaceGuideIllustration";
    ═══════════════════════════════════════════ */
 
 const B = {
-  // Backgrounds — true deep warm blacks
-  bg:          "#160C05",
-  bgDeep:      "#0C0704",
-  bgMid:       "#1E1108",
-  card:        "#261508",
-  cardHigh:    "#331C0C",
-  cardElevated:"#3E2410",
-  // Gold — 4-stop luxury palette
-  gold:        "#C49A4B",
-  goldLight:   "#D4AD6A",
-  goldBright:  "#EAC97A",
-  goldMuted:   "#8A6830",
-  goldDim:     "rgba(196,154,75,0.45)",
-  // Text
-  cream:       "#F5EDE0",
-  creamMuted:  "#C4B09A",
-  muted:       "#6E5840",
-  mutedLight:  "#8A7258",
-  white:       "#FFFBF5",
-  warmBlack:   "#080503",
-  // Borders
-  border:      "rgba(196,154,75,0.09)",
-  borderSoft:  "rgba(196,154,75,0.15)",
-  borderActive:"rgba(196,154,75,0.30)",
-  borderGlow:  "rgba(196,154,75,0.50)",
-  // Gradients
-  goldGrad:    "linear-gradient(135deg, #9A7230 0%, #C49A4B 30%, #EAC97A 55%, #C49A4B 75%, #9A7230 100%)",
-  goldGradSimple: "linear-gradient(135deg, #C49A4B 0%, #D4AD6A 50%, #C49A4B 100%)",
-  darkGrad:    "linear-gradient(180deg, #160C05 0%, #0C0704 100%)",
-  cardGrad:    "linear-gradient(145deg, #3E2410 0%, #261508 60%, #1E1108 100%)",
-  heroGrad:    "linear-gradient(180deg, transparent 0%, rgba(8,5,3,0.65) 55%, rgba(8,5,3,0.97) 100%)",
-  // Shadows & glows
-  goldGlow:    "0 0 40px rgba(196,154,75,0.18), 0 6px 24px rgba(8,5,3,0.7)",
-  goldGlowSm:  "0 0 18px rgba(196,154,75,0.22), 0 3px 12px rgba(8,5,3,0.5)",
-  cardShadow:  "0 4px 28px rgba(8,5,3,0.6)",
+  bg: "#2D1B0E", bgDeep: "#231408", card: "#3A2516", cardHover: "#45301E",
+  gold: "#C49A4B", goldLight: "#D4AD6A", goldMuted: "#A07D3A",
+  cream: "#F2E8D9", creamMuted: "#C9B99F", muted: "#8A7560",
+  white: "#FFFAF3", warmBlack: "#1A0F06",
+  border: "rgba(196,154,75,0.12)", borderActive: "rgba(196,154,75,0.3)",
+  goldGrad: "linear-gradient(135deg, #C49A4B 0%, #D4AD6A 50%, #C49A4B 100%)",
+  darkGrad: "linear-gradient(180deg, #2D1B0E 0%, #231408 100%)",
 };
 const F  = "'Georgia','Times New Roman',serif";
 const SF = "system-ui,-apple-system,sans-serif";
 
-// ── Global luxury CSS ──
 const GLOBAL_CSS = `
-  @keyframes rhei-fade-up    { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes rhei-fade-in    { from{opacity:0} to{opacity:1} }
-  @keyframes rhei-shimmer    { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
-  @keyframes rhei-glow-pulse { 0%,100%{opacity:0.35;transform:scale(1)} 50%{opacity:0.7;transform:scale(1.04)} }
-  @keyframes rhei-spin        { to{transform:rotate(360deg)} }
-  @keyframes rhei-breathe    { 0%,100%{transform:scale(0.97);opacity:0.7} 50%{transform:scale(1.03);opacity:1} }
-  .rhei-page { animation: rhei-fade-up 0.45s cubic-bezier(.22,1,.36,1) both; }
-  .rhei-card { transition: all 0.2s cubic-bezier(.22,1,.36,1); }
-  .rhei-card:active { transform: scale(0.985); }
-  .rhei-gold-shimmer {
-    background: linear-gradient(105deg, #9A7230 0%, #C49A4B 20%, #EAC97A 38%, #C49A4B 55%, #9A7230 100%);
-    background-size: 200% 100%;
-    animation: rhei-shimmer 2.8s ease-in-out infinite;
-  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  .rhei-page { animation: fadeUp 0.35s ease both; }
   ::-webkit-scrollbar { display: none; }
   * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
 `;
 
-// ── Audio Resets ──
+// ── Nervous System Resets ──
 const sessions = [
-  { id:1, title:"Morning Reset", subtitle:"3 min · before anything else", duration:179, icon:Sun, description:"A 3-minute breathing sequence that regulates your cortisol response before the day starts. Sets your nervous system baseline. Works whether you feel stressed or not — do it every morning.", technique:"Extended exhale · Somatic grounding · Vagal humming", bestFor:"First 10 minutes after waking. Before your phone.", timeOfDay:"morning", audioFile:"/audio/morning-reset.mp3", occasion:"morning" },
-  { id:2, title:"Pre-Meeting Reset", subtitle:"3 min · calm before high-stakes moments", duration:200, icon:Shield, description:"Activates your vagal tone and grounds your nervous system before presentations, difficult conversations, or any interaction that matters. Walk in composed, not reactive.", technique:"Physiological sigh · Somatic grounding · Cognitive anchor", bestFor:"5 minutes before a meeting, call, or anything you're dreading.", timeOfDay:"any", audioFile:"/audio/pre-meeting-reset.mp3", occasion:"event" },
-  { id:3, title:"End of Day Reset", subtitle:"4 min · leave work at work", duration:234, icon:Sunset, description:"Releases the performance mode your body stays locked in after a workday. Specifically designed for the transition between professional mode and personal life. Stops you from bringing it home.", technique:"Progressive release · Body scan · Identity shift", bestFor:"The commute home, or before you walk through the door.", timeOfDay:"evening", audioFile:"/audio/transition-reset.mp3", occasion:"evening" },
-  { id:4, title:"After Conflict Reset", subtitle:"3 min · release what you're still holding", duration:194, icon:Wind, description:"After an argument, difficult conversation, or emotionally draining interaction, your body stays physiologically activated long after the event ends. This moves you out of it.", technique:"Bilateral stimulation · Physiological sigh · Self-compassion", bestFor:"After any interaction that left you shaken, frustrated, or flat.", timeOfDay:"any", audioFile:"/audio/post-conflict-reset.mp3", occasion:"recovery" },
-  { id:5, title:"Quick Reset", subtitle:"3 min · anytime, anywhere", duration:172, icon:RefreshCw, description:"The fastest way back to yourself. No particular moment required — use this whenever you notice you've drifted, tensed, or lost the thread. Works in a bathroom, a car, or a walk.", technique:"Diaphragmatic breathing · Body awareness · Vagal activation", bestFor:"Any moment you need to come back to center.", timeOfDay:"any", audioFile:"/audio/general-reset.mp3", occasion:"any" },
+  { id:1, title:"Morning Reset", subtitle:"Before the day begins", duration:179, icon:Sun, description:"Sets your nervous system baseline before anything else can. Three minutes of breathing — extended exhale, somatic grounding, vagal activation. Best done before your phone.", technique:"Extended exhale · Somatic grounding · Vagal humming", bestFor:"First minutes after waking", timeOfDay:"morning", audioFile:"/audio/morning-reset.mp3", occasion:"morning" },
+  { id:2, title:"Pre-Meeting Reset", subtitle:"Walk in composed, not reactive", duration:200, icon:Shield, description:"Activates vagal tone and grounds the nervous system before high-stakes moments. The difference between responding and reacting.", technique:"Physiological sigh · Somatic grounding · Cognitive anchor", bestFor:"Five minutes before any demanding interaction", timeOfDay:"any", audioFile:"/audio/pre-meeting-reset.mp3", occasion:"event" },
+  { id:3, title:"The Transition", subtitle:"From performance mode to presence", duration:234, icon:Sunset, description:"Releases the activation that lingers after a workday. Designed for the shift between professional and personal life — so you don't bring it home.", technique:"Progressive release · Body scan · Identity shift", bestFor:"The commute home, or before walking through the door", timeOfDay:"evening", audioFile:"/audio/transition-reset.mp3", occasion:"evening" },
+  { id:4, title:"Post-Conflict Reset", subtitle:"Release what you're still holding", duration:194, icon:Wind, description:"After a difficult conversation, the body stays physiologically activated long after the moment ends. This is how you actually leave it.", technique:"Bilateral stimulation · Physiological sigh · Self-compassion", bestFor:"After difficult conversations or anything emotionally costly", timeOfDay:"any", audioFile:"/audio/post-conflict-reset.mp3", occasion:"recovery" },
+  { id:5, title:"General Reset", subtitle:"Return to yourself", duration:172, icon:RefreshCw, description:"The foundational reset. No specific trigger required — use it whenever you've drifted or tensed. Three minutes, anywhere.", technique:"Diaphragmatic breathing · Body awareness · Vagal activation", bestFor:"Any moment you need to come back to center", timeOfDay:"any", audioFile:"/audio/general-reset.mp3", occasion:"any" },
 ];
 
 const nsStates = [
-  { id:"wired", label:"Wired / Tense", sublabel:"Can't settle · jaw tight · mind racing", icon:Zap, color:"#C4786A", recommended:[2,4], ritualId:"gua-sha", score:25 },
-  { id:"foggy", label:"Puffy / Flat", sublabel:"Face swollen · heavy under eyes · low energy", icon:Brain, color:"#8A9BAF", recommended:[1,3], ritualId:"lymphatic", score:35 },
-  { id:"reactive", label:"Reactive / On edge", sublabel:"Easy to irritate · emotions near the surface", icon:Activity, color:"#A08BAA", recommended:[4,2], ritualId:"buccal", score:30 },
-  { id:"exhausted", label:"Exhausted / Depleted", sublabel:"Drained and drawn · tired but wired", icon:Moon, color:"#7A8B99", recommended:[5,3], ritualId:"eye-revival", score:20 },
-  { id:"steady", label:"Okay / Steady", sublabel:"Functional · not quite settled yet", icon:Waves, color:"#8BAA8B", recommended:[1,5], ritualId:"gua-sha", score:60 },
-  { id:"composed", label:"Good / Clear", sublabel:"Grounded · face relaxed · present", icon:Heart, color:"#5A8A5A", recommended:[1], ritualId:"gua-sha", score:85 },
+  { id:"wired",    label:"Wired",     sublabel:"Tense, can't settle, jaw tight",      icon:Zap,      color:"#C4786A", recommended:[2,4], ritualId:"gua-sha",    score:25 },
+  { id:"foggy",    label:"Flat",      sublabel:"Low energy, face heavy and drawn",     icon:Brain,    color:"#8A9BAF", recommended:[1,3], ritualId:"lymphatic",  score:35 },
+  { id:"reactive", label:"Reactive",  sublabel:"Emotions close to the surface",        icon:Activity, color:"#A08BAA", recommended:[4,2], ritualId:"buccal",     score:30 },
+  { id:"exhausted",label:"Depleted",  sublabel:"Drained but can't rest",               icon:Moon,     color:"#7A8B99", recommended:[5,3], ritualId:"eye-revival",score:20 },
+  { id:"steady",   label:"Steady",    sublabel:"Present, almost settled",              icon:Waves,    color:"#8BAA8B", recommended:[1,5], ritualId:"gua-sha",    score:60 },
+  { id:"composed", label:"Clear",     sublabel:"Grounded and here",                    icon:Heart,    color:"#5A8A5A", recommended:[1],   ritualId:"gua-sha",    score:85 },
 ];
 
 // ── Ritual Guide Data ──
 const rituals = [
   {
-    id: "gua-sha", title: "Gua Sha Sculpt", subtitle: "8 min · jawline, cheekbones, neck · stone or fingers",
+    id: "gua-sha", title: "Gua Sha Sculpt", subtitle: "Jawline, cheekbones, and neck drainage",
     duration: "8 min", isPremium: false, svgFile: "/svgs/gua-sha-zones.svg",
-    description: "Uses a gua sha stone (or your fingers) to drain lymphatic fluid, reduce puffiness, and define the jawline and cheekbones through firm sweeping strokes. Visibly sharpens the face. The most immediately noticeable result of any ritual here.",
+    description: "Firm sweeping strokes along the jawline and cheekbones to drain lymphatic fluid, reduce puffiness, and define bone structure. The most visibly immediate result of any ritual here. Uses a gua sha stone or clean fingers.",
     tools: "Gua sha stone or clean fingers · facial oil",
     occasion: "morning", audioFollowUp: 1,
     steps: [
@@ -107,9 +67,9 @@ const rituals = [
     ]
   },
   {
-    id: "lymphatic", title: "Lymphatic Drainage", subtitle: "6 min · depuff the face · fingertips only, no tools needed",
+    id: "lymphatic", title: "Lymphatic Drainage", subtitle: "De-puff and restore circulation",
     duration: "6 min", isPremium: true, svgFile: "/svgs/lymphatic-paths.svg",
-    description: "Light fingertip pressure following the lymphatic pathways to drain fluid that causes morning puffiness, under-eye swelling, and dull skin. No tools needed. Uses only fingertips with a specific sequence. Best done in the morning — results visible immediately.",
+    description: "Light fingertip pressure along the lymphatic pathways to drain the fluid that causes morning puffiness, under-eye swelling, and dull skin. No tools needed. Results are visible immediately — especially effective in the morning.",
     tools: "Clean fingertips only — no tools needed",
     occasion: "morning", audioFollowUp: 5,
     steps: [
@@ -123,9 +83,9 @@ const rituals = [
     ]
   },
   {
-    id: "face-lift", title: "Face Lifting", subtitle: "7 min · lift and firm using pressure points · fingertips",
+    id: "face-lift", title: "Face Lifting", subtitle: "Targeted lift through pressure and technique",
     duration: "7 min", isPremium: true, svgFile: "/svgs/face-lifting-points.svg",
-    description: "Targets the specific pressure points and muscle groups that gravity and tension pull downward over time. Hook-and-lift technique on cheekbones, brow bone presses, knuckle sweeps along the jawline. You will feel the lift during the ritual itself.",
+    description: "Hook-and-lift technique on the cheekbones, brow bone presses, and knuckle sweeps along the jaw — targeting the specific points that gravity and tension pull downward. You'll feel the result while you're doing it.",
     tools: "Clean fingertips · facial oil",
     occasion: "evening", audioFollowUp: 3,
     steps: [
@@ -140,9 +100,9 @@ const rituals = [
     ]
   },
   {
-    id: "buccal", title: "Deep Jaw Release", subtitle: "5 min · release jaw and cheek tension · hands only",
+    id: "buccal", title: "Jaw Release", subtitle: "Deep release for the jaw and cheek muscles",
     duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg",
-    description: "Targets the masseter (the main jaw muscle) and buccinator (cheek muscle) — the two places that store the most stress tension in the face. Most people are shocked by how much tension they find here. Hands only, no tools. Immediate jaw release.",
+    description: "Targets the masseter and buccinator — the two muscles that hold the most stress tension in the face. Most people find far more tension here than expected. Hands only, no tools needed. Immediate release.",
     tools: "Clean hands · facial oil",
     occasion: "recovery", audioFollowUp: 4,
     steps: [
@@ -155,9 +115,9 @@ const rituals = [
     ]
   },
   {
-    id: "pre-event", title: "Pre-Event Glow", subtitle: "5 min · depuff + define before anything important",
+    id: "pre-event", title: "Pre-Event Glow", subtitle: "Quick definition and de-puff before anything important",
     duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg",
-    description: "A fast sequence specifically designed for before a presentation, photoshoot, dinner, or any moment that matters. Drains under-eye puffiness, defines the jawline, lifts the cheekbone. Visible result in 5 minutes.",
+    description: "Drains under-eye puffiness, defines the jawline, and lifts the cheekbone in five minutes. Designed for before a presentation, shoot, dinner, or any moment that requires you looking and feeling your best.",
     tools: "Gua sha stone or clean fingertips · facial oil",
     occasion: "event", audioFollowUp: 2,
     steps: [
@@ -170,9 +130,9 @@ const rituals = [
     ]
   },
   {
-    id: "eye-revival", title: "Eye Brightening", subtitle: "5 min · reduce dark circles + depuff eye area · ring fingers",
+    id: "eye-revival", title: "Eye Revival", subtitle: "Brighten and depuff the eye area",
     duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg",
-    description: "Drains the orbital area (under and around the eyes) using ring finger pressure points and sweeping motions. Reduces dark circles, depuffs the under-eye, and releases the corrugator muscle that causes the heavy, hooded look. Uses only ring fingers.",
+    description: "Drains the orbital area using ring finger pressure points and sweeping motions. Reduces dark circles, depuffs the under-eye, and releases the corrugator — the muscle responsible for the heavy, hooded look. Ring fingers only.",
     tools: "Ring fingers · eye cream or serum",
     occasion: "morning", audioFollowUp: 5,
     steps: [
@@ -839,164 +799,140 @@ export default function ObrizApp() {
     const ritualZone = zoneMap[arc.ritual.id] || "full";
 
     return (
-    <div className="rhei-page" style={{minHeight:"100vh",paddingBottom:120}}>
-
-      {/* Atmospheric top glow */}
-      <div style={{position:"fixed",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,height:320,background:"radial-gradient(ellipse at 50% 0%, rgba(196,154,75,0.07) 0%, transparent 70%)",pointerEvents:"none",zIndex:0}}/>
+    <div className="rhei-page" style={{padding:"56px 22px 120px"}}>
 
       {/* Header */}
-      <div style={{padding:"52px 24px 0",display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:28,position:"relative",zIndex:1}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:32}}>
         <div>
-          <p style={{fontSize:9,letterSpacing:8,color:B.goldDim,textTransform:"uppercase",fontFamily:SF,margin:"0 0 4px"}}>RHEI</p>
-          <h1 style={{fontSize:24,fontWeight:400,color:B.cream,margin:0,fontFamily:F,lineHeight:1.2}}>{greetUser(userName)}</h1>
+          <h1 style={{fontSize:20,letterSpacing:12,color:B.gold,fontWeight:400,margin:"0 0 4px",fontFamily:F}}>RHEI</h1>
+          <p style={{fontSize:22,fontWeight:400,color:B.cream,margin:0,fontFamily:F}}>{greetUser(userName)}</p>
         </div>
-        <button onClick={()=>setScreen("premium")} style={{background:isPremium?`rgba(196,154,75,0.08)`:"none",border:`1px solid ${isPremium?B.borderActive:B.border}`,borderRadius:22,padding:"7px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:5,transition:"all 0.2s"}}>
+        <button onClick={()=>setScreen("premium")} style={{background:"none",border:`1px solid ${B.border}`,borderRadius:20,padding:"6px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
           <Crown size={11} color={isPremium?B.gold:B.muted}/>
           <span style={{fontSize:10,color:isPremium?B.gold:B.muted,fontFamily:SF,letterSpacing:0.5}}>{isPremium?"Premium":"Unlock"}</span>
         </button>
       </div>
 
-      <div style={{padding:"0 20px",position:"relative",zIndex:1}}>
-
-      {/* Install prompt — minimal */}
+      {/* Install prompt */}
       {showInstallPrompt&&!isStandalone&&(
-        <div style={{background:`rgba(196,154,75,0.05)`,border:`1px solid ${B.borderSoft}`,borderRadius:14,padding:"12px 16px",marginBottom:18,display:"flex",alignItems:"center",gap:12,position:"relative"}}>
-          <button onClick={dismissInstall} style={{position:"absolute",top:8,right:8,background:"none",border:"none",cursor:"pointer",padding:4,opacity:0.5}}><X size={11} color={B.muted}/></button>
+        <div style={{background:`${B.gold}0A`,border:`1px solid ${B.borderActive}`,borderRadius:14,padding:"12px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:12,position:"relative"}}>
+          <button onClick={dismissInstall} style={{position:"absolute",top:8,right:8,background:"none",border:"none",cursor:"pointer",padding:4}}><X size={11} color={B.muted}/></button>
           <button onClick={installApp} style={{flex:1,background:"none",border:"none",cursor:"pointer",textAlign:"left",padding:0}}>
-            <p style={{fontSize:12,color:B.creamMuted,margin:0,fontFamily:SF}}>Add to your home screen</p>
+            <p style={{fontSize:12,color:B.cream,margin:0,fontFamily:SF}}>Add RHEI to your home screen</p>
           </button>
-          <ArrowRight size={12} color={B.goldDim}/>
+          <ArrowRight size={12} color={B.gold}/>
         </div>
       )}
 
-      {/* Face check-in — minimal strip */}
+      {/* Check-in */}
       {!checkinDone?(
-        <button onClick={()=>setShowCheckin(true)} className="rhei-card"
-          style={{width:"100%",background:`linear-gradient(135deg, ${B.cardHigh} 0%, ${B.card} 100%)`,border:`1px solid ${B.borderSoft}`,borderRadius:18,padding:"18px 20px",cursor:"pointer",textAlign:"left",marginBottom:20,display:"flex",alignItems:"center",justifyContent:"space-between",boxShadow:B.cardShadow}}>
+        <button onClick={()=>setShowCheckin(true)}
+          style={{width:"100%",background:B.card,border:`1px solid ${B.border}`,borderRadius:18,padding:"18px 20px",cursor:"pointer",textAlign:"left",marginBottom:24,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div>
-            <p style={{fontSize:8,letterSpacing:3,color:B.goldDim,textTransform:"uppercase",fontFamily:SF,margin:"0 0 5px"}}>Before you begin</p>
-            <p style={{fontSize:17,color:B.cream,margin:0,fontFamily:F,fontWeight:400}}>How is your face today?</p>
+            <p style={{fontSize:9,letterSpacing:2,color:B.muted,textTransform:"uppercase",fontFamily:SF,margin:"0 0 5px"}}>Before we begin</p>
+            <p style={{fontSize:18,color:B.cream,margin:"0 0 4px",fontFamily:F,fontWeight:400}}>How are you right now?</p>
+            <p style={{fontSize:12,color:B.muted,margin:0,fontFamily:SF,fontStyle:"italic"}}>Your face reflects it. We'll build from there.</p>
           </div>
-          <div style={{width:38,height:38,borderRadius:"50%",background:`rgba(196,154,75,0.08)`,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          <div style={{width:36,height:36,borderRadius:"50%",background:`${B.gold}12`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
             <ArrowRight size={14} color={B.gold}/>
           </div>
         </button>
       ):(
         <button onClick={()=>{setCheckinDone(false);setCheckinState(null);setShowCheckin(true);}}
-          style={{width:"100%",background:`rgba(196,154,75,0.04)`,border:`1px solid ${B.border}`,borderRadius:14,padding:"12px 18px",marginBottom:20,display:"flex",alignItems:"center",gap:12,cursor:"pointer",textAlign:"left"}}>
-          <div style={{width:7,height:7,borderRadius:"50%",background:checkinState?.color||B.gold,flexShrink:0,boxShadow:`0 0 8px ${checkinState?.color||B.gold}`}}/>
+          style={{width:"100%",background:`${B.gold}06`,border:`1px solid ${B.border}`,borderRadius:14,padding:"13px 18px",marginBottom:24,display:"flex",alignItems:"center",gap:12,cursor:"pointer",textAlign:"left"}}>
+          <div style={{width:8,height:8,borderRadius:"50%",background:checkinState?.color||B.gold,flexShrink:0}}/>
           <div style={{flex:1}}>
-            <p style={{fontSize:13,color:B.cream,margin:0,fontFamily:F,fontWeight:400}}>{checkinState?.label}</p>
-            <p style={{fontSize:10,color:B.muted,margin:"1px 0 0",fontFamily:SF}}>{checkinState?.sublabel}</p>
+            <p style={{fontSize:13,color:B.cream,margin:0,fontFamily:SF,fontWeight:500}}>{checkinState?.label}</p>
+            <p style={{fontSize:11,color:B.muted,margin:"1px 0 0",fontFamily:SF}}>{checkinState?.sublabel}</p>
           </div>
-          <span style={{fontSize:9,color:B.muted,fontFamily:SF,border:`1px solid ${B.border}`,padding:"3px 8px",borderRadius:8}}>change</span>
+          <span style={{fontSize:10,color:B.muted,fontFamily:SF}}>Change</span>
         </button>
       )}
 
-      {/* TODAY'S RITUAL ARC — Hero card */}
-      <div style={{marginBottom:24}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
-          <p style={{fontSize:8,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,margin:0}}>{checkinDone?"Your ritual today":greetShort()}</p>
-          {!isFirstTime&&<p style={{fontSize:9,color:B.muted,fontFamily:SF}}>{arc.ritual.duration}</p>}
-        </div>
+      {/* Today's practice — face + nervous system as one arc */}
+      <div style={{marginBottom:28}}>
+        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:4,fontFamily:SF}}>{checkinDone?"Your practice today":greetShort()}</p>
+        <p style={{fontSize:11,color:B.muted,fontFamily:SF,fontStyle:"italic",marginBottom:14}}>Start with the face. Finish with the nervous system.</p>
 
-        {/* First time — special entry */}
+        {/* First time — "Your First Ritual" */}
         {isFirstTime&&(
-          <div style={{marginBottom:10,background:`linear-gradient(145deg, #3A2010 0%, #1E1008 100%)`,border:`1px solid ${B.borderActive}`,borderRadius:24,overflow:"hidden",boxShadow:B.goldGlow}}>
-            <div style={{padding:"28px 22px 8px",position:"relative"}}>
-              <div style={{position:"absolute",top:"-20px",right:"-20px",opacity:0.5}}><Orb active={false} size={160}/></div>
-              <p style={{fontSize:8,letterSpacing:4,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 10px",position:"relative",zIndex:2}}>Start here</p>
-              <h2 style={{fontSize:26,color:B.cream,fontWeight:400,margin:"0 0 8px",fontFamily:F,lineHeight:1.2,position:"relative",zIndex:2}}>Your First Ritual</h2>
-              <p style={{fontSize:12,color:B.creamMuted,margin:"0 0 20px",fontFamily:SF,lineHeight:1.6,position:"relative",zIndex:2}}>Before you explore anything else. The Sculptor followed by Morning. You will feel the difference before you finish.</p>
-            </div>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"0 22px 22px"}}>
-              <button onClick={()=>setActiveRitual(rituals[0])} style={{background:B.goldGrad,border:"none",borderRadius:24,padding:"13px 28px",cursor:"pointer",color:B.warmBlack,fontSize:13,fontFamily:SF,letterSpacing:1.5,fontWeight:700,boxShadow:B.goldGlowSm,letterSpacing:1}} className="rhei-gold-shimmer">Begin</button>
-              <div style={{textAlign:"right"}}>
-                <p style={{fontSize:9,color:B.muted,fontFamily:SF,margin:0}}>Face ritual</p>
-                <p style={{fontSize:9,color:B.muted,fontFamily:SF,margin:"1px 0 0"}}>then audio reset</p>
-              </div>
+          <div style={{background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"22px 20px",marginBottom:10,position:"relative",overflow:"hidden"}}>
+            <div style={{position:"absolute",top:-30,right:-30}}><Orb active={false} size={140}/></div>
+            <div style={{position:"relative",zIndex:2}}>
+              <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 8px"}}>Start here</p>
+              <h2 style={{fontSize:20,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>Your First Ritual</h2>
+              <p style={{fontSize:12,color:B.muted,margin:"0 0 16px",fontFamily:SF,lineHeight:1.55}}>Gua Sha Sculpt followed by the Morning Reset. Do this once and you'll understand exactly how RHEI works.</p>
+              <button onClick={()=>setActiveRitual(rituals[0])} style={{background:B.goldGrad,border:"none",borderRadius:22,padding:"11px 24px",cursor:"pointer",color:B.warmBlack,fontSize:12,fontFamily:SF,letterSpacing:1,fontWeight:600,boxShadow:`0 4px 20px ${B.gold}25`}}>Begin</button>
             </div>
           </div>
         )}
 
-        {/* Face ritual — main hero */}
+        {/* Face ritual card */}
         <button onClick={()=>{if(ritualLocked){setScreen("premium");}else{setActiveRitual(arc.ritual);}}}
-          className="rhei-card"
-          style={{width:"100%",background:`linear-gradient(145deg, ${B.cardElevated} 0%, ${B.card} 55%, ${B.bgMid} 100%)`,border:`1px solid ${B.borderActive}`,borderRadius:24,padding:"26px 22px 22px",cursor:"pointer",textAlign:"left",marginBottom:6,position:"relative",overflow:"hidden",boxShadow:B.goldGlow}}>
-          {/* Background orb */}
-          <div style={{position:"absolute",top:-60,right:-60,opacity:0.6}}><Orb active={false} size={220}/></div>
-          {/* Gold top edge */}
-          <div style={{position:"absolute",top:0,left:0,right:0,height:1,background:`linear-gradient(90deg, transparent, rgba(196,154,75,0.4), transparent)`}}/>
-          {ritualLocked&&<div style={{position:"absolute",top:16,right:16,display:"flex",alignItems:"center",gap:4,background:`rgba(196,154,75,0.10)`,padding:"4px 10px",borderRadius:8,border:`1px solid ${B.border}`}}><Lock size={9} color={B.gold}/><span style={{fontSize:8,color:B.gold,fontFamily:SF,letterSpacing:1.5}}>PREMIUM</span></div>}
+          style={{width:"100%",background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"22px 20px",cursor:"pointer",textAlign:"left",marginBottom:4,position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:-40,right:-40,width:180,height:180}}><Orb active={false} size={180}/></div>
+          {ritualLocked&&<div style={{position:"absolute",top:14,right:14,display:"flex",alignItems:"center",gap:4,background:`${B.gold}12`,padding:"3px 8px",borderRadius:7}}><Lock size={9} color={B.gold}/><span style={{fontSize:8,letterSpacing:1.5,color:B.gold,fontFamily:SF,textTransform:"uppercase"}}>Premium</span></div>}
           <div style={{position:"relative",zIndex:2}}>
-            {/* Illustration + label */}
-            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
-              <div style={{width:56,height:56,borderRadius:16,background:`rgba(196,154,75,0.06)`,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                <FaceGuideIllustration zone={ritualZone} size={44}/>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+              <div style={{width:44,height:44,borderRadius:12,background:`${B.gold}08`,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                <FaceGuideIllustration zone={ritualZone} size={34}/>
               </div>
               <div>
-                <p style={{fontSize:8,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 3px",opacity:0.8}}>Face ritual</p>
-                <h2 style={{fontSize:24,color:B.cream,margin:0,fontWeight:400,fontFamily:F,lineHeight:1.1}}>{arc.ritual.title}</h2>
+                <p style={{fontSize:8,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 2px"}}>Face Ritual</p>
+                <h2 style={{fontSize:20,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>{arc.ritual.title}</h2>
               </div>
             </div>
-            <p style={{fontSize:13,color:B.muted,margin:"0 0 20px",fontStyle:"italic",fontFamily:F,lineHeight:1.5}}>{arc.ritual.subtitle}</p>
-            <div style={{display:"flex",alignItems:"center",gap:12}}>
-              <div style={{background:B.goldGrad,borderRadius:24,padding:"11px 28px",boxShadow:B.goldGlowSm}} className="rhei-gold-shimmer">
-                <span style={{fontSize:13,color:B.warmBlack,fontFamily:SF,fontWeight:700,letterSpacing:1.5}}>Begin</span>
+            <p style={{fontSize:12,color:B.muted,margin:"0 0 14px",fontFamily:SF}}>{arc.ritual.subtitle}</p>
+            <div style={{display:"flex",alignItems:"center",gap:14}}>
+              <div style={{background:B.goldGrad,borderRadius:22,padding:"9px 22px",boxShadow:`0 4px 20px ${B.gold}25`}}>
+                <span style={{fontSize:12,color:B.warmBlack,fontFamily:SF,fontWeight:600,letterSpacing:0.5}}>Begin</span>
               </div>
-              <div>
-                <p style={{fontSize:10,color:B.muted,fontFamily:SF,margin:0}}>{arc.ritual.duration}</p>
-                <p style={{fontSize:9,color:B.muted,fontFamily:SF,margin:"1px 0 0"}}>{arc.ritual.steps.length} steps</p>
-              </div>
+              <span style={{fontSize:11,color:B.muted,fontFamily:SF}}>{arc.ritual.duration} · {arc.ritual.steps.length} steps</span>
             </div>
           </div>
         </button>
 
-        {/* Connector line */}
-        <div style={{display:"flex",justifyContent:"center",margin:"0",height:12,alignItems:"center"}}>
-          <div style={{width:1,height:"100%",background:`linear-gradient(to bottom, rgba(196,154,75,0.3), rgba(196,154,75,0.1))`}}/>
+        {/* Connector */}
+        <div style={{display:"flex",justifyContent:"center",height:10,alignItems:"center"}}>
+          <div style={{width:1,height:"100%",background:`rgba(196,154,75,0.2)`}}/>
         </div>
 
-        {/* Audio reset — second movement */}
+        {/* Nervous system reset */}
         <button onClick={()=>{const locked=arc.audio.id!==1&&!isPremium;if(locked){setScreen("premium");}else{startSession(arc.audio.id);}}}
-          className="rhei-card"
-          style={{width:"100%",background:`linear-gradient(145deg, ${B.cardHigh}88 0%, ${B.card}66 100%)`,border:`1px solid ${B.border}`,borderRadius:18,padding:"16px 20px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:14}}>
-          <div style={{width:40,height:40,borderRadius:"50%",background:`rgba(196,154,75,0.07)`,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-            <Play size={14} color={B.gold} fill={B.gold} style={{marginLeft:2}}/>
+          style={{width:"100%",background:`${B.card}AA`,border:`1px solid ${B.border}`,borderRadius:16,padding:"14px 18px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:14}}>
+          <div style={{width:36,height:36,borderRadius:"50%",background:`${B.gold}10`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+            <Play size={13} color={B.gold} fill={B.gold} style={{marginLeft:2}}/>
           </div>
           <div style={{flex:1}}>
-            <p style={{fontSize:8,letterSpacing:2.5,color:B.muted,textTransform:"uppercase",fontFamily:SF,margin:"0 0 3px"}}>Then · audio reset</p>
-            <p style={{fontSize:16,color:B.cream,margin:0,fontFamily:F,fontWeight:400}}>{arc.audio.title}</p>
-            <p style={{fontSize:11,color:B.muted,margin:"2px 0 0",fontFamily:SF,fontStyle:"italic"}}>{arc.audio.subtitle}</p>
+            <p style={{fontSize:8,letterSpacing:2,color:B.muted,textTransform:"uppercase",fontFamily:SF,margin:"0 0 2px"}}>Nervous System Reset</p>
+            <p style={{fontSize:15,color:B.cream,margin:0,fontFamily:F}}>{arc.audio.title}</p>
+            <p style={{fontSize:11,color:B.muted,margin:"1px 0 0",fontFamily:SF}}>{arc.audio.subtitle}</p>
           </div>
-          <span style={{fontSize:10,color:B.goldDim,fontFamily:SF}}>{Math.ceil(arc.audio.duration/60)}m</span>
+          <span style={{fontSize:10,color:B.muted,fontFamily:SF}}>{Math.ceil(arc.audio.duration/60)}m</span>
         </button>
       </div>
 
-      {/* Thin divider */}
-      <div style={{height:1,background:`linear-gradient(90deg, transparent, rgba(196,154,75,0.12), transparent)`,marginBottom:24}}/>
+      {/* Divider */}
+      <div style={{height:1,background:`rgba(196,154,75,0.08)`,marginBottom:24}}/>
 
-      {/* When you only have a moment */}
+      {/* Quick interventions */}
       <div style={{marginBottom:8}}>
-        <p style={{fontSize:8,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:14,fontFamily:SF}}>When you only have a moment</p>
+        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:12,fontFamily:SF}}>Quick relief</p>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
           {[
-            {id:"sigh",title:"Physiological Sigh",badge:"60 sec",desc:"Double inhale + long exhale. Fastest way to lower stress hormones."},
-            {id:"jaw",title:"Jaw Release",badge:"40 sec",desc:"3 holds to release the masseter. For when your jaw is tight."},
-            {id:"ground",title:"5-4-3-2-1 Grounding",badge:"90 sec",desc:"Use your 5 senses to stop spiraling and return to the present."},
-            {id:"tap",title:"Butterfly Tap",badge:"30 sec",desc:"Cross-body tapping that calms the nervous system. Works fast."},
+            {id:"sigh",  title:"Physiological Sigh",  badge:"60 sec", desc:"Fastest nervous system reset. Double inhale, long exhale."},
+            {id:"jaw",   title:"Jaw Release",          badge:"40 sec", desc:"Release jaw tension through 3 sustained holds."},
+            {id:"ground",title:"5-4-3-2-1 Grounding",  badge:"90 sec", desc:"Anchor to the present using your five senses."},
+            {id:"tap",   title:"Butterfly Tap",        badge:"30 sec", desc:"Bilateral tapping that calms the nervous system."},
           ].map(mi=>(
-            <button key={mi.id} onClick={()=>openMicro(mi.id)} className="rhei-card"
-              style={{background:`linear-gradient(145deg, ${B.cardHigh} 0%, ${B.card} 100%)`,border:`1px solid ${B.border}`,borderRadius:18,padding:"16px 14px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden"}}>
-              <div style={{position:"absolute",top:0,left:0,right:0,height:1,background:`linear-gradient(90deg, transparent, rgba(196,154,75,0.2), transparent)`}}/>
-              <p style={{fontSize:9,color:B.gold,fontFamily:SF,margin:"0 0 10px",letterSpacing:0.5}}>{mi.badge}</p>
-              <p style={{fontSize:14,color:B.cream,margin:"0 0 4px",fontFamily:F,fontWeight:400}}>{mi.title}</p>
+            <button key={mi.id} onClick={()=>openMicro(mi.id)}
+              style={{background:B.card,border:`1px solid ${B.border}`,borderRadius:14,padding:"14px 13px",cursor:"pointer",textAlign:"left"}}>
+              <p style={{fontSize:9,color:B.gold,fontFamily:SF,margin:"0 0 8px",background:`${B.gold}10`,display:"inline-block",padding:"2px 8px",borderRadius:5}}>{mi.badge}</p>
+              <p style={{fontSize:13,color:B.cream,margin:"0 0 3px",fontFamily:F,fontWeight:400}}>{mi.title}</p>
               <p style={{fontSize:11,color:B.muted,margin:0,fontFamily:SF,lineHeight:1.4}}>{mi.desc}</p>
             </button>
           ))}
         </div>
-      </div>
-
       </div>
     </div>
   );};
@@ -1071,9 +1007,14 @@ export default function ObrizApp() {
   const renderRituals=()=>(
     <div style={{padding:"56px 22px 120px"}}>
       <div style={{textAlign:"center",marginBottom:28}}>
-        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,marginBottom:6}}>All Rituals</p>
-        <h1 style={{fontSize:22,fontWeight:400,color:B.cream,margin:0,fontFamily:F}}>Face first.</h1>
-        <p style={{fontSize:13,color:B.muted,marginTop:6,fontStyle:"italic",fontFamily:F}}>Then the audio reset follows. One arc.</p>
+        <h1 style={{fontSize:22,fontWeight:400,color:B.cream,margin:"0 0 6px",fontFamily:F}}>Your Practices</h1>
+        <p style={{fontSize:13,color:B.muted,fontFamily:SF,lineHeight:1.5}}>Two approaches. One system. The face is where stress shows — these work on it from the outside and inside simultaneously.</p>
+      </div>
+
+      {/* ── Face Rituals section ── */}
+      <div style={{marginBottom:14}}>
+        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:4,fontFamily:SF}}>Face Rituals</p>
+        <p style={{fontSize:12,color:B.muted,fontFamily:SF,lineHeight:1.5}}>Hands-on techniques that sculpt, drain, and lift. The face responds immediately — results are visible during the ritual itself.</p>
       </div>
 
       {/* ── Smart Scan Hero Card ── */}
@@ -1140,9 +1081,12 @@ export default function ObrizApp() {
         );
       })}
 
-      {/* Section: Audio resets */}
-      <div style={{height:1,background:`linear-gradient(90deg,transparent,rgba(196,154,75,0.1),transparent)`,margin:"8px 0 20px"}}/>
-      <p style={{fontSize:8,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:14,fontFamily:SF}}>Audio resets · The second movement</p>
+      {/* Section: Nervous System Resets */}
+      <div style={{height:1,background:`rgba(196,154,75,0.08)`,margin:"8px 0 22px"}}/>
+      <div style={{marginBottom:16}}>
+        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:4,fontFamily:SF}}>Nervous System Resets</p>
+        <p style={{fontSize:12,color:B.muted,fontFamily:SF,lineHeight:1.5}}>Audio-guided resets that regulate from the inside. Pair with a face ritual, or use independently.</p>
+      </div>
       {sessions.map(s=>{
         const Icon=s.icon; const locked=s.id!==1&&!isPremium; const done=completedToday.includes(s.id);
         return(
@@ -1358,9 +1302,9 @@ export default function ObrizApp() {
       <div style={{width:"100%",maxWidth:390,padding:"32px 22px"}}>
         <button onClick={()=>{setShowCheckin(false);setSelectedCheckin(null);}} style={{position:"absolute",top:18,right:18,background:"none",border:"none",cursor:"pointer"}}><X size={18} color={B.muted}/></button>
         <div style={{textAlign:"center",marginBottom:24}}>
-          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,marginBottom:10}}>Your face today</p>
-          <h2 style={{fontSize:20,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>How is your face{userName?`, ${userName}`:""}?</h2>
-          <p style={{fontSize:12,color:B.muted,fontStyle:"italic",marginBottom:4}}>Your face holds the answer before you do.</p>
+          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,marginBottom:10}}>Daily check-in</p>
+          <h2 style={{fontSize:20,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>How are you right now{userName?`, ${userName}`:""}?</h2>
+          <p style={{fontSize:12,color:B.muted,fontStyle:"italic",marginBottom:4}}>Your answer shapes what we recommend — for your face and your nervous system.</p>
         </div>
         {nsStates.map(state=>{const Icon=state.icon; const selected=selectedCheckin?.id===state.id; return(
           <button key={state.id} onClick={()=>setSelectedCheckin(state)} style={{width:"100%",background:selected?`${state.color}15`:B.card,border:`2px solid ${selected?state.color:B.border}`,borderRadius:14,padding:"15px 16px",marginBottom:8,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"left",transition:"all 0.2s",position:"relative"}}>
