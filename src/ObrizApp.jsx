@@ -551,34 +551,77 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
 // ══════════════════════════════════
 function Onboarding({ onComplete }) {
   const [name,setName]=useState("");
-  const [step,setStep]=useState(0); // 0=welcome, 1=name
+  const [step,setStep]=useState(0); // 0=what, 1=why-face, 2=how, 3=name
 
-  if(step===0) {
+  // Explainer screens (steps 0, 1, 2) share a layout — content varies by step
+  const explainerSteps = [
+    {
+      eyebrow: "What this is",
+      heading: "A practice for the over-feeling, over-doing nervous system.",
+      body: "Three-minute resets. Quick face rituals. Tools to come back to yourself, between everything that asks for your attention.",
+    },
+    {
+      eyebrow: "Why your face",
+      heading: "Your face holds what your nervous system holds.",
+      body: "The jaw clench. The brow tension. The puffiness after a heavy week. Working with the face is one of the fastest ways to regulate the system underneath it.",
+    },
+    {
+      eyebrow: "How it works",
+      heading: "Open it when you need it. That's the practice.",
+      body: "Tell us how you're showing up today. We'll match you with what your body needs — an audio reset, a face ritual, or a quick intervention. Three minutes or less. As often as you want.",
+    },
+  ];
+
+  if (step <= 2) {
+    const s = explainerSteps[step];
+    const isFirst = step === 0;
     return (
-      <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:B.darkGrad,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center"}}>
-        <div style={{textAlign:"center",padding:"32px 28px",maxWidth:380}}>
-          <div style={{marginBottom:40}}>
-            <h1 style={{fontSize:22,letterSpacing:14,color:B.gold,fontWeight:400,margin:"0 0 12px",fontFamily:F}}>RHEI</h1>
-            <div style={{width:50,height:1,background:B.gold,margin:"0 auto 20px",opacity:0.4}}/>
-            <p style={{fontSize:20,color:B.cream,fontWeight:400,fontFamily:F,margin:"0 0 12px",lineHeight:1.4}}>Your face is where<br/>your nervous system shows.</p>
-            <p style={{fontSize:13,color:B.muted,fontStyle:"italic",lineHeight:1.55}}>The tension in your jaw. The weight under your eyes. The furrow that won't release. RHEI works there — precisely.</p>
-          </div>
-          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:32}}>
-            {["6 guided face rituals","Audio resets that follow each ritual","Quick interventions for any moment","Your face as the diagnostic surface"].map((f,i)=>(
-              <div key={i} style={{display:"flex",alignItems:"center",gap:10,textAlign:"left"}}>
-                <div style={{width:20,height:20,borderRadius:"50%",background:`${B.gold}15`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                  <Check size={10} color={B.gold}/>
-                </div>
-                <span style={{fontSize:12,color:B.creamMuted,fontFamily:SF}}>{f}</span>
-              </div>
+      <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:B.darkGrad,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 22px"}}>
+        <div style={{textAlign:"center",maxWidth:420,width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}>
+          {/* Logo, only on first screen */}
+          {isFirst && (
+            <div style={{marginBottom:36}}>
+              <h1 style={{fontSize:22,letterSpacing:14,color:B.gold,fontWeight:400,margin:"0 0 12px",fontFamily:F}}>RHEI</h1>
+              <div style={{width:50,height:1,background:B.gold,margin:"0 auto",opacity:0.4}}/>
+            </div>
+          )}
+
+          {/* Eyebrow */}
+          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 14px"}}>{s.eyebrow}</p>
+
+          {/* Heading */}
+          <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 18px",fontFamily:F,lineHeight:1.35}}>{s.heading}</h2>
+
+          {/* Body */}
+          <p style={{fontSize:14,color:B.creamMuted,fontFamily:F,fontStyle:"italic",lineHeight:1.6,margin:"0 0 40px",maxWidth:340}}>{s.body}</p>
+
+          {/* Progress dots */}
+          <div style={{display:"flex",gap:6,marginBottom:32}}>
+            {[0,1,2].map(i => (
+              <div key={i} style={{width:i===step?16:5,height:5,borderRadius:3,background:i===step?B.gold:`${B.gold}30`,transition:"width 0.3s"}}/>
             ))}
           </div>
-          <button onClick={()=>setStep(1)} style={{width:"100%",background:B.goldGrad,border:"none",borderRadius:28,padding:"16px",cursor:"pointer",color:B.warmBlack,fontSize:13,fontFamily:SF,letterSpacing:2,fontWeight:700,boxShadow:B.goldGlow}} className="rhei-gold-shimmer">Begin</button>
+
+          {/* Continue button */}
+          <button
+            onClick={()=>setStep(step+1)}
+            style={{width:"100%",maxWidth:280,background:B.goldGrad,border:"none",borderRadius:28,padding:"15px",cursor:"pointer",color:B.warmBlack,fontSize:13,fontFamily:SF,letterSpacing:2,fontWeight:700,boxShadow:B.goldGlow}}
+            className="rhei-gold-shimmer">
+            {step === 2 ? "Begin" : "Continue"}
+          </button>
+
+          {/* Skip intro link */}
+          <button
+            onClick={()=>setStep(3)}
+            style={{background:"none",border:"none",cursor:"pointer",color:B.muted,fontSize:11,fontFamily:SF,marginTop:18,padding:6,letterSpacing:0.5}}>
+            Skip intro
+          </button>
         </div>
       </div>
     );
   }
 
+  // Step 3: name input
   return (
     <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:B.darkGrad,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center"}}>
       <div style={{textAlign:"center",padding:"32px 28px",maxWidth:380,width:"100%"}}>
