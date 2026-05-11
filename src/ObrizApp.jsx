@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Crown, User, Hand, Mail, LogOut } from "lucide-react";
+import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Crown, User, Hand, Mail, LogOut, MessageCircle } from "lucide-react";
 import { supabase } from "./supabaseClient";
 import FaceGuideIllustration from "./FaceGuideIllustration";
+import AffirmationsScreen from "./AffirmationsScreen";
 
 /* ═══════════════════════════════════════════
    RHEI — Your face is where your nervous system shows.
@@ -617,6 +618,8 @@ export default function ObrizApp() {
   const [audioDuration,setAudioDuration]=useState(0);
   const [completedToday,setCompletedToday]=useState(()=>load('completedToday',[]));
   const [streak,setStreak]=useState(()=>load('streak',1));
+  const [longestStreak,setLongestStreak]=useState(()=>load('longestStreak',1));
+  const [streakHistory,setStreakHistory]=useState(()=>load('streakHistory',[]));
   const [totalSessions,setTotalSessions]=useState(()=>load('totalSessions',0));
   const [totalMinutes,setTotalMinutes]=useState(()=>load('totalMinutes',0));
   // Face check-in
@@ -761,6 +764,10 @@ export default function ObrizApp() {
   useEffect(()=>{save('completedToday',completedToday);},[completedToday]);
   useEffect(()=>{save('streak',streak);},[streak]);
   useEffect(()=>{save('meditationStreak',meditationStreak);},[meditationStreak]);
+  useEffect(()=>{save('longestStreak',longestStreak);},[longestStreak]);
+  useEffect(()=>{save('streakHistory',streakHistory);},[streakHistory]);
+  // Keep longestStreak in sync if current streak exceeds it
+  useEffect(()=>{if(streak>longestStreak)setLongestStreak(streak);if(meditationStreak>longestStreak)setLongestStreak(meditationStreak);},[streak,meditationStreak,longestStreak]);
   useEffect(()=>{save('totalSessions',totalSessions);},[totalSessions]);
   useEffect(()=>{save('totalMinutes',totalMinutes);},[totalMinutes]);
   useEffect(()=>{save('nsScore',nsScore);},[nsScore]);
@@ -1323,6 +1330,37 @@ export default function ObrizApp() {
           <p style={{fontSize:13,color:B.muted,marginTop:4,fontStyle:"italic",fontFamily:F}}>Your face is the record of what you've shown up for.</p>
         </div>
 
+        {/* Streak — the daily return */}
+        <div style={{background:B.card,borderRadius:18,padding:"22px 20px",marginBottom:14,border:`1px solid ${B.borderActive}`,position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:-30,right:-30,opacity:0.06}}><Flame size={140} color={B.gold}/></div>
+          <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 14px",position:"relative"}}>Your streak</p>
+          <div style={{display:"flex",alignItems:"flex-end",gap:14,marginBottom:10,position:"relative"}}>
+            <div style={{display:"flex",alignItems:"baseline",gap:6}}>
+              <Flame size={26} color={B.gold} strokeWidth={1.5}/>
+              <p style={{fontSize:42,color:B.cream,margin:0,fontFamily:SF,fontWeight:300,lineHeight:1}}>{meditationStreak||(completedToday.length>0?1:0)}</p>
+              <p style={{fontSize:12,color:B.muted,margin:0,fontFamily:SF,letterSpacing:1}}>day{meditationStreak===1?"":"s"}</p>
+            </div>
+          </div>
+          <p style={{fontSize:12,color:B.creamMuted,margin:"0 0 14px",fontFamily:F,fontStyle:"italic",lineHeight:1.5,position:"relative"}}>
+            {meditationStreak===0&&completedToday.length===0&&"Start today. The smallest return counts."}
+            {meditationStreak===0&&completedToday.length>0&&"You showed up today. That's day one."}
+            {meditationStreak>=1&&meditationStreak<=3&&"You're building the pattern. The first week is the hardest."}
+            {meditationStreak>=4&&meditationStreak<=7&&"This is becoming a practice. Keep returning."}
+            {meditationStreak>=8&&meditationStreak<=20&&"You've made it past where most people stop."}
+            {meditationStreak>20&&"This is who you are now. Quietly consistent."}
+          </p>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",borderTop:`1px solid ${B.border}`,paddingTop:12,position:"relative"}}>
+            <div>
+              <p style={{fontSize:9,color:B.muted,letterSpacing:1.5,textTransform:"uppercase",fontFamily:SF,margin:"0 0 2px"}}>Best ever</p>
+              <p style={{fontSize:18,color:B.cream,margin:0,fontFamily:SF,fontWeight:300}}>{Math.max(longestStreak,meditationStreak,completedToday.length>0?1:0)} day{Math.max(longestStreak,meditationStreak,completedToday.length>0?1:0)===1?"":"s"}</p>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <p style={{fontSize:9,color:B.muted,letterSpacing:1.5,textTransform:"uppercase",fontFamily:SF,margin:"0 0 2px"}}>Today</p>
+              <p style={{fontSize:18,color:completedToday.length>0?B.gold:B.muted,margin:0,fontFamily:SF,fontWeight:300}}>{completedToday.length>0?"✓ Done":"Not yet"}</p>
+            </div>
+          </div>
+        </div>
+
         {/* Progression — language not numbers */}
         <div style={{background:B.card,borderRadius:18,padding:"22px 20px",marginBottom:14,border:`1px solid ${B.border}`}}>
           <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 16px"}}>How your face is changing</p>
@@ -1351,7 +1389,7 @@ export default function ObrizApp() {
             {[
               {v:totalSessions,l:"Rituals completed",sub:totalSessions===0?"Start today":totalSessions===1?"Your first — well done":"Keep building"},
               {v:`${totalMinutes}m`,l:"Time invested",sub:totalMinutes>0?"In your face and nervous system":"Time well spent"},
-              {v:meditationStreak>0?`${meditationStreak}`:completedToday.length>0?"1":"—",l:"Meditation streak",sub:meditationStreak>1?"Consecutive sessions":"Complete one to start"},
+              {v:meditationStreak>0?`${meditationStreak}`:completedToday.length>0?"1":"—",l:"Current streak",sub:longestStreak>meditationStreak?`Best: ${longestStreak}`:meditationStreak>1?"Consecutive sessions":"Complete one to start"},
               {v:completedToday.length>0?"✓":"—",l:"Practiced today",sub:completedToday.length>0?"You showed up":"Your face is waiting"},
             ].map((s,i)=>(
               <div key={i} style={{textAlign:"left"}}>
@@ -1483,6 +1521,7 @@ export default function ObrizApp() {
       {screen==="meditations"&&renderMeditations()}
       {screen==="premium"&&renderPremium()}
       {screen==="progress"&&renderProgress()}
+      {screen==="affirmations"&&<AffirmationsScreen onBack={()=>setScreen("home")}/>}
       {showCheckin&&renderCheckin()}
       {microActive&&renderMicro()}
       {activeRitual&&<RitualPlayer
@@ -1499,6 +1538,7 @@ export default function ObrizApp() {
         {navBtn("home",Home,"Today")}
         {navBtn("rituals",Sparkles,"Rituals")}
         {navBtn("meditations",Headphones,"Meditate")}
+        {navBtn("affirmations",MessageCircle,"Affirm")}
         {navBtn("progress",Heart,"Journey")}
       </div>
     </div>
