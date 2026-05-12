@@ -549,9 +549,193 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
 // ══════════════════════════════════
 // ONBOARDING COMPONENT
 // ══════════════════════════════════
-function Onboarding({ onComplete }) {
+function Onboarding({ onComplete, authUser }) {
   const [name,setName]=useState("");
-  const [step,setStep]=useState(0); // 0=what, 1=why-face, 2=how, 3=name
+  // step: "splash" | "email" | "linkSent" | 0 | 1 | 2 | 3
+  // 0-2 are the existing explainer screens, 3 is the name input
+  // If user is already authenticated (returning from magic link), skip the splash/email steps
+  const [step,setStep]=useState(() => (authUser ? 0 : "splash"));
+  const [email,setEmail]=useState("");
+  const [authError,setAuthError]=useState("");
+  const [authLoading,setAuthLoading]=useState(false);
+  const [authMode,setAuthMode]=useState("signup"); // "signup" or "signin"
+
+  // When auth state changes mid-flow (user clicks magic link in another tab/window),
+  // advance them to the explainer screens automatically
+  useEffect(() => {
+    if (authUser && (step === "splash" || step === "email" || step === "linkSent")) {
+      setStep(0);
+    }
+  }, [authUser]);
+
+  const sendMagicLink = async () => {
+    const e = email.trim();
+    if (!e) return;
+    if (!supabase) {
+      setAuthError("Account setup isn't available right now. You can continue without one.");
+      return;
+    }
+    setAuthError("");
+    setAuthLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: e,
+        options: { emailRedirectTo: window.location.origin }
+      });
+      if (error) {
+        setAuthError(error.message || "Couldn't send the link. Try again.");
+      } else {
+        setStep("linkSent");
+      }
+    } catch (err) {
+      setAuthError("Connection issue. Try again in a moment.");
+    }
+    setAuthLoading(false);
+  };
+
+  // ── Welcome splash ──
+  if (step === "splash") {
+    return (
+      <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:B.darkGrad,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 22px"}}>
+        <div style={{textAlign:"center",maxWidth:420,width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}>
+          {/* Logo + tagline */}
+          <div style={{marginBottom:48}}>
+            <h1 style={{fontSize:28,letterSpacing:18,color:B.gold,fontWeight:400,margin:"0 0 16px",fontFamily:F}}>RHEI</h1>
+            <div style={{width:60,height:1,background:B.gold,margin:"0 auto 28px",opacity:0.4}}/>
+            <p style={{fontSize:18,color:B.cream,fontFamily:F,fontWeight:400,lineHeight:1.4,margin:"0 0 14px"}}>
+              Your face is where<br/>your nervous system shows.
+            </p>
+            <p style={{fontSize:13,color:B.muted,fontFamily:F,fontStyle:"italic",lineHeight:1.5,maxWidth:320}}>
+              For those who do too much and feel too deeply.
+            </p>
+          </div>
+
+          {/* Primary CTA */}
+          <button
+            onClick={()=>{setAuthMode("signup");setStep("email");}}
+            style={{width:"100%",maxWidth:300,background:B.goldGrad,border:"none",borderRadius:28,padding:"16px",cursor:"pointer",color:B.warmBlack,fontSize:13,fontFamily:SF,letterSpacing:2,fontWeight:700,boxShadow:B.goldGlow,marginBottom:12}}
+            className="rhei-gold-shimmer">
+            Create your account
+          </button>
+
+          {/* Secondary CTA */}
+          <button
+            onClick={()=>{setAuthMode("signin");setStep("email");}}
+            style={{background:"none",border:"none",cursor:"pointer",color:B.cream,fontSize:13,fontFamily:SF,padding:"10px 18px",letterSpacing:0.5,marginBottom:6}}>
+            I have an account
+          </button>
+
+          {/* Skip account creation entirely */}
+          <button
+            onClick={()=>setStep(0)}
+            style={{background:"none",border:"none",cursor:"pointer",color:B.muted,fontSize:11,fontFamily:SF,padding:"6px",letterSpacing:0.5,marginTop:14}}>
+            Continue without account
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Email entry ──
+  if (step === "email") {
+    const isSignup = authMode === "signup";
+    return (
+      <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:B.darkGrad,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 22px"}}>
+        <div style={{textAlign:"center",maxWidth:420,width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}>
+          {/* Back to splash */}
+          <button
+            onClick={()=>{setStep("splash");setAuthError("");}}
+            style={{position:"absolute",top:24,left:24,background:"none",border:"none",cursor:"pointer",color:B.muted,fontSize:12,fontFamily:SF,padding:8,display:"flex",alignItems:"center",gap:4}}>
+            <ChevronLeft size={14}/> Back
+          </button>
+
+          <div style={{marginBottom:32,width:"100%"}}>
+            <div style={{width:48,height:48,borderRadius:"50%",background:`${B.gold}12`,border:`1px solid ${B.borderActive}`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px"}}>
+              <Mail size={20} color={B.gold} strokeWidth={1.5}/>
+            </div>
+            <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 12px"}}>
+              {isSignup ? "Create your account" : "Welcome back"}
+            </p>
+            <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 12px",fontFamily:F,lineHeight:1.35}}>
+              {isSignup ? "What email should we use?" : "What email did you sign up with?"}
+            </h2>
+            <p style={{fontSize:13,color:B.muted,fontFamily:F,fontStyle:"italic",lineHeight:1.5,margin:"0 auto",maxWidth:320}}>
+              We'll send a magic link. No password to remember.
+            </p>
+          </div>
+
+          {/* Email input */}
+          <input
+            type="email"
+            value={email}
+            onChange={e=>setEmail(e.target.value)}
+            onKeyDown={e=>{if(e.key==="Enter")sendMagicLink();}}
+            placeholder="you@example.com"
+            autoFocus
+            disabled={authLoading}
+            style={{width:"100%",maxWidth:340,background:B.card,border:`1px solid ${email?B.borderActive:B.border}`,borderRadius:14,padding:"16px 18px",color:B.cream,fontSize:16,fontFamily:SF,outline:"none",textAlign:"center",boxSizing:"border-box",transition:"border-color 0.3s",marginBottom:14}}
+          />
+
+          {/* Error message */}
+          {authError && (
+            <p style={{fontSize:12,color:"#C4786A",fontFamily:SF,margin:"0 0 14px",maxWidth:320,lineHeight:1.5}}>{authError}</p>
+          )}
+
+          {/* Send button */}
+          <button
+            onClick={sendMagicLink}
+            disabled={!email.trim() || authLoading}
+            style={{width:"100%",maxWidth:300,background:email.trim()&&!authLoading?B.goldGrad:`${B.gold}20`,border:"none",borderRadius:28,padding:"15px",cursor:email.trim()&&!authLoading?"pointer":"not-allowed",color:email.trim()&&!authLoading?B.warmBlack:B.muted,fontSize:13,fontFamily:SF,letterSpacing:2,fontWeight:700,opacity:email.trim()&&!authLoading?1:0.5,transition:"all 0.3s",marginBottom:16}}>
+            {authLoading ? "Sending..." : "Send magic link"}
+          </button>
+
+          {/* Skip */}
+          <button
+            onClick={()=>setStep(0)}
+            style={{background:"none",border:"none",cursor:"pointer",color:B.muted,fontSize:11,fontFamily:SF,padding:6,letterSpacing:0.5}}>
+            I'll set this up later
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Magic link sent confirmation ──
+  if (step === "linkSent") {
+    return (
+      <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:B.darkGrad,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 22px"}}>
+        <div style={{textAlign:"center",maxWidth:420,width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}>
+          <div style={{width:64,height:64,borderRadius:"50%",background:`${B.gold}12`,border:`1px solid ${B.borderActive}`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 28px"}}>
+            <Check size={26} color={B.gold} strokeWidth={1.5}/>
+          </div>
+          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 14px"}}>Check your inbox</p>
+          <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 14px",fontFamily:F,lineHeight:1.35,maxWidth:340}}>
+            A magic link is on its way.
+          </h2>
+          <p style={{fontSize:14,color:B.creamMuted,fontFamily:F,fontStyle:"italic",lineHeight:1.6,margin:"0 0 8px",maxWidth:340}}>
+            We sent it to <span style={{color:B.cream,fontStyle:"normal"}}>{email}</span>.
+          </p>
+          <p style={{fontSize:12,color:B.muted,fontFamily:F,lineHeight:1.55,margin:"0 0 36px",maxWidth:320}}>
+            Tap the link in the email to come back, signed in. It might take a minute to arrive — check spam if you don't see it.
+          </p>
+
+          {/* Try a different email */}
+          <button
+            onClick={()=>{setStep("email");setAuthError("");}}
+            style={{background:"none",border:`1px solid ${B.border}`,borderRadius:22,padding:"10px 22px",cursor:"pointer",color:B.cream,fontSize:12,fontFamily:SF,letterSpacing:0.5,marginBottom:12}}>
+            Try a different email
+          </button>
+
+          {/* Skip — continue without waiting */}
+          <button
+            onClick={()=>setStep(0)}
+            style={{background:"none",border:"none",cursor:"pointer",color:B.muted,fontSize:11,fontFamily:SF,padding:6,letterSpacing:0.5}}>
+            Continue without account
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Explainer screens (steps 0, 1, 2) share a layout — content varies by step
   const explainerSteps = [
@@ -918,7 +1102,7 @@ export default function ObrizApp() {
 
   // ══════════ ONBOARDING ══════════
   if(!onboarded) {
-    return <Onboarding onComplete={(name)=>{setUserName(name);setOnboarded(true);save('onboarded',true);}} />;
+    return <Onboarding authUser={authUser} onComplete={(name)=>{setUserName(name);setOnboarded(true);save('onboarded',true);}} />;
   }
 
   // ══════════ TODAY ══════════
