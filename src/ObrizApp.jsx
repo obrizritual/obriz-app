@@ -606,7 +606,7 @@ function Onboarding({ onComplete, authUser }) {
               Your face is where<br/>your nervous system shows.
             </p>
             <p style={{fontSize:13,color:B.muted,fontFamily:F,fontStyle:"italic",lineHeight:1.5,maxWidth:320}}>
-              For those who do too much and feel too deeply.
+              Welcome to your quiet space.
             </p>
           </div>
 
@@ -1187,9 +1187,6 @@ export default function ObrizApp() {
         </button>
       </div>
 
-      {/* Bridge text */}
-      <p style={{fontSize:11,color:B.muted,fontFamily:SF,fontStyle:"italic",textAlign:"center",padding:"8px 0 12px"}}>Your face reflects your nervous system — both work together.</p>
-
       {/* ── Section 2: Meditation ── */}
       <div style={{marginBottom:28}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
@@ -1320,30 +1317,6 @@ export default function ObrizApp() {
       <div style={{marginBottom:24}}>
         <h1 style={{fontSize:22,fontWeight:400,color:B.cream,margin:"0 0 4px",fontFamily:F}}>Face Rituals</h1>
         <p style={{fontSize:13,color:B.muted,fontFamily:SF}}>Hands-on techniques that sculpt, drain, and lift.</p>
-      </div>
-
-      {/* ── Inline face check-in ── */}
-      <div style={{background:B.card,borderRadius:18,padding:"18px 18px 14px",marginBottom:20,border:`1px solid ${B.border}`}}>
-        <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 10px"}}>What are you noticing today?</p>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:checkinDone?12:0}}>
-          {nsStates.map(state=>{
-            const selected = checkinState?.id===state.id;
-            return (
-              <button key={state.id}
-                onClick={()=>{setCheckinState(state);setCheckinDone(true);}}
-                style={{background:selected?`${state.color}18`:B.bgDeep,border:`1.5px solid ${selected?state.color:B.border}`,borderRadius:12,padding:"10px 12px",cursor:"pointer",textAlign:"left",transition:"all 0.15s"}}>
-                <p style={{fontSize:12,color:selected?B.cream:B.creamMuted,margin:0,fontFamily:SF,fontWeight:selected?500:400}}>{state.label}</p>
-                <p style={{fontSize:10,color:B.muted,margin:"2px 0 0",fontFamily:SF,lineHeight:1.3}}>{state.sublabel}</p>
-              </button>
-            );
-          })}
-        </div>
-        {checkinDone && recommended && (
-          <div style={{display:"flex",alignItems:"center",gap:8,paddingTop:4,borderTop:`1px solid ${B.border}`}}>
-            <Sparkles size={12} color={B.gold}/>
-            <p style={{fontSize:12,color:B.gold,fontFamily:SF,margin:0}}>Recommended for you: <strong style={{color:B.cream}}>{recommended.title}</strong></p>
-          </div>
-        )}
       </div>
 
       {/* ── Ritual cards ── */}
