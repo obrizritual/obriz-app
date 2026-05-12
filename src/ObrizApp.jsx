@@ -1021,7 +1021,14 @@ export default function ObrizApp() {
           </div>
           <div style={{flex:1}}>
             <h3 style={{fontSize:15,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>{arc.audio.title}</h3>
-            <p style={{fontSize:11,color:B.muted,margin:"1px 0 0",fontFamily:SF}}>{arc.audio.subtitle}</p>
+            <p style={{fontSize:11,color:B.muted,margin:"1px 0 6px",fontFamily:SF}}>{arc.audio.subtitle}</p>
+            {arc.audio.technique && (
+              <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                {arc.audio.technique.split(" · ").slice(0,2).map((tech, i) => (
+                  <span key={i} style={{fontSize:7.5,color:B.goldMuted,background:"transparent",border:`1px solid ${B.border}`,padding:"2px 6px",borderRadius:4,letterSpacing:1,textTransform:"uppercase",fontFamily:SF,fontWeight:500}}>{tech}</span>
+                ))}
+              </div>
+            )}
           </div>
           <span style={{fontSize:10,color:B.muted,fontFamily:SF}}>{Math.ceil(arc.audio.duration/60)}m</span>
         </button>
@@ -1259,7 +1266,15 @@ export default function ObrizApp() {
                 <h3 style={{fontSize:15,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>{s.title}</h3>
                 {isRec&&<span style={{fontSize:8,color:B.gold,background:`${B.gold}12`,border:`1px solid ${B.gold}30`,padding:"1px 6px",borderRadius:5,letterSpacing:0.5}}>For you</span>}
               </div>
-              <p style={{fontSize:11,color:B.muted,margin:0,fontFamily:SF}}>{s.subtitle}</p>
+              <p style={{fontSize:11,color:B.muted,margin:"0 0 6px",fontFamily:SF}}>{s.subtitle}</p>
+              {/* Technique tag pills — primary technique shown prominently */}
+              {s.technique && (
+                <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                  {s.technique.split(" · ").slice(0,2).map((tech, i) => (
+                    <span key={i} style={{fontSize:7.5,color:B.goldMuted,background:"transparent",border:`1px solid ${B.border}`,padding:"2px 6px",borderRadius:4,letterSpacing:1,textTransform:"uppercase",fontFamily:SF,fontWeight:500}}>{tech}</span>
+                  ))}
+                </div>
+              )}
             </div>
             <div style={{textAlign:"right",flexShrink:0}}>
               {locked
