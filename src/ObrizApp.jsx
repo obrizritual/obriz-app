@@ -596,39 +596,67 @@ function Onboarding({ onComplete, authUser }) {
   // ── Welcome splash ──
   if (step === "splash") {
     return (
-      <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:B.darkGrad,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 22px"}}>
-        <div style={{textAlign:"center",maxWidth:420,width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}>
-          {/* Logo + tagline */}
-          <div style={{marginBottom:48}}>
-            <h1 style={{fontSize:28,letterSpacing:18,color:B.gold,fontWeight:400,margin:"0 0 16px",fontFamily:F}}>RHEI</h1>
-            <div style={{width:60,height:1,background:B.gold,margin:"0 auto 28px",opacity:0.4}}/>
-            <p style={{fontSize:18,color:B.cream,fontFamily:F,fontWeight:400,lineHeight:1.4,margin:"0 0 14px"}}>
-              Your face is where<br/>your nervous system shows.
-            </p>
-            <p style={{fontSize:13,color:B.muted,fontFamily:F,fontStyle:"italic",lineHeight:1.5,maxWidth:320}}>
-              Welcome to your quiet space.
-            </p>
-          </div>
+      <div style={{
+        position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:200,
+        // Full-bleed hero photograph as background. Fallback to dark gradient if image fails.
+        backgroundColor:B.warmBlack,
+        backgroundImage:`linear-gradient(180deg, rgba(26,15,6,0.15) 0%, rgba(26,15,6,0.05) 35%, rgba(26,15,6,0.6) 75%, rgba(26,15,6,0.92) 100%), url('/images/splash-hero.jpg')`,
+        backgroundSize:"cover",
+        backgroundPosition:"center",
+        backgroundRepeat:"no-repeat",
+        display:"flex",flexDirection:"column",justifyContent:"space-between",
+        padding:"60px 28px 48px",
+      }}>
+        {/* Top: empty space — let the photograph breathe */}
+        <div/>
 
-          {/* Primary CTA */}
+        {/* Center: brand mark, placed in the lower-middle like the reference */}
+        <div style={{textAlign:"center"}}>
+          <h1 style={{
+            fontSize:60,letterSpacing:0,color:B.cream,fontWeight:400,
+            margin:0,fontFamily:F,lineHeight:1,
+            textShadow:"0 2px 24px rgba(0,0,0,0.45)",
+          }}>Rhei.</h1>
+        </div>
+
+        {/* Bottom: CTAs */}
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
+          {/* Primary — create account */}
           <button
             onClick={()=>{setAuthMode("signup");setStep("email");}}
-            style={{width:"100%",maxWidth:300,background:B.goldGrad,border:"none",borderRadius:28,padding:"16px",cursor:"pointer",color:B.warmBlack,fontSize:13,fontFamily:SF,letterSpacing:2,fontWeight:700,boxShadow:B.goldGlow,marginBottom:12}}
-            className="rhei-gold-shimmer">
-            Create your account
+            style={{
+              width:"100%",maxWidth:320,
+              background:"rgba(242,232,217,0.96)",
+              backdropFilter:"blur(8px)",
+              border:"none",borderRadius:32,padding:"17px",
+              cursor:"pointer",color:B.warmBlack,
+              fontSize:14,fontFamily:F,letterSpacing:0.5,fontWeight:400,
+              boxShadow:"0 8px 32px rgba(0,0,0,0.25)",
+            }}>
+            Create account
           </button>
 
-          {/* Secondary CTA */}
+          {/* Secondary — sign in */}
           <button
             onClick={()=>{setAuthMode("signin");setStep("email");}}
-            style={{background:"none",border:"none",cursor:"pointer",color:B.cream,fontSize:13,fontFamily:SF,padding:"10px 18px",letterSpacing:0.5,marginBottom:6}}>
-            I have an account
+            style={{
+              background:"none",border:"none",cursor:"pointer",
+              color:B.cream,fontSize:14,fontFamily:F,padding:"6px 18px",
+              textShadow:"0 1px 8px rgba(0,0,0,0.5)",
+            }}>
+            Sign in
           </button>
 
-          {/* Skip account creation entirely */}
+          {/* Tertiary — skip auth, very subtle */}
           <button
             onClick={()=>setStep(0)}
-            style={{background:"none",border:"none",cursor:"pointer",color:B.muted,fontSize:11,fontFamily:SF,padding:"6px",letterSpacing:0.5,marginTop:14}}>
+            style={{
+              background:"none",border:"none",cursor:"pointer",
+              color:"rgba(242,232,217,0.55)",
+              fontSize:11,fontFamily:SF,padding:"4px",letterSpacing:1,
+              marginTop:6,
+              textShadow:"0 1px 6px rgba(0,0,0,0.4)",
+            }}>
             Continue without account
           </button>
         </div>
@@ -765,7 +793,7 @@ function Onboarding({ onComplete, authUser }) {
           {/* Logo, only on first screen */}
           {isFirst && (
             <div style={{marginBottom:36}}>
-              <h1 style={{fontSize:22,letterSpacing:14,color:B.gold,fontWeight:400,margin:"0 0 12px",fontFamily:F}}>RHEI</h1>
+              <h1 style={{fontSize:36,letterSpacing:0,color:B.cream,fontWeight:400,margin:"0 0 14px",fontFamily:F,lineHeight:1}}>Rhei.</h1>
               <div style={{width:50,height:1,background:B.gold,margin:"0 auto",opacity:0.4}}/>
             </div>
           )}
@@ -1121,7 +1149,7 @@ export default function ObrizApp() {
       {/* Header */}
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:28}}>
         <div>
-          <h1 style={{fontSize:20,letterSpacing:12,color:B.gold,fontWeight:400,margin:"0 0 4px",fontFamily:F}}>RHEI</h1>
+          <h1 style={{fontSize:24,letterSpacing:0,color:B.cream,fontWeight:400,margin:"0 0 4px",fontFamily:F,lineHeight:1}}>Rhei.</h1>
           <p style={{fontSize:22,fontWeight:400,color:B.cream,margin:0,fontFamily:F}}>{greetUser(userName)}</p>
         </div>
         <button onClick={()=>setScreen("premium")} style={{background:"none",border:`1px solid ${B.border}`,borderRadius:20,padding:"6px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
