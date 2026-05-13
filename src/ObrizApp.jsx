@@ -1275,7 +1275,17 @@ export default function ObrizApp() {
   const renderPlayer=()=>{
     if(!cur)return null;
     return(
-      <div style={{padding:"36px 22px 120px",minHeight:"100vh",display:"flex",flexDirection:"column",alignItems:"center",background:B.darkGrad}}>
+      <div style={{
+        padding:"36px 22px 120px",minHeight:"100vh",
+        display:"flex",flexDirection:"column",alignItems:"center",
+        position:"relative",
+        // Warm orb of light photograph as ambient base, with strong dark gradient overlay for legibility
+        backgroundColor:B.warmBlack,
+        backgroundImage:`linear-gradient(180deg, rgba(26,15,6,0.55) 0%, rgba(26,15,6,0.78) 45%, rgba(26,15,6,0.95) 100%), url('/images/player-ambient.jpg')`,
+        backgroundSize:"cover",
+        backgroundPosition:"center top",
+        backgroundRepeat:"no-repeat",
+      }}>
         <div style={{position:"fixed",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,height:"60%",background:"radial-gradient(ellipse at 50% 30%, rgba(196,154,75,0.05) 0%, transparent 70%)",pointerEvents:"none"}}/>
         <button onClick={exitPlayer} style={{position:"absolute",top:18,left:18,background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:4,color:B.muted,fontFamily:SF,fontSize:11,letterSpacing:0.5}}><ChevronLeft size={14}/><span>Back</span></button>
         <div style={{textAlign:"center",marginTop:36,marginBottom:36}}>
@@ -1566,12 +1576,28 @@ export default function ObrizApp() {
   const renderProgress=()=>{
     const recentRituals=[...rituals].filter(r=>completedToday.length>0||totalSessions>0);
     return(
-      <div style={{padding:"56px 22px 120px"}}>
-        <div style={{marginBottom:32}}>
-          <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,marginBottom:6}}>Journey</p>
-          <h1 style={{fontSize:22,fontWeight:400,color:B.cream,margin:0,fontFamily:F}}>{userName||"Your practice"}</h1>
-          <p style={{fontSize:13,color:B.muted,marginTop:4,fontStyle:"italic",fontFamily:F}}>Your face is the record of what you've shown up for.</p>
+      <div style={{padding:"0 0 120px"}}>
+        {/* Hero header — silhouette in water at sunset, full-width banner */}
+        <div style={{
+          position:"relative",
+          height:280,
+          marginBottom:24,
+          backgroundColor:B.warmBlack,
+          backgroundImage:`linear-gradient(180deg, rgba(26,15,6,0.15) 0%, rgba(26,15,6,0.05) 35%, rgba(26,15,6,0.7) 80%, rgba(26,15,6,1) 100%), url('/images/journey-hero.jpg')`,
+          backgroundSize:"cover",
+          backgroundPosition:"center",
+          backgroundRepeat:"no-repeat",
+          display:"flex",
+          flexDirection:"column",
+          justifyContent:"flex-end",
+          padding:"0 22px 18px",
+        }}>
+          <p style={{fontSize:9,letterSpacing:3,color:B.cream,textTransform:"uppercase",fontFamily:SF,marginBottom:6,textShadow:"0 1px 8px rgba(0,0,0,0.5)"}}>Journey</p>
+          <h1 style={{fontSize:28,fontWeight:400,color:B.cream,margin:0,fontFamily:F,textShadow:"0 2px 16px rgba(0,0,0,0.45)"}}>{userName||"Your practice"}</h1>
+          <p style={{fontSize:13,color:B.creamMuted,marginTop:4,fontStyle:"italic",fontFamily:F,textShadow:"0 1px 8px rgba(0,0,0,0.5)"}}>Your face is the record of what you've shown up for.</p>
         </div>
+
+        <div style={{padding:"0 22px"}}>
 
         {/* Streak — the daily return */}
         <div style={{background:B.card,borderRadius:18,padding:"22px 20px",marginBottom:14,border:`1px solid ${B.borderActive}`,position:"relative",overflow:"hidden"}}>
@@ -1696,6 +1722,7 @@ export default function ObrizApp() {
             </div>
           )}
         </div>
+      </div>
       </div>
     );
   };
