@@ -600,7 +600,7 @@ function Onboarding({ onComplete, authUser }) {
         position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:200,
         // Full-bleed hero photograph as background. Fallback to dark gradient if image fails.
         backgroundColor:B.warmBlack,
-        backgroundImage:`linear-gradient(180deg, rgba(26,15,6,0.15) 0%, rgba(26,15,6,0.05) 35%, rgba(26,15,6,0.6) 75%, rgba(26,15,6,0.92) 100%), url('/images/splash-hero.jpg')`,
+        backgroundImage:`linear-gradient(180deg, rgba(26,15,6,0) 0%, rgba(26,15,6,0) 55%, rgba(26,15,6,0.35) 75%, rgba(26,15,6,0.85) 100%), url('/images/splash-hero.jpg')`,
         backgroundSize:"cover",
         backgroundPosition:"center",
         backgroundRepeat:"no-repeat",
@@ -611,11 +611,11 @@ function Onboarding({ onComplete, authUser }) {
         <div/>
 
         {/* Center: brand mark, placed in the lower-middle like the reference */}
-        <div style={{textAlign:"center"}}>
+        <div style={{textAlign:"center",marginBottom:80}}>
           <h1 style={{
-            fontSize:60,letterSpacing:0,color:B.cream,fontWeight:400,
+            fontSize:64,letterSpacing:0,color:B.cream,fontWeight:400,
             margin:0,fontFamily:F,lineHeight:1,
-            textShadow:"0 2px 24px rgba(0,0,0,0.45)",
+            textShadow:"0 3px 28px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.4)",
           }}>Rhei.</h1>
         </div>
 
@@ -668,26 +668,34 @@ function Onboarding({ onComplete, authUser }) {
   if (step === "email") {
     const isSignup = authMode === "signup";
     return (
-      <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:B.darkGrad,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 22px"}}>
+      <div style={{
+        position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:200,
+        backgroundColor:B.warmBlack,
+        backgroundImage:`linear-gradient(180deg, rgba(26,15,6,0.7) 0%, rgba(26,15,6,0.55) 30%, rgba(26,15,6,0.85) 100%), url('/images/splash-hero.jpg')`,
+        backgroundSize:"cover",
+        backgroundPosition:"center",
+        backgroundRepeat:"no-repeat",
+        display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 22px",
+      }}>
         <div style={{textAlign:"center",maxWidth:420,width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}>
           {/* Back to splash */}
           <button
             onClick={()=>{setStep("splash");setAuthError("");}}
-            style={{position:"absolute",top:24,left:24,background:"none",border:"none",cursor:"pointer",color:B.muted,fontSize:12,fontFamily:SF,padding:8,display:"flex",alignItems:"center",gap:4}}>
+            style={{position:"absolute",top:24,left:24,background:"none",border:"none",cursor:"pointer",color:B.creamMuted,fontSize:12,fontFamily:SF,padding:8,display:"flex",alignItems:"center",gap:4,textShadow:"0 1px 6px rgba(0,0,0,0.5)"}}>
             <ChevronLeft size={14}/> Back
           </button>
 
           <div style={{marginBottom:32,width:"100%"}}>
-            <div style={{width:48,height:48,borderRadius:"50%",background:`${B.gold}12`,border:`1px solid ${B.borderActive}`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px"}}>
+            <div style={{width:48,height:48,borderRadius:"50%",background:"rgba(196,154,75,0.18)",border:`1px solid ${B.borderActive}`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px",backdropFilter:"blur(6px)"}}>
               <Mail size={20} color={B.gold} strokeWidth={1.5}/>
             </div>
-            <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 12px"}}>
+            <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 12px",textShadow:"0 1px 6px rgba(0,0,0,0.5)"}}>
               {isSignup ? "Create your account" : "Welcome back"}
             </p>
-            <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 12px",fontFamily:F,lineHeight:1.35}}>
+            <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 12px",fontFamily:F,lineHeight:1.35,textShadow:"0 2px 12px rgba(0,0,0,0.5)"}}>
               {isSignup ? "What email should we use?" : "What email did you sign up with?"}
             </h2>
-            <p style={{fontSize:13,color:B.muted,fontFamily:F,fontStyle:"italic",lineHeight:1.5,margin:"0 auto",maxWidth:320}}>
+            <p style={{fontSize:13,color:B.creamMuted,fontFamily:F,fontStyle:"italic",lineHeight:1.5,margin:"0 auto",maxWidth:320,textShadow:"0 1px 6px rgba(0,0,0,0.5)"}}>
               We'll send a magic link. No password to remember.
             </p>
           </div>
@@ -731,19 +739,27 @@ function Onboarding({ onComplete, authUser }) {
   // ── Magic link sent confirmation ──
   if (step === "linkSent") {
     return (
-      <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:B.darkGrad,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 22px"}}>
+      <div style={{
+        position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:200,
+        backgroundColor:B.warmBlack,
+        backgroundImage:`linear-gradient(180deg, rgba(26,15,6,0.65) 0%, rgba(26,15,6,0.5) 35%, rgba(26,15,6,0.85) 100%), url('/images/splash-hero.jpg')`,
+        backgroundSize:"cover",
+        backgroundPosition:"center",
+        backgroundRepeat:"no-repeat",
+        display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 22px",
+      }}>
         <div style={{textAlign:"center",maxWidth:420,width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}>
-          <div style={{width:64,height:64,borderRadius:"50%",background:`${B.gold}12`,border:`1px solid ${B.borderActive}`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 28px"}}>
+          <div style={{width:64,height:64,borderRadius:"50%",background:"rgba(196,154,75,0.18)",border:`1px solid ${B.borderActive}`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 28px",backdropFilter:"blur(6px)"}}>
             <Check size={26} color={B.gold} strokeWidth={1.5}/>
           </div>
-          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 14px"}}>Check your inbox</p>
-          <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 14px",fontFamily:F,lineHeight:1.35,maxWidth:340}}>
+          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 14px",textShadow:"0 1px 6px rgba(0,0,0,0.5)"}}>Check your inbox</p>
+          <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 14px",fontFamily:F,lineHeight:1.35,maxWidth:340,textShadow:"0 2px 12px rgba(0,0,0,0.5)"}}>
             A magic link is on its way.
           </h2>
-          <p style={{fontSize:14,color:B.creamMuted,fontFamily:F,fontStyle:"italic",lineHeight:1.6,margin:"0 0 8px",maxWidth:340}}>
+          <p style={{fontSize:14,color:B.creamMuted,fontFamily:F,fontStyle:"italic",lineHeight:1.6,margin:"0 0 8px",maxWidth:340,textShadow:"0 1px 6px rgba(0,0,0,0.5)"}}>
             We sent it to <span style={{color:B.cream,fontStyle:"normal"}}>{email}</span>.
           </p>
-          <p style={{fontSize:12,color:B.muted,fontFamily:F,lineHeight:1.55,margin:"0 0 36px",maxWidth:320}}>
+          <p style={{fontSize:12,color:B.creamMuted,fontFamily:F,lineHeight:1.55,margin:"0 0 36px",maxWidth:320,textShadow:"0 1px 6px rgba(0,0,0,0.5)"}}>
             Tap the link in the email to come back, signed in. It might take a minute to arrive — check spam if you don't see it.
           </p>
 
@@ -787,25 +803,38 @@ function Onboarding({ onComplete, authUser }) {
   if (step <= 2) {
     const s = explainerSteps[step];
     const isFirst = step === 0;
+    // Step 0 ("What this is") gets a lighter overlay so the image is more present.
+    // Steps 1-2 use a heavier overlay since they have more body copy that needs to read clearly.
+    const overlay = isFirst
+      ? "linear-gradient(180deg, rgba(26,15,6,0.5) 0%, rgba(26,15,6,0.55) 40%, rgba(26,15,6,0.85) 100%)"
+      : "linear-gradient(180deg, rgba(26,15,6,0.78) 0%, rgba(26,15,6,0.82) 50%, rgba(26,15,6,0.92) 100%)";
     return (
-      <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:B.darkGrad,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 22px"}}>
+      <div style={{
+        position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:200,
+        backgroundColor:B.warmBlack,
+        backgroundImage:`${overlay}, url('/images/splash-hero.jpg')`,
+        backgroundSize:"cover",
+        backgroundPosition:"center",
+        backgroundRepeat:"no-repeat",
+        display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 22px",
+      }}>
         <div style={{textAlign:"center",maxWidth:420,width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}>
           {/* Logo, only on first screen */}
           {isFirst && (
             <div style={{marginBottom:36}}>
-              <h1 style={{fontSize:36,letterSpacing:0,color:B.cream,fontWeight:400,margin:"0 0 14px",fontFamily:F,lineHeight:1}}>Rhei.</h1>
-              <div style={{width:50,height:1,background:B.gold,margin:"0 auto",opacity:0.4}}/>
+              <h1 style={{fontSize:42,letterSpacing:0,color:B.cream,fontWeight:400,margin:"0 0 14px",fontFamily:F,lineHeight:1,textShadow:"0 2px 16px rgba(0,0,0,0.55)"}}>Rhei.</h1>
+              <div style={{width:50,height:1,background:B.gold,margin:"0 auto",opacity:0.5}}/>
             </div>
           )}
 
           {/* Eyebrow */}
-          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 14px"}}>{s.eyebrow}</p>
+          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 14px",textShadow:"0 1px 6px rgba(0,0,0,0.5)"}}>{s.eyebrow}</p>
 
           {/* Heading */}
-          <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 18px",fontFamily:F,lineHeight:1.35}}>{s.heading}</h2>
+          <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 18px",fontFamily:F,lineHeight:1.35,textShadow:"0 2px 12px rgba(0,0,0,0.5)"}}>{s.heading}</h2>
 
           {/* Body */}
-          <p style={{fontSize:14,color:B.creamMuted,fontFamily:F,fontStyle:"italic",lineHeight:1.6,margin:"0 0 40px",maxWidth:340}}>{s.body}</p>
+          <p style={{fontSize:14,color:B.creamMuted,fontFamily:F,fontStyle:"italic",lineHeight:1.6,margin:"0 0 40px",maxWidth:340,textShadow:"0 1px 8px rgba(0,0,0,0.55)"}}>{s.body}</p>
 
           {/* Progress dots */}
           <div style={{display:"flex",gap:6,marginBottom:32}}>
@@ -825,7 +854,7 @@ function Onboarding({ onComplete, authUser }) {
           {/* Skip intro link */}
           <button
             onClick={()=>setStep(3)}
-            style={{background:"none",border:"none",cursor:"pointer",color:B.muted,fontSize:11,fontFamily:SF,marginTop:18,padding:6,letterSpacing:0.5}}>
+            style={{background:"none",border:"none",cursor:"pointer",color:B.creamMuted,fontSize:11,fontFamily:SF,marginTop:18,padding:6,letterSpacing:0.5,textShadow:"0 1px 6px rgba(0,0,0,0.5)"}}>
             Skip intro
           </button>
         </div>
