@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Crown, User, Hand, Mail, LogOut, MessageCircle } from "lucide-react";
+import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Crown, User, Hand, Mail, LogOut, MessageCircle, Camera } from "lucide-react";
 import { supabase } from "./supabaseClient";
 import FaceGuideIllustration from "./FaceGuideIllustration";
 import AffirmationsScreen from "./AffirmationsScreen";
+import FaceMirrorMode from "./FaceMirrorMode";
 
 /* ═══════════════════════════════════════════
    RHEI — Your face is where your nervous system shows.
@@ -1378,6 +1379,46 @@ export default function ObrizApp() {
         <p style={{fontSize:13,color:B.muted,fontFamily:SF}}>Hands-on techniques that sculpt, drain, and lift.</p>
       </div>
 
+      {/* ── Featured: Mirror Mode (the brand differentiator) ── */}
+      <button
+        onClick={()=>setScreen("mirror")}
+        style={{
+          width:"100%",
+          background:`linear-gradient(135deg, ${B.card} 0%, ${B.cardHover} 100%)`,
+          border:`1.5px solid ${B.borderActive}`,
+          borderRadius:20,
+          padding:"20px 18px",
+          marginBottom:18,
+          cursor:"pointer",
+          textAlign:"left",
+          position:"relative",
+          overflow:"hidden",
+          boxShadow:`0 4px 24px rgba(196,154,75,0.08)`,
+        }}>
+        {/* Top gold accent line */}
+        <div style={{position:"absolute",top:0,left:0,right:0,height:1,background:`linear-gradient(90deg, transparent, ${B.gold}66, transparent)`}}/>
+        {/* "New" tag */}
+        <div style={{position:"absolute",top:14,right:14,background:`${B.gold}18`,border:`1px solid ${B.gold}40`,padding:"3px 10px",borderRadius:7}}>
+          <span style={{fontSize:8,color:B.gold,fontFamily:SF,letterSpacing:1.5}}>NEW</span>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:14}}>
+          {/* Camera/eye icon container */}
+          <div style={{width:54,height:54,borderRadius:14,background:`${B.gold}10`,border:`1px solid ${B.borderActive}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+            <Camera size={22} color={B.gold} strokeWidth={1.5}/>
+          </div>
+          <div style={{flex:1,minWidth:0,paddingRight:50}}>
+            <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 4px"}}>Mirror Mode</p>
+            <h3 style={{fontSize:17,color:B.cream,margin:"0 0 4px",fontWeight:400,fontFamily:F,lineHeight:1.25}}>Your face, guided live.</h3>
+            <p style={{fontSize:11,color:B.creamMuted,margin:0,fontStyle:"italic",fontFamily:F,lineHeight:1.4}}>
+              Camera-guided ritual. Personalized to where you're holding tension today.
+            </p>
+          </div>
+        </div>
+      </button>
+
+      {/* Section label for the standard rituals below */}
+      <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,margin:"22px 0 12px"}}>All rituals</p>
+
       {/* ── Ritual cards ── */}
       {rituals.map((r)=>{
         const locked = r.isPremium && !isPremium;
@@ -1813,6 +1854,7 @@ export default function ObrizApp() {
       {screen==="premium"&&renderPremium()}
       {screen==="progress"&&renderProgress()}
       {screen==="affirmations"&&<AffirmationsScreen onBack={()=>setScreen("home")}/>}
+      {screen==="mirror"&&<FaceMirrorMode onClose={()=>setScreen("rituals")} onTransitionToReset={(id)=>startSession(id)} rituals={rituals} isPremium={isPremium}/>}
       {showCheckin&&renderCheckin()}
       {microActive&&renderMicro()}
       {activeRitual&&<RitualPlayer
