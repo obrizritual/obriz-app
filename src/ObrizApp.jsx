@@ -607,17 +607,9 @@ function Onboarding({ onComplete, authUser }) {
         display:"flex",flexDirection:"column",justifyContent:"space-between",
         padding:"60px 28px 48px",
       }}>
-        {/* Top: empty space — let the photograph breathe */}
+        {/* Top + center: empty — the 'Rhei.' wordmark is already embedded in the photograph itself */}
         <div/>
-
-        {/* Center: brand mark, placed in the lower-middle like the reference */}
-        <div style={{textAlign:"center",marginBottom:80}}>
-          <h1 style={{
-            fontSize:64,letterSpacing:0,color:B.cream,fontWeight:400,
-            margin:0,fontFamily:F,lineHeight:1,
-            textShadow:"0 3px 28px rgba(0,0,0,0.6), 0 1px 4px rgba(0,0,0,0.4)",
-          }}>Rhei.</h1>
-        </div>
+        <div/>
 
         {/* Bottom: CTAs */}
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
