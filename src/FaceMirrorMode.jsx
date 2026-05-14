@@ -77,6 +77,7 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
   const [stepSecs,    setStepSecs]    = useState(0);
   const [cameraReady, setCameraReady] = useState(false);
   const [mpLoaded,    setMpLoaded]    = useState(false);        // MediaPipe loaded flag
+  const [videoAspect, setVideoAspect] = useState("16 / 9");     // Tracks the real video aspect for the AR wrapper
 
   const videoRef  = useRef(null);
   const canvasRef = useRef(null);
@@ -134,6 +135,9 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
         const vw = videoRef.current.videoWidth  || 640;
         const vh = videoRef.current.videoHeight || 480;
         if (canvasRef.current) { canvasRef.current.width = vw; canvasRef.current.height = vh; }
+        // Lock the wrapper aspect ratio to the actual video stream so the canvas overlay
+        // occupies the exact same display region — this is what makes the AR markers land precisely on the face.
+        setVideoAspect(`${vw} / ${vh}`);
         setCameraReady(true);
       }
       // Load MediaPipe in background for mirror overlays
@@ -372,6 +376,9 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
         const vw = videoRef.current.videoWidth  || 640;
         const vh = videoRef.current.videoHeight || 480;
         if (canvasRef.current) { canvasRef.current.width = vw; canvasRef.current.height = vh; }
+        // Lock the wrapper aspect ratio to the actual video stream so the canvas overlay
+        // occupies the exact same display region — this is what makes the AR markers land precisely on the face.
+        setVideoAspect(`${vw} / ${vh}`);
         setCameraReady(true);
         loadMP().catch(() => {});
       }
@@ -575,23 +582,47 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
 
     return (
       <div style={{ position:"fixed", inset:0, background:"#000", zIndex:200, overflow:"hidden" }}>
-        {/* ── FULL-SCREEN camera ── face fills the viewport, MediaPipe overlay aligns 1:1 with the actual face position ── */}
-        <video ref={videoRef} playsInline muted autoPlay
-          style={{
-            position:"absolute", inset:0, width:"100%", height:"100%",
-            // objectFit:"contain" keeps the full video frame visible so the canvas overlay aligns
-            // exactly with the face. cover would crop and create coordinate drift with the AR markers.
-            objectFit:"contain",
-            transform:"scaleX(-1)",
-          }}/>
-        <canvas ref={canvasRef}
-          style={{
-            position:"absolute", inset:0, width:"100%", height:"100%",
-            // Canvas matches the video's contain-fit so landmarks render in exactly the right place
-            objectFit:"contain",
-            transform:"scaleX(-1)",
-            pointerEvents:"none",
-          }}/>
+        {/* ── AR camera region ─────────────────────────────────────────────────────
+           Video and canvas BOTH live inside a single aspect-ratio wrapper that
+           matches the actual video stream's dimensions. Both fill that wrapper at
+           100%/100% so they occupy the exact same display region. This is the
+           ONLY reliable way to make MediaPipe landmark coordinates land precisely
+           on the user's face — earlier attempts to use object-fit:contain on the
+           canvas silently failed because canvas isn't a replaced element and
+           ignores object-fit, stretching while the video letterboxed.
+        ─────────────────────────────────────────────────────────────────────────── */}
+        <div style={{
+          position:"absolute", inset:0,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          pointerEvents:"none",
+        }}>
+          <div style={{
+            position:"relative",
+            aspectRatio: videoAspect,
+            width:"100%",
+            maxWidth:"100%",
+            maxHeight:"100%",
+            pointerEvents:"auto",
+          }}>
+            <video ref={videoRef} playsInline muted autoPlay
+              style={{
+                position:"absolute", inset:0, width:"100%", height:"100%",
+                // No object-fit needed: the wrapper already has the correct aspect, so the video
+                // can simply stretch to fill it without distortion or letterboxing.
+                transform:"scaleX(-1)",
+                display:"block",
+              }}/>
+            <canvas ref={canvasRef}
+              style={{
+                position:"absolute", inset:0, width:"100%", height:"100%",
+                // Stretches to fill the SAME wrapper as the video, so every MediaPipe
+                // landmark coordinate maps to the same physical pixel as the video frame.
+                transform:"scaleX(-1)",
+                pointerEvents:"none",
+                display:"block",
+              }}/>
+          </div>
+        </div>
 
         {/* Top vignette + nav controls (translucent, overlay) */}
         <div style={{ position:"absolute", top:0, left:0, right:0, height:140, background:"linear-gradient(to bottom, rgba(26,15,6,0.88) 0%, rgba(26,15,6,0.5) 55%, transparent 100%)", pointerEvents:"none", zIndex:3 }}/>
