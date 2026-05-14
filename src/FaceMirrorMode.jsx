@@ -215,27 +215,56 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
     const type = overlays[stepRef.current];
 
     const gold = "#C49A4B";
+    const goldBright = "#E8C988";
     pulseT.current = (pulseT.current + 0.025) % (Math.PI * 2);
     const p = (Math.sin(pulseT.current) + 1) / 2;
 
-    // Draw a glow dot at a landmark
+    // Draw a glow dot at a landmark — much bigger, layered glow for visibility
     const dot = (idx) => {
       const x = px(idx), y = py(idx);
       if (!x) return;
-      ctx.beginPath(); ctx.arc(x, y, 8+p*3, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(196,154,75,0.1)`; ctx.fill();
-      ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI*2);
-      ctx.fillStyle = gold; ctx.fill();
+      // Outer soft glow (large, breathing)
+      ctx.beginPath(); ctx.arc(x, y, 22+p*6, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(196,154,75,${0.1+p*0.08})`; ctx.fill();
+      // Mid glow
+      ctx.beginPath(); ctx.arc(x, y, 14+p*3, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(196,154,75,${0.2+p*0.12})`; ctx.fill();
+      // Inner core (solid, bright)
+      ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI*2);
+      ctx.fillStyle = goldBright; ctx.fill();
+      // Cream highlight on the core
+      ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2);
+      ctx.fillStyle = "rgba(255,250,243,0.9)"; ctx.fill();
     };
-    // Draw a dashed line with arrow
+    // Draw a dashed line with arrow — thicker, brighter, with shadow for depth
     const line = (x1,y1,x2,y2) => {
-      ctx.strokeStyle = `rgba(196,154,75,${0.6+p*0.35})`; ctx.lineWidth=1.8;
-      ctx.setLineDash([6,4]); ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.setLineDash([]);
+      // Soft dark shadow underneath for contrast against varied skin tones
+      ctx.strokeStyle = "rgba(0,0,0,0.35)";
+      ctx.lineWidth = 6;
+      ctx.setLineDash([14,7]);
+      ctx.beginPath(); ctx.moveTo(x1+1,y1+1); ctx.lineTo(x2+1,y2+1); ctx.stroke();
+      // Main gold line — much thicker
+      ctx.strokeStyle = `rgba(232,201,136,${0.92+p*0.08})`;
+      ctx.lineWidth = 4;
+      ctx.setLineDash([14,7]);
+      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+      ctx.setLineDash([]);
+      // Arrowhead — bigger and bolder
       const a = Math.atan2(y2-y1,x2-x1);
-      ctx.strokeStyle=gold; ctx.lineWidth=1.5; ctx.beginPath();
-      ctx.moveTo(x2,y2); ctx.lineTo(x2-9*Math.cos(a-0.5),y2-9*Math.sin(a-0.5));
-      ctx.moveTo(x2,y2); ctx.lineTo(x2-9*Math.cos(a+0.5),y2-9*Math.sin(a+0.5));
+      const arrowLen = 18;
+      // Shadow arrowhead
+      ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(x2+1,y2+1); ctx.lineTo(x2+1-arrowLen*Math.cos(a-0.5),y2+1-arrowLen*Math.sin(a-0.5));
+      ctx.moveTo(x2+1,y2+1); ctx.lineTo(x2+1-arrowLen*Math.cos(a+0.5),y2+1-arrowLen*Math.sin(a+0.5));
       ctx.stroke();
+      // Bright arrowhead
+      ctx.strokeStyle = goldBright; ctx.lineWidth = 3.5; ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(x2,y2); ctx.lineTo(x2-arrowLen*Math.cos(a-0.5),y2-arrowLen*Math.sin(a-0.5));
+      ctx.moveTo(x2,y2); ctx.lineTo(x2-arrowLen*Math.cos(a+0.5),y2-arrowLen*Math.sin(a+0.5));
+      ctx.stroke();
+      ctx.lineCap = "butt";
     };
 
     if (type==="jawline_out") {
@@ -580,6 +609,32 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
           ))}
         </div>
 
+        {/* ── Reference diagram (small floating card, top-right) ── */}
+        {/* Shows the abstract technique zone so the user has both their live face AND the reference at once */}
+        <div style={{
+          position:"absolute",
+          top:84,
+          right:14,
+          zIndex:5,
+          background:"rgba(26,15,6,0.55)",
+          backdropFilter:"blur(12px)",
+          border:"1px solid rgba(196,154,75,0.22)",
+          borderRadius:14,
+          padding:10,
+          boxShadow:"0 6px 20px rgba(0,0,0,0.35)",
+        }}>
+          <FaceGuideIllustration zone={illustZ} size={70}/>
+          <p style={{
+            fontSize:7,
+            letterSpacing:1.5,
+            color:B.gold,
+            textTransform:"uppercase",
+            fontFamily:SF,
+            margin:"6px 0 0",
+            textAlign:"center",
+          }}>Zone</p>
+        </div>
+
         {/* ── Bottom: floating instruction card over translucent gradient ── */}
         <div style={{
           position:"absolute", bottom:0, left:0, right:0,
@@ -592,21 +647,51 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
             <div style={{ width:`${stepPct}%`, height:"100%", background:B.goldGrad, borderRadius:1, transition:"width 0.8s linear", boxShadow:`0 0 6px rgba(196,154,75,0.4)` }}/>
           </div>
 
-          {/* Step info */}
+          {/* Step info — progressively revealed, larger type for readability */}
           {step && (
             <>
-              <div style={{ textAlign:"center", marginBottom:14 }}>
-                <p style={{ fontSize:9, letterSpacing:2.5, color:B.gold, textTransform:"uppercase", fontFamily:SF, margin:"0 0 6px" }}>Step {stepIdx+1} of {total} · {stepSecs}s</p>
-                <h3 style={{ fontSize:20, color:B.cream, fontWeight:400, margin:"0 0 6px", fontFamily:F, lineHeight:1.3 }}>{step.title}</h3>
-                {step.direction && <p style={{ fontSize:10, color:B.gold, fontFamily:SF, display:"inline-block", background:"rgba(196,154,75,0.14)", border:"1px solid rgba(196,154,75,0.25)", padding:"3px 12px", borderRadius:14, margin:"0 0 8px" }}>{step.direction}</p>}
-                <p style={{ fontSize:12, color:B.creamMuted, margin:"0 auto", fontFamily:SF, lineHeight:1.55, maxWidth:340 }}>{step.instruction}</p>
+              {/* Progressive-reveal keyframes (scoped here, re-triggered per step via key) */}
+              <style>{`@keyframes rhei-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+
+              {/* key={stepIdx} causes the wrapper to remount on each step, re-triggering the staggered fade-ins */}
+              <div key={stepIdx} style={{ textAlign:"center", marginBottom:18 }}>
+                <p style={{
+                  fontSize:10, letterSpacing:2.5, color:B.gold, textTransform:"uppercase", fontFamily:SF, fontWeight:600,
+                  margin:"0 0 10px",
+                  animation:"rhei-rise 0.5s ease 0s both",
+                  textShadow:"0 1px 6px rgba(0,0,0,0.6)",
+                }}>Step {stepIdx+1} of {total} · {stepSecs}s</p>
+
+                <h3 style={{
+                  fontSize:26, color:B.cream, fontWeight:400, margin:"0 0 10px", fontFamily:F, lineHeight:1.25,
+                  animation:"rhei-rise 0.6s ease 0.2s both",
+                  textShadow:"0 2px 14px rgba(0,0,0,0.7)",
+                }}>{step.title}</h3>
+
+                {step.direction && (
+                  <p style={{
+                    fontSize:11, color:B.gold, fontFamily:SF, display:"inline-block",
+                    background:"rgba(196,154,75,0.16)",
+                    border:"1px solid rgba(196,154,75,0.32)",
+                    padding:"4px 14px", borderRadius:14, margin:"0 0 12px",
+                    letterSpacing:0.5,
+                    animation:"rhei-rise 0.6s ease 0.4s both",
+                  }}>{step.direction}</p>
+                )}
+
+                <p style={{
+                  fontSize:15, color:B.cream, margin:"0 auto", fontFamily:F, fontStyle:"italic",
+                  lineHeight:1.65, maxWidth:360,
+                  animation:"rhei-rise 0.6s ease 0.5s both",
+                  textShadow:"0 1px 10px rgba(0,0,0,0.65)",
+                }}>{step.instruction}</p>
               </div>
 
               {/* Controls */}
               <div style={{ display:"flex", gap:10, width:"100%", maxWidth:420, margin:"0 auto" }}>
-                {stepIdx > 0 && <button onClick={prevStep} style={{ flex:"0 0 auto", background:"rgba(58,37,22,0.7)", backdropFilter:"blur(8px)", border:"1px solid rgba(196,154,75,0.18)", borderRadius:24, padding:"12px 18px", cursor:"pointer", color:B.creamMuted, fontSize:13, fontFamily:SF }}>←</button>}
+                {stepIdx > 0 && <button onClick={prevStep} style={{ flex:"0 0 auto", background:"rgba(58,37,22,0.7)", backdropFilter:"blur(8px)", border:"1px solid rgba(196,154,75,0.18)", borderRadius:24, padding:"13px 20px", cursor:"pointer", color:B.cream, fontSize:14, fontFamily:SF }}>←</button>}
                 <button onClick={nextStep}
-                  style={{ flex:1, background: stepSecs<=0 ? B.goldGrad : "rgba(58,37,22,0.7)", backdropFilter: stepSecs<=0 ? "none" : "blur(8px)", border: stepSecs<=0 ? "none" : "1px solid rgba(196,154,75,0.18)", borderRadius:24, padding:"13px", cursor:"pointer", color: stepSecs<=0 ? B.warmBlack : B.cream, fontSize:13, fontFamily:SF, fontWeight: stepSecs<=0 ? 600 : 400 }}>
+                  style={{ flex:1, background: stepSecs<=0 ? B.goldGrad : "rgba(58,37,22,0.7)", backdropFilter: stepSecs<=0 ? "none" : "blur(8px)", border: stepSecs<=0 ? "none" : "1px solid rgba(196,154,75,0.18)", borderRadius:24, padding:"15px", cursor:"pointer", color: stepSecs<=0 ? B.warmBlack : B.cream, fontSize:14, fontFamily:SF, fontWeight: stepSecs<=0 ? 600 : 500, letterSpacing:0.5 }}>
                   {stepSecs<=0 ? (stepIdx+1>=total ? "Finish ✦" : "Next Step →") : "Skip →"}
                 </button>
               </div>
