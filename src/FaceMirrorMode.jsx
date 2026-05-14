@@ -125,7 +125,7 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
     // Open camera in background (for mirror phase later)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode:"user", width:{ ideal:640 }, height:{ ideal:480 } },
+        video: { facingMode:"user", width:{ ideal:1280 }, height:{ ideal:720 } },
       });
       streamRef.current = stream;
       if (videoRef.current) {
@@ -334,7 +334,7 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
     // Open camera now — only when ritual actually starts
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode:"user", width:{ ideal:640 }, height:{ ideal:480 } },
+        video: { facingMode:"user", width:{ ideal:1280 }, height:{ ideal:720 } },
       });
       streamRef.current = stream;
       if (videoRef.current) {
@@ -545,55 +545,68 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
     const illustZ   = OVERLAY_TO_ILLUS[overlayZ] || step?.zone || "full";
 
     return (
-      <div style={{ position:"fixed", inset:0, background:B.bgDeep, zIndex:200, display:"flex", flexDirection:"column", overflow:"hidden" }}>
-        {/* ── Top: camera oval (small, mirror) ── */}
-        <div style={{ position:"relative", width:"100%", height:240, flexShrink:0, overflow:"hidden", background:"#000" }}>
-          <video ref={videoRef} playsInline muted autoPlay style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", transform:"scaleX(-1)" }}/>
-          <canvas ref={canvasRef} style={{ position:"absolute", inset:0, width:"100%", height:"100%", transform:"scaleX(-1)" }}/>
-          <div style={{ position:"absolute", inset:0, background:"linear-gradient(to bottom, rgba(26,15,6,0.55) 0%, transparent 30%, rgba(26,15,6,0.85) 100%)", pointerEvents:"none" }}/>
-          {/* Top nav */}
-          <div style={{ position:"absolute", top:16, left:0, right:0, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 18px", zIndex:5 }}>
-            <button onClick={onClose} style={{ background:"rgba(26,15,6,0.7)", border:"1px solid rgba(196,154,75,0.2)", borderRadius:20, padding:"6px 14px", cursor:"pointer", display:"flex", alignItems:"center", gap:4, color:B.creamMuted, fontFamily:SF, fontSize:11 }}>
-              <X size={12}/><span>Exit</span>
-            </button>
-            <p style={{ fontSize:9, letterSpacing:3, color:B.gold, textTransform:"uppercase", fontFamily:SF }}>{activeRitual.title}</p>
-            <div style={{ width:62 }}/>
-          </div>
-          {/* Step dots */}
-          <div style={{ position:"absolute", bottom:14, left:0, right:0, display:"flex", gap:3, justifyContent:"center", zIndex:5 }}>
-            {activeRitual.steps.map((_,i) => (
-              <div key={i} style={{ width:i===stepIdx?20:6, height:3, borderRadius:2, background:i<stepIdx?B.gold:i===stepIdx?B.goldLight:"rgba(196,154,75,0.22)", transition:"all 0.4s" }}/>
-            ))}
-          </div>
+      <div style={{ position:"fixed", inset:0, background:"#000", zIndex:200, overflow:"hidden" }}>
+        {/* ── FULL-SCREEN camera ── face fills the viewport, MediaPipe overlay aligns 1:1 with the actual face position ── */}
+        <video ref={videoRef} playsInline muted autoPlay
+          style={{
+            position:"absolute", inset:0, width:"100%", height:"100%",
+            // objectFit:"contain" keeps the full video frame visible so the canvas overlay aligns
+            // exactly with the face. cover would crop and create coordinate drift with the AR markers.
+            objectFit:"contain",
+            transform:"scaleX(-1)",
+          }}/>
+        <canvas ref={canvasRef}
+          style={{
+            position:"absolute", inset:0, width:"100%", height:"100%",
+            // Canvas matches the video's contain-fit so landmarks render in exactly the right place
+            objectFit:"contain",
+            transform:"scaleX(-1)",
+            pointerEvents:"none",
+          }}/>
+
+        {/* Top vignette + nav controls (translucent, overlay) */}
+        <div style={{ position:"absolute", top:0, left:0, right:0, height:140, background:"linear-gradient(to bottom, rgba(26,15,6,0.88) 0%, rgba(26,15,6,0.5) 55%, transparent 100%)", pointerEvents:"none", zIndex:3 }}/>
+        <div style={{ position:"absolute", top:18, left:0, right:0, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 20px", zIndex:5 }}>
+          <button onClick={onClose} style={{ background:"rgba(26,15,6,0.55)", backdropFilter:"blur(10px)", border:"1px solid rgba(196,154,75,0.22)", borderRadius:22, padding:"8px 16px", cursor:"pointer", display:"flex", alignItems:"center", gap:5, color:B.cream, fontFamily:SF, fontSize:11 }}>
+            <X size={13}/><span>Exit</span>
+          </button>
+          <p style={{ fontSize:10, letterSpacing:3, color:B.gold, textTransform:"uppercase", fontFamily:SF, textShadow:"0 1px 8px rgba(0,0,0,0.6)" }}>{activeRitual.title}</p>
+          <div style={{ width:74 }}/>
+        </div>
+        {/* Step dots — anchored to the top nav, not floating in the middle */}
+        <div style={{ position:"absolute", top:60, left:0, right:0, display:"flex", gap:4, justifyContent:"center", zIndex:5 }}>
+          {activeRitual.steps.map((_,i) => (
+            <div key={i} style={{ width:i===stepIdx?22:6, height:3, borderRadius:2, background:i<stepIdx?B.gold:i===stepIdx?B.goldLight:"rgba(196,154,75,0.3)", transition:"all 0.4s", boxShadow:i===stepIdx?"0 0 8px rgba(196,154,75,0.4)":"none" }}/>
+          ))}
         </div>
 
-        {/* ── Bottom: illustration + instruction ── */}
-        <div style={{ flex:1, overflowY:"auto", padding:"16px 20px 40px", display:"flex", flexDirection:"column", alignItems:"center" }}>
+        {/* ── Bottom: floating instruction card over translucent gradient ── */}
+        <div style={{
+          position:"absolute", bottom:0, left:0, right:0,
+          background:"linear-gradient(to top, rgba(26,15,6,0.97) 0%, rgba(26,15,6,0.88) 50%, rgba(26,15,6,0.55) 85%, transparent 100%)",
+          padding:"56px 20px 28px",
+          zIndex:4,
+        }}>
           {/* Time bar */}
-          <div style={{ width:"100%", height:2, background:"rgba(196,154,75,0.12)", borderRadius:1, marginBottom:16 }}>
-            <div style={{ width:`${stepPct}%`, height:"100%", background:B.goldGrad, borderRadius:1, transition:"width 0.8s linear" }}/>
-          </div>
-
-          {/* Face illustration for this step */}
-          <div style={{ marginBottom:14 }}>
-            <FaceGuideIllustration zone={illustZ} size={150}/>
+          <div style={{ width:"100%", height:2, background:"rgba(196,154,75,0.18)", borderRadius:1, marginBottom:18 }}>
+            <div style={{ width:`${stepPct}%`, height:"100%", background:B.goldGrad, borderRadius:1, transition:"width 0.8s linear", boxShadow:`0 0 6px rgba(196,154,75,0.4)` }}/>
           </div>
 
           {/* Step info */}
           {step && (
             <>
-              <div style={{ textAlign:"center", marginBottom:4 }}>
-                <p style={{ fontSize:9, letterSpacing:2, color:B.gold, textTransform:"uppercase", fontFamily:SF, margin:"0 0 4px" }}>Step {stepIdx+1} of {total} · {stepSecs}s</p>
-                <h3 style={{ fontSize:19, color:B.cream, fontWeight:400, margin:"0 0 4px", fontFamily:F }}>{step.title}</h3>
-                {step.direction && <p style={{ fontSize:10, color:B.gold, fontFamily:SF, display:"inline-block", background:"rgba(196,154,75,0.1)", padding:"3px 10px", borderRadius:12, margin:"0 0 8px" }}>{step.direction}</p>}
-                <p style={{ fontSize:12, color:B.creamMuted, margin:0, fontFamily:SF, lineHeight:1.6, maxWidth:320 }}>{step.instruction}</p>
+              <div style={{ textAlign:"center", marginBottom:14 }}>
+                <p style={{ fontSize:9, letterSpacing:2.5, color:B.gold, textTransform:"uppercase", fontFamily:SF, margin:"0 0 6px" }}>Step {stepIdx+1} of {total} · {stepSecs}s</p>
+                <h3 style={{ fontSize:20, color:B.cream, fontWeight:400, margin:"0 0 6px", fontFamily:F, lineHeight:1.3 }}>{step.title}</h3>
+                {step.direction && <p style={{ fontSize:10, color:B.gold, fontFamily:SF, display:"inline-block", background:"rgba(196,154,75,0.14)", border:"1px solid rgba(196,154,75,0.25)", padding:"3px 12px", borderRadius:14, margin:"0 0 8px" }}>{step.direction}</p>}
+                <p style={{ fontSize:12, color:B.creamMuted, margin:"0 auto", fontFamily:SF, lineHeight:1.55, maxWidth:340 }}>{step.instruction}</p>
               </div>
 
               {/* Controls */}
-              <div style={{ display:"flex", gap:10, marginTop:16, width:"100%" }}>
-                {stepIdx > 0 && <button onClick={prevStep} style={{ flex:"0 0 auto", background:B.card, border:B.border, borderRadius:24, padding:"12px 18px", cursor:"pointer", color:B.creamMuted, fontSize:13, fontFamily:SF }}>←</button>}
+              <div style={{ display:"flex", gap:10, width:"100%", maxWidth:420, margin:"0 auto" }}>
+                {stepIdx > 0 && <button onClick={prevStep} style={{ flex:"0 0 auto", background:"rgba(58,37,22,0.7)", backdropFilter:"blur(8px)", border:"1px solid rgba(196,154,75,0.18)", borderRadius:24, padding:"12px 18px", cursor:"pointer", color:B.creamMuted, fontSize:13, fontFamily:SF }}>←</button>}
                 <button onClick={nextStep}
-                  style={{ flex:1, background: stepSecs<=0 ? B.goldGrad : B.card, border: stepSecs<=0 ? "none" : B.border, borderRadius:24, padding:"13px", cursor:"pointer", color: stepSecs<=0 ? B.warmBlack : B.creamMuted, fontSize:13, fontFamily:SF, fontWeight: stepSecs<=0 ? 600 : 400 }}>
+                  style={{ flex:1, background: stepSecs<=0 ? B.goldGrad : "rgba(58,37,22,0.7)", backdropFilter: stepSecs<=0 ? "none" : "blur(8px)", border: stepSecs<=0 ? "none" : "1px solid rgba(196,154,75,0.18)", borderRadius:24, padding:"13px", cursor:"pointer", color: stepSecs<=0 ? B.warmBlack : B.cream, fontSize:13, fontFamily:SF, fontWeight: stepSecs<=0 ? 600 : 400 }}>
                   {stepSecs<=0 ? (stepIdx+1>=total ? "Finish ✦" : "Next Step →") : "Skip →"}
                 </button>
               </div>
