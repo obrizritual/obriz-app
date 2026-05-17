@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Crown, User, Hand, Mail, LogOut, MessageCircle, Camera } from "lucide-react";
+import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Crown, User, Hand, Mail, LogOut, MessageCircle, Camera, Volume2, VolumeX } from "lucide-react";
 import { supabase } from "./supabaseClient";
 import FaceGuideIllustration from "./FaceGuideIllustration";
 import AffirmationsScreen from "./AffirmationsScreen";
@@ -412,9 +412,68 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
   const [timeLeft,setTimeLeft]=useState(0);
   const [paused,setPaused]=useState(false);
   const timerRef=useRef(null);
+  const [voiceEnabled, setVoiceEnabled] = useState(() => {
+    try { return localStorage.getItem("rhei_mirror_voice") !== "0"; } catch { return true; }
+  });
+  const voiceAudioRef = useRef(null);
 
   const currentStep = step >= 0 && step < ritual.steps.length ? ritual.steps[step] : null;
   const totalSteps = ritual.steps.length;
+
+  // Persist voice toggle (shared with Mirror Mode)
+  useEffect(() => {
+    try { localStorage.setItem("rhei_mirror_voice", voiceEnabled ? "1" : "0"); } catch {}
+  }, [voiceEnabled]);
+
+  // Voiceover: play Lulu's pre-recorded MP3 for this step; fall back to browser TTS
+  useEffect(() => {
+    if (!voiceEnabled) {
+      // If user just muted, stop anything currently playing
+      try { window.speechSynthesis?.cancel(); } catch {}
+      if (voiceAudioRef.current) { try { voiceAudioRef.current.pause(); } catch {} voiceAudioRef.current = null; }
+      return;
+    }
+    if (step < 0 || step >= totalSteps) return;
+    const stepData = ritual.steps[step];
+    if (!stepData) return;
+    const text = `${stepData.title}. ${stepData.instruction || ""}`.trim();
+
+    try { window.speechSynthesis?.cancel(); } catch {}
+    if (voiceAudioRef.current) { try { voiceAudioRef.current.pause(); } catch {} voiceAudioRef.current = null; }
+
+    const url = `/audio/rituals/${ritual.id}-${step}.mp3`;
+    const audio = new Audio(url);
+    audio.volume = 0.95;
+    voiceAudioRef.current = audio;
+    let speakingBrowserTts = false;
+    audio.addEventListener("error", () => {
+      if (!("speechSynthesis" in window)) return;
+      try {
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = 0.88; u.pitch = 1.02; u.volume = 0.95;
+        const voices = window.speechSynthesis.getVoices();
+        const preferred = voices.find(v => /en/i.test(v.lang) && /(samantha|ava|jenny|aria|female)/i.test(v.name))
+                       || voices.find(v => /en/i.test(v.lang));
+        if (preferred) u.voice = preferred;
+        speakingBrowserTts = true;
+        window.speechSynthesis.speak(u);
+      } catch {}
+    });
+    audio.play().catch(() => { /* error handler covers fallback */ });
+
+    return () => {
+      try { audio.pause(); } catch {}
+      if (speakingBrowserTts) { try { window.speechSynthesis.cancel(); } catch {} }
+    };
+  }, [step, voiceEnabled, ritual, totalSteps]);
+
+  // Stop audio entirely when player unmounts
+  useEffect(() => {
+    return () => {
+      try { window.speechSynthesis?.cancel(); } catch {}
+      if (voiceAudioRef.current) { try { voiceAudioRef.current.pause(); } catch {} voiceAudioRef.current = null; }
+    };
+  }, []);
 
   useEffect(()=>{
     if(step < 0 || step >= totalSteps || paused) return;
@@ -504,6 +563,12 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
     <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:`${B.warmBlack}F8`,zIndex:100,overflowY:"auto"}}>
       <div style={{maxWidth:430,margin:"0 auto",padding:"24px 22px 40px",display:"flex",flexDirection:"column",alignItems:"center",minHeight:"100vh"}}>
         <button onClick={onClose} style={{position:"absolute",top:18,right:18,background:"none",border:"none",cursor:"pointer",zIndex:10}}><X size={18} color={B.muted}/></button>
+        <button
+          onClick={() => setVoiceEnabled(v => !v)}
+          aria-label={voiceEnabled ? "Mute Lulu's voice" : "Unmute Lulu's voice"}
+          style={{position:"absolute",top:16,left:18,background:"rgba(26,15,6,0.55)",backdropFilter:"blur(8px)",border:`1px solid ${voiceEnabled ? B.gold + "40" : B.border}`,borderRadius:"50%",width:36,height:36,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",color:voiceEnabled?B.gold:B.muted,padding:0,zIndex:10}}>
+          {voiceEnabled ? <Volume2 size={15}/> : <VolumeX size={15}/>}
+        </button>
 
         <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,marginBottom:4,marginTop:8}}>{ritual.title}</p>
         <p style={{fontSize:12,color:B.muted,marginBottom:28,fontFamily:SF}}>Step {step+1} of {totalSteps}</p>
