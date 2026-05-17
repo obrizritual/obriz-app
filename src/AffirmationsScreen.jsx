@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, Play, Pause, Plus, Trash2, Save, BookOpen, Sparkles } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { ChevronLeft, Play, Pause, Plus, Trash2, Save, BookOpen, Sparkles, Volume2, VolumeX, Music2 } from "lucide-react";
 
 /* ═══════════════════════════════════════════
    RHEI — Affirmations
@@ -115,6 +115,64 @@ const saveJSON = (key, value) => {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
 };
 
+// ── Procedural ambient pad (Web Audio API — no external file needed) ──
+// Generates a soft, slowly-drifting drone using three sine layers (root + fifth + octave)
+// with subtle LFO detuning and a low-pass filter, so it sits warmly under the voiceover.
+function startAmbientPad() {
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return null;
+  const ctx = new Ctx();
+  // Resume immediately in case the context starts suspended (autoplay policies)
+  if (ctx.state === "suspended") { try { ctx.resume(); } catch {} }
+
+  const master = ctx.createGain();
+  master.gain.setValueAtTime(0, ctx.currentTime);
+  master.gain.linearRampToValueAtTime(0.085, ctx.currentTime + 3); // gentle 3s fade-in
+  master.connect(ctx.destination);
+
+  const filter = ctx.createBiquadFilter();
+  filter.type = "lowpass";
+  filter.frequency.value = 560;
+  filter.Q.value = 0.6;
+  filter.connect(master);
+
+  // Root A2 (110), Fifth E3 (164.81), Octave A3 (220) — open, modal, undemanding
+  const freqs = [110, 164.81, 220];
+  const layers = freqs.map((f, idx) => {
+    const osc = ctx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.value = f;
+    const oscGain = ctx.createGain();
+    oscGain.gain.value = 1 / freqs.length;
+    osc.connect(oscGain).connect(filter);
+
+    // Each layer has its own slow LFO modulating detune in cents (subtle drift)
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 0.04 + idx * 0.018;
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.value = 4 + idx * 1.5;
+    lfo.connect(lfoGain).connect(osc.detune);
+
+    osc.start();
+    lfo.start();
+    return { osc, lfo };
+  });
+
+  return {
+    stop: () => {
+      try {
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.setValueAtTime(master.gain.value, ctx.currentTime);
+        master.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.4);
+      } catch {}
+      setTimeout(() => {
+        layers.forEach(({ osc, lfo }) => { try { osc.stop(); lfo.stop(); } catch {} });
+        try { ctx.close(); } catch {}
+      }, 1600);
+    },
+  };
+}
+
 // ── Breathing orb (matches existing app aesthetic) ──
 const Orb = ({ active, size = 100, accent = B.gold }) => (
   <div style={{
@@ -149,19 +207,138 @@ export default function AffirmationsScreen({ onBack }) {
   const [draft, setDraft] = useState("");
   const [playerIdx, setPlayerIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const timerRef = useRef(null);
+  const [voiceEnabled, setVoiceEnabled] = useState(() => {
+    try { return localStorage.getItem("rhei_mirror_voice") !== "0"; } catch { return true; }
+  });
+  const [musicEnabled, setMusicEnabled] = useState(() => {
+    try { return localStorage.getItem("rhei_affirmation_music") !== "0"; } catch { return true; }
+  });
+  const advanceTimerRef = useRef(null);
+  const audioRef = useRef(null);
+  const padRef = useRef(null);
+
+  // Repeat pause: silent seconds after each affirmation so you can say it back yourself
+  const REPEAT_PAUSE_MS = 5000;
+  // Minimum dwell time on each affirmation (used when audio fails or doesn't load)
+  const MIN_DWELL_MS = 7000;
 
   // Persist custom list
   useEffect(() => { saveJSON(KEY_CUSTOM, customList); }, [customList]);
 
-  // Player auto-advance (every 7 seconds when playing)
+  // Persist voice + music toggles
   useEffect(() => {
-    if (!playing) return;
-    timerRef.current = setTimeout(() => {
-      setPlayerIdx(i => (i + 1) % activeList.length);
-    }, 7000);
-    return () => clearTimeout(timerRef.current);
-  }, [playing, playerIdx, activeList.length]);
+    try { localStorage.setItem("rhei_mirror_voice", voiceEnabled ? "1" : "0"); } catch {}
+  }, [voiceEnabled]);
+  useEffect(() => {
+    try { localStorage.setItem("rhei_affirmation_music", musicEnabled ? "1" : "0"); } catch {}
+  }, [musicEnabled]);
+
+  // Helper: stop whatever's currently being said
+  const stopVoice = useCallback(() => {
+    try { window.speechSynthesis?.cancel(); } catch {}
+    if (audioRef.current) {
+      try { audioRef.current.pause(); audioRef.current.src = ""; } catch {}
+      audioRef.current = null;
+    }
+    if (advanceTimerRef.current) {
+      clearTimeout(advanceTimerRef.current);
+      advanceTimerRef.current = null;
+    }
+  }, []);
+
+  const advanceNext = useCallback(() => {
+    setPlayerIdx(i => (i + 1) % Math.max(1, activeList.length));
+  }, [activeList.length]);
+
+  // Ambient music: starts when playing + musicEnabled, stops otherwise
+  useEffect(() => {
+    if (playing && musicEnabled && !padRef.current) {
+      padRef.current = startAmbientPad();
+    } else if ((!playing || !musicEnabled) && padRef.current) {
+      padRef.current.stop();
+      padRef.current = null;
+    }
+  }, [playing, musicEnabled]);
+
+  // Voiceover + auto-advance — audio-driven, with a repeat-pause built in
+  useEffect(() => {
+    if (!playing) { stopVoice(); return; }
+    if (activeList.length === 0) return;
+    const text = activeList[playerIdx] || "";
+
+    stopVoice();
+
+    // Schedule the next advance after audio ends + REPEAT_PAUSE_MS.
+    // If audio is missing/disabled, we use MIN_DWELL_MS so the player still progresses.
+    const scheduleAdvance = (delay) => {
+      if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
+      advanceTimerRef.current = setTimeout(advanceNext, delay);
+    };
+
+    if (!voiceEnabled) {
+      scheduleAdvance(MIN_DWELL_MS);
+      return () => { if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current); };
+    }
+
+    // Try Lulu's MP3 if this is a built-in category; custom mode goes straight to TTS
+    const categoryId = activeCategory?.id;
+    const tryRecorded = !!categoryId;
+    let usingTts = false;
+
+    const playTts = () => {
+      if (!("speechSynthesis" in window)) { scheduleAdvance(MIN_DWELL_MS); return; }
+      try {
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = 0.85; u.pitch = 1.02; u.volume = 0.95;
+        const voices = window.speechSynthesis.getVoices();
+        const preferred = voices.find(v => /en/i.test(v.lang) && /(samantha|ava|jenny|aria|female)/i.test(v.name))
+                       || voices.find(v => /en/i.test(v.lang));
+        if (preferred) u.voice = preferred;
+        u.onend = () => scheduleAdvance(REPEAT_PAUSE_MS);
+        usingTts = true;
+        window.speechSynthesis.speak(u);
+        // Fallback in case onend never fires (some Chromium builds)
+        scheduleAdvance(MIN_DWELL_MS + 4000);
+      } catch {
+        scheduleAdvance(MIN_DWELL_MS);
+      }
+    };
+
+    if (tryRecorded) {
+      const url = `/audio/affirmations/${categoryId}-${playerIdx}.mp3`;
+      const audio = new Audio(url);
+      audio.volume = 0.95;
+      audioRef.current = audio;
+      audio.addEventListener("ended", () => scheduleAdvance(REPEAT_PAUSE_MS));
+      audio.addEventListener("error", () => { audioRef.current = null; playTts(); });
+      audio.play().catch(() => {
+        // Either autoplay was blocked or the file was unreachable.
+        // The error event handles the unreachable case; if neither fires within a beat,
+        // fall back to TTS so we don't strand the user on a silent step.
+        setTimeout(() => {
+          if (audioRef.current === audio && audio.paused) {
+            audioRef.current = null;
+            playTts();
+          }
+        }, 350);
+      });
+    } else {
+      playTts();
+    }
+
+    return () => {
+      stopVoice();
+      if (usingTts) { try { window.speechSynthesis.cancel(); } catch {} }
+    };
+  }, [playing, playerIdx, voiceEnabled, activeList, activeCategory, advanceNext, stopVoice]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopVoice();
+      if (padRef.current) { padRef.current.stop(); padRef.current = null; }
+    };
+  }, [stopVoice]);
 
   const startCategory = (cat) => {
     setActiveCategory(cat);
@@ -327,9 +504,27 @@ export default function AffirmationsScreen({ onBack }) {
           animation:"rhei-breath-2 28s ease-in-out infinite",
           pointerEvents:"none", zIndex:0, filter:"blur(60px)",
         }}/>
-        <button onClick={() => { setPlaying(false); setView("home"); }} style={{ background: "none", border: "none", color: B.creamMuted, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0, alignSelf: "flex-start", zIndex:1 }}>
-          <ChevronLeft size={16} /> <span style={{ fontSize: 11, letterSpacing: 1.5, fontFamily: SF, textTransform: "uppercase" }}>Done</span>
-        </button>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", width:"100%", zIndex:1 }}>
+          <button onClick={() => { setPlaying(false); setView("home"); }} style={{ background: "none", border: "none", color: B.creamMuted, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0 }}>
+            <ChevronLeft size={16} /> <span style={{ fontSize: 11, letterSpacing: 1.5, fontFamily: SF, textTransform: "uppercase" }}>Done</span>
+          </button>
+          <div style={{ display:"flex", gap:10 }}>
+            <button
+              onClick={() => setMusicEnabled(m => !m)}
+              aria-label={musicEnabled ? "Mute background music" : "Play background music"}
+              title={musicEnabled ? "Music on" : "Music off"}
+              style={{ background:"rgba(26,15,6,0.55)", backdropFilter:"blur(8px)", border:`1px solid ${musicEnabled ? B.gold + "40" : B.border}`, borderRadius:"50%", width:34, height:34, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color: musicEnabled ? B.gold : B.muted, padding:0 }}>
+              <Music2 size={14} />
+            </button>
+            <button
+              onClick={() => setVoiceEnabled(v => !v)}
+              aria-label={voiceEnabled ? "Mute Lulu's voice" : "Unmute Lulu's voice"}
+              title={voiceEnabled ? "Voice on" : "Voice off"}
+              style={{ background:"rgba(26,15,6,0.55)", backdropFilter:"blur(8px)", border:`1px solid ${voiceEnabled ? B.gold + "40" : B.border}`, borderRadius:"50%", width:34, height:34, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color: voiceEnabled ? B.gold : B.muted, padding:0 }}>
+              {voiceEnabled ? <Volume2 size={14}/> : <VolumeX size={14}/>}
+            </button>
+          </div>
+        </div>
 
         <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", position:"relative", zIndex:1 }}>
           <div style={{ position: "relative", width: 200, height: 200, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 38 }}>
