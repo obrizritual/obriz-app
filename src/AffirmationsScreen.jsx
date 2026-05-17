@@ -233,11 +233,15 @@ export default function AffirmationsScreen({ onBack }) {
     try { localStorage.setItem("rhei_affirmation_music", musicEnabled ? "1" : "0"); } catch {}
   }, [musicEnabled]);
 
-  // Helper: stop whatever's currently being said
+  // Helper: stop whatever's currently being said.
+  // IMPORTANT: do NOT set audio.src = "" here — that triggers a synthetic `error`
+  // event on the audio element which our error handler would (mis)interpret as a
+  // missing file and fall back to browser TTS, causing a second voice to repeat
+  // the affirmation Lulu just finished. pause() alone is sufficient.
   const stopVoice = useCallback(() => {
     try { window.speechSynthesis?.cancel(); } catch {}
     if (audioRef.current) {
-      try { audioRef.current.pause(); audioRef.current.src = ""; } catch {}
+      try { audioRef.current.pause(); } catch {}
       audioRef.current = null;
     }
     if (advanceTimerRef.current) {
@@ -304,19 +308,32 @@ export default function AffirmationsScreen({ onBack }) {
       }
     };
 
+    // Closure-scoped flag so any late events that fire AFTER we've torn down
+    // (cleanup ran, user advanced, pause hit, etc.) cannot trigger a duplicate
+    // TTS read of the affirmation Lulu already finished.
+    let stopped = false;
+
     if (tryRecorded) {
       const url = `/audio/affirmations/${categoryId}-${playerIdx}.mp3`;
       const audio = new Audio(url);
       audio.volume = 0.95;
       audioRef.current = audio;
-      audio.addEventListener("ended", () => scheduleAdvance(REPEAT_PAUSE_MS));
-      audio.addEventListener("error", () => { audioRef.current = null; playTts(); });
+      audio.addEventListener("ended", () => {
+        if (stopped) return;
+        scheduleAdvance(REPEAT_PAUSE_MS);
+      });
+      audio.addEventListener("error", () => {
+        if (stopped) return;
+        // True load error — file missing or unsupported. Fall back to TTS.
+        audioRef.current = null;
+        playTts();
+      });
       audio.play().catch(() => {
-        // Either autoplay was blocked or the file was unreachable.
-        // The error event handles the unreachable case; if neither fires within a beat,
-        // fall back to TTS so we don't strand the user on a silent step.
+        // play() rejected — usually autoplay block. Wait briefly, then if the
+        // audio still hasn't started AND we haven't been torn down, try TTS.
         setTimeout(() => {
-          if (audioRef.current === audio && audio.paused) {
+          if (stopped) return;
+          if (audioRef.current === audio && audio.paused && audio.currentTime === 0) {
             audioRef.current = null;
             playTts();
           }
@@ -327,6 +344,7 @@ export default function AffirmationsScreen({ onBack }) {
     }
 
     return () => {
+      stopped = true;
       stopVoice();
       if (usingTts) { try { window.speechSynthesis.cancel(); } catch {} }
     };
