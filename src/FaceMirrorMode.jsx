@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { X, Camera, ChevronLeft, Check, ArrowRight, Sparkles, Play, Pause } from "lucide-react";
+import { X, Camera, ChevronLeft, Check, ArrowRight, Sparkles, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import FaceGuideIllustration from "./FaceGuideIllustration";
 
 /* ═══════════════════════════════════════════
@@ -77,7 +77,9 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
   const [stepSecs,    setStepSecs]    = useState(0);
   const [cameraReady, setCameraReady] = useState(false);
   const [mpLoaded,    setMpLoaded]    = useState(false);        // MediaPipe loaded flag
-  const [videoAspect, setVideoAspect] = useState("16 / 9");     // Tracks the real video aspect for the AR wrapper
+  const [voiceEnabled, setVoiceEnabled] = useState(() => {
+    try { return localStorage.getItem("rhei_mirror_voice") !== "0"; } catch { return true; }
+  });
 
   const videoRef  = useRef(null);
   const canvasRef = useRef(null);
@@ -103,6 +105,43 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
     if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
     if (fmRef.current) try { fmRef.current.close(); } catch {}
   }, []);
+
+  // ── Position canvas to exactly match the video's object-fit:cover crop region.
+  //    This is the ONLY way to make MediaPipe landmark overlays land precisely on the face.
+  //    Math: with cover, video scales to AT LEAST as big as the container in both dims, then crops the excess.
+  //    We replicate that exact same display region on the canvas so normalized landmark coords map 1:1.
+  const matchCanvasToVideo = useCallback(() => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+    const container = video.parentElement;
+    if (!container) return;
+    const cw = container.clientWidth;
+    const ch = container.clientHeight;
+    const vw = video.videoWidth  || 1280;
+    const vh = video.videoHeight || 720;
+    if (!cw || !ch || !vw || !vh) return;
+    const scale = Math.max(cw / vw, ch / vh);
+    const dispW = vw * scale;
+    const dispH = vh * scale;
+    const offX  = (cw - dispW) / 2;
+    const offY  = (ch - dispH) / 2;
+    canvas.style.width  = `${dispW}px`;
+    canvas.style.height = `${dispH}px`;
+    canvas.style.left   = `${offX}px`;
+    canvas.style.top    = `${offY}px`;
+  }, []);
+
+  // Re-position canvas on every window resize / orientation change
+  useEffect(() => {
+    const onResize = () => matchCanvasToVideo();
+    window.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onResize);
+    };
+  }, [matchCanvasToVideo]);
 
   // ── Camera open (called on permission) ────────────────────────────────────
   const openCamera = useCallback(async () => {
@@ -135,9 +174,8 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
         const vw = videoRef.current.videoWidth  || 640;
         const vh = videoRef.current.videoHeight || 480;
         if (canvasRef.current) { canvasRef.current.width = vw; canvasRef.current.height = vh; }
-        // Lock the wrapper aspect ratio to the actual video stream so the canvas overlay
-        // occupies the exact same display region — this is what makes the AR markers land precisely on the face.
-        setVideoAspect(`${vw} / ${vh}`);
+        // Position the canvas to exactly match the video's object-fit:cover display region.
+        matchCanvasToVideo();
         setCameraReady(true);
       }
       // Load MediaPipe in background for mirror overlays
@@ -350,6 +388,62 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
     return () => clearInterval(stepTmr.current);
   }, [phase, activeRitual, stepIdx]);
 
+  // ── Voiceover: try ElevenLabs-generated MP3 first, fall back to browser TTS ─
+  // Audio files (when present) should live at /audio/rituals/{ritualId}-{stepIdx}.mp3
+  // To populate them, run an ElevenLabs generation script with the step.instruction text.
+  const voiceAudioRef = useRef(null);
+  useEffect(() => {
+    if (!voiceEnabled || phase !== "mirror" || !activeRitual) return;
+    const step = activeRitual.steps[stepIdx];
+    if (!step) return;
+    const text = `${step.title}. ${step.instruction || ""}`.trim();
+
+    // Stop any prior speech / audio playback first
+    try { window.speechSynthesis?.cancel(); } catch {}
+    if (voiceAudioRef.current) { try { voiceAudioRef.current.pause(); } catch {} voiceAudioRef.current = null; }
+
+    // Try recorded ElevenLabs audio
+    const url = `/audio/rituals/${activeRitual.id}-${stepIdx}.mp3`;
+    const audio = new Audio(url);
+    audio.volume = 0.95;
+    voiceAudioRef.current = audio;
+    let speakingBrowserTts = false;
+    audio.addEventListener("error", () => {
+      // File doesn't exist yet — fall back to browser TTS so the feature still works
+      if (!("speechSynthesis" in window)) return;
+      try {
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = 0.88; u.pitch = 1.02; u.volume = 0.95;
+        // Prefer a calm English voice if available
+        const voices = window.speechSynthesis.getVoices();
+        const preferred = voices.find(v => /en/i.test(v.lang) && /(samantha|ava|jenny|aria|female)/i.test(v.name))
+                       || voices.find(v => /en/i.test(v.lang));
+        if (preferred) u.voice = preferred;
+        speakingBrowserTts = true;
+        window.speechSynthesis.speak(u);
+      } catch {}
+    });
+    audio.play().catch(() => { /* error event handles the fallback */ });
+
+    return () => {
+      try { audio.pause(); } catch {}
+      if (speakingBrowserTts) { try { window.speechSynthesis.cancel(); } catch {} }
+    };
+  }, [phase, activeRitual, stepIdx, voiceEnabled]);
+
+  // Persist voice toggle
+  useEffect(() => {
+    try { localStorage.setItem("rhei_mirror_voice", voiceEnabled ? "1" : "0"); } catch {}
+  }, [voiceEnabled]);
+
+  // Cancel speech when leaving the mirror phase entirely
+  useEffect(() => {
+    if (phase !== "mirror") {
+      try { window.speechSynthesis?.cancel(); } catch {}
+      if (voiceAudioRef.current) { try { voiceAudioRef.current.pause(); } catch {} voiceAudioRef.current = null; }
+    }
+  }, [phase]);
+
   const selectZone = (zoneId) => {
     setChosenZone(zoneId);
     setTimeout(() => {
@@ -376,9 +470,8 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
         const vw = videoRef.current.videoWidth  || 640;
         const vh = videoRef.current.videoHeight || 480;
         if (canvasRef.current) { canvasRef.current.width = vw; canvasRef.current.height = vh; }
-        // Lock the wrapper aspect ratio to the actual video stream so the canvas overlay
-        // occupies the exact same display region — this is what makes the AR markers land precisely on the face.
-        setVideoAspect(`${vw} / ${vh}`);
+        // Position the canvas to exactly match the video's object-fit:cover display region.
+        matchCanvasToVideo();
         setCameraReady(true);
         loadMP().catch(() => {});
       }
@@ -583,46 +676,25 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
     return (
       <div style={{ position:"fixed", inset:0, background:"#000", zIndex:200, overflow:"hidden" }}>
         {/* ── AR camera region ─────────────────────────────────────────────────────
-           Video and canvas BOTH live inside a single aspect-ratio wrapper that
-           matches the actual video stream's dimensions. Both fill that wrapper at
-           100%/100% so they occupy the exact same display region. This is the
-           ONLY reliable way to make MediaPipe landmark coordinates land precisely
-           on the user's face — earlier attempts to use object-fit:contain on the
-           canvas silently failed because canvas isn't a replaced element and
-           ignores object-fit, stretching while the video letterboxed.
+           Video uses object-fit:cover (face fills the screen). Canvas is positioned
+           absolutely and JS-sized to exactly match the video's cover-cropped display
+           region (computed in matchCanvasToVideo). This makes MediaPipe landmark
+           coordinates land precisely on the actual face position, regardless of phone
+           aspect ratio. Re-runs on window resize / orientation change.
         ─────────────────────────────────────────────────────────────────────────── */}
-        <div style={{
-          position:"absolute", inset:0,
-          display:"flex", alignItems:"center", justifyContent:"center",
-          pointerEvents:"none",
-        }}>
-          <div style={{
-            position:"relative",
-            aspectRatio: videoAspect,
-            width:"100%",
-            maxWidth:"100%",
-            maxHeight:"100%",
-            pointerEvents:"auto",
-          }}>
-            <video ref={videoRef} playsInline muted autoPlay
-              style={{
-                position:"absolute", inset:0, width:"100%", height:"100%",
-                // No object-fit needed: the wrapper already has the correct aspect, so the video
-                // can simply stretch to fill it without distortion or letterboxing.
-                transform:"scaleX(-1)",
-                display:"block",
-              }}/>
-            <canvas ref={canvasRef}
-              style={{
-                position:"absolute", inset:0, width:"100%", height:"100%",
-                // Stretches to fill the SAME wrapper as the video, so every MediaPipe
-                // landmark coordinate maps to the same physical pixel as the video frame.
-                transform:"scaleX(-1)",
-                pointerEvents:"none",
-                display:"block",
-              }}/>
-          </div>
-        </div>
+        <video ref={videoRef} playsInline muted autoPlay
+          style={{
+            position:"absolute", inset:0, width:"100%", height:"100%",
+            objectFit:"cover",
+            transform:"scaleX(-1)",
+          }}/>
+        <canvas ref={canvasRef}
+          style={{
+            // width/height/left/top are set by matchCanvasToVideo() to match the cover crop region.
+            position:"absolute",
+            transform:"scaleX(-1)",
+            pointerEvents:"none",
+          }}/>
 
         {/* Top vignette + nav controls (translucent, overlay) */}
         <div style={{ position:"absolute", top:0, left:0, right:0, height:140, background:"linear-gradient(to bottom, rgba(26,15,6,0.88) 0%, rgba(26,15,6,0.5) 55%, transparent 100%)", pointerEvents:"none", zIndex:3 }}/>
@@ -630,8 +702,21 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
           <button onClick={onClose} style={{ background:"rgba(26,15,6,0.55)", backdropFilter:"blur(10px)", border:"1px solid rgba(196,154,75,0.22)", borderRadius:22, padding:"8px 16px", cursor:"pointer", display:"flex", alignItems:"center", gap:5, color:B.cream, fontFamily:SF, fontSize:11 }}>
             <X size={13}/><span>Exit</span>
           </button>
-          <p style={{ fontSize:10, letterSpacing:3, color:B.gold, textTransform:"uppercase", fontFamily:SF, textShadow:"0 1px 8px rgba(0,0,0,0.6)" }}>{activeRitual.title}</p>
-          <div style={{ width:74 }}/>
+          <p style={{ fontSize:11, letterSpacing:3, color:B.gold, textTransform:"uppercase", fontFamily:SF, textShadow:"0 1px 8px rgba(0,0,0,0.6)" }}>{activeRitual.title}</p>
+          {/* Voice toggle — switches between recorded voiceover (or browser TTS fallback) and silent */}
+          <button
+            onClick={() => setVoiceEnabled(v => !v)}
+            aria-label={voiceEnabled ? "Mute voice" : "Unmute voice"}
+            style={{
+              background:"rgba(26,15,6,0.55)", backdropFilter:"blur(10px)",
+              border:"1px solid rgba(196,154,75,0.22)",
+              borderRadius:"50%", width:38, height:38,
+              cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center",
+              color: voiceEnabled ? B.gold : B.muted,
+              padding:0,
+            }}>
+            {voiceEnabled ? <Volume2 size={16}/> : <VolumeX size={16}/>}
+          </button>
         </div>
         {/* Step dots — anchored to the top nav, not floating in the middle */}
         <div style={{ position:"absolute", top:60, left:0, right:0, display:"flex", gap:4, justifyContent:"center", zIndex:5 }}>
@@ -685,44 +770,44 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
               <style>{`@keyframes rhei-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }`}</style>
 
               {/* key={stepIdx} causes the wrapper to remount on each step, re-triggering the staggered fade-ins */}
-              <div key={stepIdx} style={{ textAlign:"center", marginBottom:18 }}>
+              <div key={stepIdx} style={{ textAlign:"center", marginBottom:22 }}>
                 <p style={{
-                  fontSize:10, letterSpacing:2.5, color:B.gold, textTransform:"uppercase", fontFamily:SF, fontWeight:600,
-                  margin:"0 0 10px",
+                  fontSize:12, letterSpacing:2.5, color:B.gold, textTransform:"uppercase", fontFamily:SF, fontWeight:600,
+                  margin:"0 0 14px",
                   animation:"rhei-rise 0.5s ease 0s both",
-                  textShadow:"0 1px 6px rgba(0,0,0,0.6)",
+                  textShadow:"0 1px 6px rgba(0,0,0,0.7)",
                 }}>Step {stepIdx+1} of {total} · {stepSecs}s</p>
 
                 <h3 style={{
-                  fontSize:26, color:B.cream, fontWeight:400, margin:"0 0 10px", fontFamily:F, lineHeight:1.25,
+                  fontSize:34, color:B.cream, fontWeight:400, margin:"0 0 14px", fontFamily:F, lineHeight:1.22,
                   animation:"rhei-rise 0.6s ease 0.2s both",
-                  textShadow:"0 2px 14px rgba(0,0,0,0.7)",
+                  textShadow:"0 2px 18px rgba(0,0,0,0.85), 0 1px 4px rgba(0,0,0,0.6)",
                 }}>{step.title}</h3>
 
                 {step.direction && (
                   <p style={{
-                    fontSize:11, color:B.gold, fontFamily:SF, display:"inline-block",
-                    background:"rgba(196,154,75,0.16)",
-                    border:"1px solid rgba(196,154,75,0.32)",
-                    padding:"4px 14px", borderRadius:14, margin:"0 0 12px",
-                    letterSpacing:0.5,
+                    fontSize:13, color:B.gold, fontFamily:SF, display:"inline-block",
+                    background:"rgba(196,154,75,0.2)",
+                    border:"1px solid rgba(196,154,75,0.35)",
+                    padding:"5px 16px", borderRadius:16, margin:"0 0 14px",
+                    letterSpacing:0.5, fontWeight:500,
                     animation:"rhei-rise 0.6s ease 0.4s both",
                   }}>{step.direction}</p>
                 )}
 
                 <p style={{
-                  fontSize:15, color:B.cream, margin:"0 auto", fontFamily:F, fontStyle:"italic",
-                  lineHeight:1.65, maxWidth:360,
+                  fontSize:18, color:B.cream, margin:"0 auto", fontFamily:F, fontStyle:"italic",
+                  lineHeight:1.55, maxWidth:380,
                   animation:"rhei-rise 0.6s ease 0.5s both",
-                  textShadow:"0 1px 10px rgba(0,0,0,0.65)",
+                  textShadow:"0 1px 12px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5)",
                 }}>{step.instruction}</p>
               </div>
 
-              {/* Controls */}
-              <div style={{ display:"flex", gap:10, width:"100%", maxWidth:420, margin:"0 auto" }}>
-                {stepIdx > 0 && <button onClick={prevStep} style={{ flex:"0 0 auto", background:"rgba(58,37,22,0.7)", backdropFilter:"blur(8px)", border:"1px solid rgba(196,154,75,0.18)", borderRadius:24, padding:"13px 20px", cursor:"pointer", color:B.cream, fontSize:14, fontFamily:SF }}>←</button>}
+              {/* Controls — larger touch targets and clearer text for 1m-distance use */}
+              <div style={{ display:"flex", gap:12, width:"100%", maxWidth:440, margin:"0 auto" }}>
+                {stepIdx > 0 && <button onClick={prevStep} style={{ flex:"0 0 auto", background:"rgba(58,37,22,0.7)", backdropFilter:"blur(8px)", border:"1px solid rgba(196,154,75,0.22)", borderRadius:26, padding:"16px 22px", cursor:"pointer", color:B.cream, fontSize:18, fontFamily:SF }}>←</button>}
                 <button onClick={nextStep}
-                  style={{ flex:1, background: stepSecs<=0 ? B.goldGrad : "rgba(58,37,22,0.7)", backdropFilter: stepSecs<=0 ? "none" : "blur(8px)", border: stepSecs<=0 ? "none" : "1px solid rgba(196,154,75,0.18)", borderRadius:24, padding:"15px", cursor:"pointer", color: stepSecs<=0 ? B.warmBlack : B.cream, fontSize:14, fontFamily:SF, fontWeight: stepSecs<=0 ? 600 : 500, letterSpacing:0.5 }}>
+                  style={{ flex:1, background: stepSecs<=0 ? B.goldGrad : "rgba(58,37,22,0.7)", backdropFilter: stepSecs<=0 ? "none" : "blur(8px)", border: stepSecs<=0 ? "none" : "1px solid rgba(196,154,75,0.22)", borderRadius:26, padding:"18px", cursor:"pointer", color: stepSecs<=0 ? B.warmBlack : B.cream, fontSize:16, fontFamily:SF, fontWeight: stepSecs<=0 ? 600 : 500, letterSpacing:0.8 }}>
                   {stepSecs<=0 ? (stepIdx+1>=total ? "Finish ✦" : "Next Step →") : "Skip →"}
                 </button>
               </div>

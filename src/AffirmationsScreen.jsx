@@ -130,6 +130,14 @@ const ORB_CSS = `
     0%, 100% { transform: scale(0.9); opacity: 0.55; }
     50%      { transform: scale(1.08); opacity: 1; }
   }
+  @keyframes rhei-breath {
+    0%, 100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 0.55; }
+    50%      { transform: translate(-50%, -50%) scale(1.25) rotate(180deg); opacity: 0.85; }
+  }
+  @keyframes rhei-breath-2 {
+    0%, 100% { transform: translate(-50%, -50%) scale(1.1) rotate(0deg); opacity: 0.35; }
+    50%      { transform: translate(-50%, -50%) scale(0.85) rotate(-120deg); opacity: 0.6; }
+  }
 `;
 
 // ══════════ MAIN COMPONENT ══════════
@@ -301,26 +309,42 @@ export default function AffirmationsScreen({ onBack }) {
     const current = activeList[playerIdx] || "";
     const accent = activeCategory?.accent || B.gold;
     return (
-      <div className="rhei-page" style={{ minHeight: "100vh", background: B.bg, display: "flex", flexDirection: "column", padding: "56px 22px 56px" }}>
+      <div className="rhei-page" style={{ minHeight: "100vh", background: B.bgDeep, display: "flex", flexDirection: "column", padding: "56px 22px 56px", position:"relative", overflow:"hidden" }}>
         <style>{ORB_CSS}</style>
-        <button onClick={() => { setPlaying(false); setView("home"); }} style={{ background: "none", border: "none", color: B.muted, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0, alignSelf: "flex-start" }}>
+        {/* Calming animated background — two soft glow orbs that slowly drift and breathe,
+            instead of the static black. Sits behind everything else with low opacity. */}
+        <div style={{
+          position:"absolute", top:"50%", left:"50%",
+          width:"160vmin", height:"160vmin", borderRadius:"50%",
+          background:`radial-gradient(circle at 50% 50%, ${accent}40 0%, ${accent}18 30%, transparent 65%)`,
+          animation:"rhei-breath 22s ease-in-out infinite",
+          pointerEvents:"none", zIndex:0, filter:"blur(40px)",
+        }}/>
+        <div style={{
+          position:"absolute", top:"30%", left:"40%",
+          width:"120vmin", height:"120vmin", borderRadius:"50%",
+          background:`radial-gradient(circle at 50% 50%, ${B.gold}30 0%, ${B.goldMuted}14 35%, transparent 70%)`,
+          animation:"rhei-breath-2 28s ease-in-out infinite",
+          pointerEvents:"none", zIndex:0, filter:"blur(60px)",
+        }}/>
+        <button onClick={() => { setPlaying(false); setView("home"); }} style={{ background: "none", border: "none", color: B.creamMuted, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0, alignSelf: "flex-start", zIndex:1 }}>
           <ChevronLeft size={16} /> <span style={{ fontSize: 11, letterSpacing: 1.5, fontFamily: SF, textTransform: "uppercase" }}>Done</span>
         </button>
 
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center" }}>
-          <div style={{ position: "relative", width: 180, height: 180, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 32 }}>
-            <Orb active={playing} size={180} accent={accent} />
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", position:"relative", zIndex:1 }}>
+          <div style={{ position: "relative", width: 200, height: 200, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 38 }}>
+            <Orb active={playing} size={200} accent={accent} />
           </div>
-          <p style={{ fontSize: 10, letterSpacing: 3, color: B.muted, textTransform: "uppercase", fontFamily: SF, margin: "0 0 16px" }}>{activeCategory?.label}</p>
-          <p key={playerIdx} style={{ fontSize: 22, lineHeight: 1.45, color: B.cream, fontFamily: F, fontWeight: 400, margin: 0, maxWidth: 320, animation: "rhei-fade 0.6s ease both" }}>
+          <p style={{ fontSize: 11, letterSpacing: 3, color: B.creamMuted, textTransform: "uppercase", fontFamily: SF, margin: "0 0 20px", textShadow:"0 1px 8px rgba(0,0,0,0.5)" }}>{activeCategory?.label}</p>
+          <p key={playerIdx} style={{ fontSize: 26, lineHeight: 1.4, color: B.cream, fontFamily: F, fontWeight: 400, margin: 0, maxWidth: 360, animation: "rhei-fade 0.8s ease both", textShadow:"0 2px 14px rgba(0,0,0,0.45)" }}>
             {current}
           </p>
-          <p style={{ fontSize: 10, color: B.muted, fontFamily: SF, marginTop: 28, letterSpacing: 1 }}>
+          <p style={{ fontSize: 11, color: B.creamMuted, fontFamily: SF, marginTop: 32, letterSpacing: 1, textShadow:"0 1px 6px rgba(0,0,0,0.4)" }}>
             {playerIdx + 1} of {activeList.length}
           </p>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, marginTop: 24 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, marginTop: 24, position:"relative", zIndex:1 }}>
           <button onClick={() => setPlayerIdx(i => (i - 1 + activeList.length) % activeList.length)}
             style={{ background: "none", border: `1px solid ${B.border}`, borderRadius: "50%", width: 44, height: 44, cursor: "pointer", color: B.cream, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <ChevronLeft size={20} />
