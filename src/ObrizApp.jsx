@@ -2,6 +2,19 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Crown, User, Hand, Mail, LogOut, MessageCircle, Camera, Volume2, VolumeX } from "lucide-react";
 import { supabase } from "./supabaseClient";
 import FaceGuideIllustration from "./FaceGuideIllustration";
+import BellyGuideIllustration from "./BellyGuideIllustration";
+
+// Rituals whose guidance art is the torso/abdomen, not the face.
+// Add new body rituals here so the renderer auto-picks the right illustration.
+const BELLY_RITUALS = new Set(["belly-flow"]);
+
+// Pick the right illustration for a ritual + zone.
+function RitualIllustration({ ritualId, zone, size }) {
+  if (BELLY_RITUALS.has(ritualId)) {
+    return <BellyGuideIllustration zone={zone || "full"} size={size} />;
+  }
+  return <FaceGuideIllustration zone={zone || "full"} size={size} />;
+}
 import AffirmationsScreen from "./AffirmationsScreen";
 import FaceMirrorMode from "./FaceMirrorMode";
 
@@ -202,13 +215,13 @@ const rituals = [
     occasion: "evening", audioFollowUp: 5,
     steps: [
       { title: "Ground yourself first", duration: 30, instruction: "Lie back or sit tall. Hands flat on the lower belly. Three slow breaths — the kind where the belly rises before the chest. You're inviting the gut to soften. Don't rush this.", zone: "full", direction: "● Belly breathing" },
-      { title: "Open the drainage path", duration: 40, instruction: "Find the crease where your thigh meets your hip — both sides. Pulse gently with flat fingers, ten times each side. The lymphatic gates open here. You have to open the door before you move anything through it.", zone: "full", direction: "● Inguinal nodes" },
-      { title: "Wake the diaphragm", duration: 45, instruction: "Hands just under the ribs, fingers softly curved in. As you inhale, press gently down with your fingers. Exhale, release. Five slow rounds. This is where the lymph pump lives — most people have forgotten it's there.", zone: "full", direction: "↓ With breath" },
-      { title: "Down the left", duration: 45, instruction: "Flat hand on your left side, just under the ribs. Stroke firmly downward to your hip. Slow, sustained pressure. Five passes. This follows the descending colon. You're moving what's been stuck.", zone: "full", direction: "↓ Ribs to hip, left" },
-      { title: "Across the top", duration: 50, instruction: "From your right hip, sweep up to under the right ribs, then straight across to the left ribs, then down to the left hip. One smooth, unbroken pass. Three times. Every stroke moves things in the direction they want to go.", zone: "full", direction: "↑ → ↓ Full colon path" },
-      { title: "The I Love You", duration: 55, instruction: "Now the full sequence: an I down the left side, an inverted L across the top and down the left, and a U up the right, across, and down the left. Three full rounds. Yes, your gut knows it's being told something kind.", zone: "full", direction: "I · L · U · ×3" },
-      { title: "Around the navel", duration: 50, instruction: "Both hands stacked over your belly button. Ten slow clockwise circles — always clockwise, never against it. Light, then a little deeper. The colon is right under your hand. You're walking it home.", zone: "full", direction: "○ Clockwise, ×10" },
-      { title: "Drain it down", duration: 40, instruction: "Back to the inguinal crease. Press and hold both hands there for ten counts. Everything you just moved drains here. Three slow breaths. Notice what's softer than when you started.", zone: "full", direction: "● Hold · 10 counts" },
+      { title: "Open the drainage path", duration: 40, instruction: "Find the crease where your thigh meets your hip — both sides. Pulse gently with flat fingers, ten times each side. The lymphatic gates open here. You have to open the door before you move anything through it.", zone: "inguinal", direction: "● Inguinal nodes" },
+      { title: "Wake the diaphragm", duration: 45, instruction: "Hands just under the ribs, fingers softly curved in. As you inhale, press gently down with your fingers. Exhale, release. Five slow rounds. This is where the lymph pump lives — most people have forgotten it's there.", zone: "diaphragm", direction: "↓ With breath" },
+      { title: "Down the left", duration: 45, instruction: "Flat hand on your left side, just under the ribs. Stroke firmly downward to your hip. Slow, sustained pressure. Five passes. This follows the descending colon. You're moving what's been stuck.", zone: "left-side", direction: "↓ Ribs to hip, left" },
+      { title: "Across the top", duration: 50, instruction: "From your right hip, sweep up to under the right ribs, then straight across to the left ribs, then down to the left hip. One smooth, unbroken pass. Three times. Every stroke moves things in the direction they want to go.", zone: "top-sweep", direction: "↑ → ↓ Full colon path" },
+      { title: "The I Love You", duration: 55, instruction: "Now the full sequence: an I down the left side, an inverted L across the top and down the left, and a U up the right, across, and down the left. Three full rounds. Yes, your gut knows it's being told something kind.", zone: "colon-path", direction: "I · L · U · ×3" },
+      { title: "Around the navel", duration: 50, instruction: "Both hands stacked over your belly button. Ten slow clockwise circles — always clockwise, never against it. Light, then a little deeper. The colon is right under your hand. You're walking it home.", zone: "navel", direction: "○ Clockwise, ×10" },
+      { title: "Drain it down", duration: 40, instruction: "Back to the inguinal crease. Press and hold both hands there for ten counts. Everything you just moved drains here. Three slow breaths. Notice what's softer than when you started.", zone: "inguinal", direction: "● Hold · 10 counts" },
     ]
   },
 ];
@@ -527,8 +540,9 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
             <p style={{fontSize:13,color:B.muted,fontStyle:"italic",margin:"0 0 16px"}}>{ritual.subtitle}</p>
           </div>
           <div style={{width:"100%",height:220,borderRadius:20,background:B.card,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:24,overflow:"hidden"}}>
-            <FaceGuideIllustration
-              zone={ritual.id==="gua-sha"?"jawline":ritual.id==="lymphatic"?"nodes":"cheeks"}
+            <RitualIllustration
+              ritualId={ritual.id}
+              zone={ritual.id==="gua-sha"?"jawline":ritual.id==="lymphatic"?"nodes":ritual.id==="belly-flow"?"navel":"cheeks"}
               size={160}
             />
           </div>
@@ -599,7 +613,7 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
         <div style={{position:"relative",width:"100%",display:"flex",justifyContent:"center",alignItems:"center",marginBottom:16}}>
           {/* Timer ring top-right of illustration */}
           <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <FaceGuideIllustration zone={currentStep.zone||"full"} size={170}/>
+            <RitualIllustration ritualId={ritual.id} zone={currentStep.zone||"full"} size={170}/>
             {/* Floating timer pill */}
             <div style={{position:"absolute",bottom:8,right:-8,background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"5px 12px",display:"flex",alignItems:"center",gap:6,boxShadow:`0 4px 16px ${B.warmBlack}60`}}>
               <div style={{position:"relative",width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center"}}>
