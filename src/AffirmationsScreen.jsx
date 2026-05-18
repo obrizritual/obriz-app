@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ChevronLeft, Play, Pause, Plus, Trash2, Save, BookOpen, Sparkles, Volume2, VolumeX, Music2 } from "lucide-react";
+import { ChevronLeft, Play, Pause, Plus, Trash2, Save, BookOpen, Sparkles, Volume2, VolumeX, Music2, Mic, MicOff, Square, CircleDot, X } from "lucide-react";
 
 /* ═══════════════════════════════════════════
    RHEI — Affirmations
@@ -115,6 +115,81 @@ const saveJSON = (key, value) => {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
 };
 
+// ── customList migration: string[] → { id, text, hasRecording }[]  ──
+// Old saved entries were plain strings. New entries are objects so we can
+// track whether the user has recorded their own voice for them. This runs
+// once on load — any string gets a stable random id and hasRecording=false.
+const makeId = () =>
+  (typeof crypto !== "undefined" && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : `aff_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+const migrateCustomList = (raw) => {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((entry) => {
+    if (typeof entry === "string") {
+      return { id: makeId(), text: entry, hasRecording: false, createdAt: Date.now() };
+    }
+    return {
+      id: entry.id || makeId(),
+      text: entry.text || "",
+      hasRecording: !!entry.hasRecording,
+      createdAt: entry.createdAt || Date.now(),
+    };
+  });
+};
+
+// ── IndexedDB helpers for storing voice recordings ──
+// Audio blobs are too big for localStorage (~5 MB quota). IndexedDB gives us
+// roughly 50% of available disk per origin on modern browsers, so a hundred
+// 30-second voice clips fit comfortably. Keyed by affirmation id.
+const IDB_NAME = "rhei_audio";
+const IDB_VERSION = 1;
+const IDB_STORE = "custom_recordings";
+
+const openIDB = () => new Promise((resolve, reject) => {
+  if (typeof indexedDB === "undefined") return reject(new Error("IndexedDB unavailable"));
+  const req = indexedDB.open(IDB_NAME, IDB_VERSION);
+  req.onupgradeneeded = () => {
+    const db = req.result;
+    if (!db.objectStoreNames.contains(IDB_STORE)) {
+      db.createObjectStore(IDB_STORE); // key is the affirmation id (string)
+    }
+  };
+  req.onsuccess = () => resolve(req.result);
+  req.onerror = () => reject(req.error);
+});
+
+const idbPut = async (key, blob) => {
+  const db = await openIDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, "readwrite");
+    tx.objectStore(IDB_STORE).put(blob, key);
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); reject(tx.error); };
+  });
+};
+
+const idbGet = async (key) => {
+  const db = await openIDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, "readonly");
+    const req = tx.objectStore(IDB_STORE).get(key);
+    req.onsuccess = () => { db.close(); resolve(req.result || null); };
+    req.onerror = () => { db.close(); reject(req.error); };
+  });
+};
+
+const idbDelete = async (key) => {
+  const db = await openIDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, "readwrite");
+    tx.objectStore(IDB_STORE).delete(key);
+    tx.oncomplete = () => { db.close(); resolve(); };
+    tx.onerror = () => { db.close(); reject(tx.error); };
+  });
+};
+
 // ── Procedural ambient pad (Web Audio API — no external file needed) ──
 // Generates a soft, slowly-drifting drone using three sine layers (root + fifth + octave)
 // with subtle LFO detuning and a low-pass filter, so it sits warmly under the voiceover.
@@ -203,8 +278,16 @@ export default function AffirmationsScreen({ onBack }) {
   const [view, setView] = useState("home"); // home | category | custom | player
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeList, setActiveList] = useState([]);          // affirmations being played
-  const [customList, setCustomList] = useState(() => loadJSON(KEY_CUSTOM, []));
+  const [customList, setCustomList] = useState(() => migrateCustomList(loadJSON(KEY_CUSTOM, [])));
   const [draft, setDraft] = useState("");
+  const [recordingForId, setRecordingForId] = useState(null); // id of the affirmation currently being recorded
+  const [recordingSeconds, setRecordingSeconds] = useState(0);
+  const [recordingError, setRecordingError] = useState("");
+  const mediaRecorderRef = useRef(null);
+  const mediaStreamRef = useRef(null);
+  const recordedChunksRef = useRef([]);
+  const recordingTimerRef = useRef(null);
+  const MAX_RECORD_SECONDS = 30;
   const [playerIdx, setPlayerIdx] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(() => {
@@ -264,16 +347,19 @@ export default function AffirmationsScreen({ onBack }) {
     }
   }, [playing, musicEnabled]);
 
-  // Voiceover + auto-advance — audio-driven, with a repeat-pause built in
+  // Voiceover + auto-advance — audio-driven, with a repeat-pause built in.
+  // Three playback paths:
+  //   1. Built-in category → Lulu MP3 from /audio/affirmations/{id}-{idx}.mp3
+  //   2. Custom + user has a recording → play their recording from IndexedDB
+  //   3. Custom + no recording → browser TTS (or silent dwell if voice muted)
   useEffect(() => {
     if (!playing) { stopVoice(); return; }
     if (activeList.length === 0) return;
-    const text = activeList[playerIdx] || "";
+    const item = activeList[playerIdx];
+    const text = (typeof item === "string") ? item : (item?.text || "");
 
     stopVoice();
 
-    // Schedule the next advance after audio ends + REPEAT_PAUSE_MS.
-    // If audio is missing/disabled, we use MIN_DWELL_MS so the player still progresses.
     const scheduleAdvance = (delay) => {
       if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
       advanceTimerRef.current = setTimeout(advanceNext, delay);
@@ -284,10 +370,11 @@ export default function AffirmationsScreen({ onBack }) {
       return () => { if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current); };
     }
 
-    // Try Lulu's MP3 if this is a built-in category; custom mode goes straight to TTS
+    const isCustom = !!activeCategory?.isCustom;
     const categoryId = activeCategory?.id;
-    const tryRecorded = !!categoryId;
     let usingTts = false;
+    let stopped = false;
+    let blobUrl = null;
 
     const playTts = () => {
       if (!("speechSynthesis" in window)) { scheduleAdvance(MIN_DWELL_MS); return; }
@@ -298,23 +385,16 @@ export default function AffirmationsScreen({ onBack }) {
         const preferred = voices.find(v => /en/i.test(v.lang) && /(samantha|ava|jenny|aria|female)/i.test(v.name))
                        || voices.find(v => /en/i.test(v.lang));
         if (preferred) u.voice = preferred;
-        u.onend = () => scheduleAdvance(REPEAT_PAUSE_MS);
+        u.onend = () => { if (!stopped) scheduleAdvance(REPEAT_PAUSE_MS); };
         usingTts = true;
         window.speechSynthesis.speak(u);
-        // Fallback in case onend never fires (some Chromium builds)
-        scheduleAdvance(MIN_DWELL_MS + 4000);
+        scheduleAdvance(MIN_DWELL_MS + 4000); // safety net if onend never fires
       } catch {
         scheduleAdvance(MIN_DWELL_MS);
       }
     };
 
-    // Closure-scoped flag so any late events that fire AFTER we've torn down
-    // (cleanup ran, user advanced, pause hit, etc.) cannot trigger a duplicate
-    // TTS read of the affirmation Lulu already finished.
-    let stopped = false;
-
-    if (tryRecorded) {
-      const url = `/audio/affirmations/${categoryId}-${playerIdx}.mp3`;
+    const playUrl = (url, { fallbackToTts }) => {
       const audio = new Audio(url);
       audio.volume = 0.95;
       audioRef.current = audio;
@@ -324,21 +404,37 @@ export default function AffirmationsScreen({ onBack }) {
       });
       audio.addEventListener("error", () => {
         if (stopped) return;
-        // True load error — file missing or unsupported. Fall back to TTS.
         audioRef.current = null;
-        playTts();
+        if (fallbackToTts) playTts();
+        else scheduleAdvance(MIN_DWELL_MS);
       });
       audio.play().catch(() => {
-        // play() rejected — usually autoplay block. Wait briefly, then if the
-        // audio still hasn't started AND we haven't been torn down, try TTS.
         setTimeout(() => {
           if (stopped) return;
           if (audioRef.current === audio && audio.paused && audio.currentTime === 0) {
             audioRef.current = null;
-            playTts();
+            if (fallbackToTts) playTts();
+            else scheduleAdvance(MIN_DWELL_MS);
           }
         }, 350);
       });
+    };
+
+    if (isCustom) {
+      // Custom affirmations NEVER use Lulu. Either the user's own recording, or TTS.
+      if (item?.hasRecording && item?.id) {
+        idbGet(item.id).then(blob => {
+          if (stopped) return;
+          if (!blob) { playTts(); return; }
+          blobUrl = URL.createObjectURL(blob);
+          playUrl(blobUrl, { fallbackToTts: true });
+        }).catch(() => { if (!stopped) playTts(); });
+      } else {
+        playTts();
+      }
+    } else if (categoryId) {
+      // Built-in category — play Lulu's pre-recorded MP3
+      playUrl(`/audio/affirmations/${categoryId}-${playerIdx}.mp3`, { fallbackToTts: true });
     } else {
       playTts();
     }
@@ -347,6 +443,7 @@ export default function AffirmationsScreen({ onBack }) {
       stopped = true;
       stopVoice();
       if (usingTts) { try { window.speechSynthesis.cancel(); } catch {} }
+      if (blobUrl) { try { URL.revokeObjectURL(blobUrl); } catch {} }
     };
   }, [playing, playerIdx, voiceEnabled, activeList, activeCategory, advanceNext, stopVoice]);
 
@@ -368,7 +465,7 @@ export default function AffirmationsScreen({ onBack }) {
 
   const startCustom = () => {
     if (customList.length === 0) return;
-    setActiveCategory({ label: "Your affirmations", accent: B.gold });
+    setActiveCategory({ label: "Your affirmations", accent: B.gold, isCustom: true });
     setActiveList(customList);
     setPlayerIdx(0);
     setPlaying(true);
@@ -378,10 +475,95 @@ export default function AffirmationsScreen({ onBack }) {
   const addCustom = () => {
     const trimmed = draft.trim();
     if (!trimmed || customList.length >= 20) return;
-    setCustomList(list => [...list, trimmed]);
+    setCustomList(list => [...list, { id: makeId(), text: trimmed, hasRecording: false, createdAt: Date.now() }]);
     setDraft("");
   };
-  const removeCustom = (i) => setCustomList(list => list.filter((_, idx) => idx !== i));
+  const removeCustom = (i) => {
+    const item = customList[i];
+    if (item?.id) { idbDelete(item.id).catch(() => {}); }
+    setCustomList(list => list.filter((_, idx) => idx !== i));
+  };
+
+  // ── Recording: MediaRecorder + IndexedDB ──
+  const startRecording = async (affirmationId) => {
+    setRecordingError("");
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setRecordingError("This browser doesn't support voice recording.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      recordedChunksRef.current = [];
+      // Pick the best mime type the browser actually supports.
+      const mimeCandidates = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg"];
+      const mime = mimeCandidates.find(m => MediaRecorder.isTypeSupported(m)) || "";
+      const rec = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+      mediaRecorderRef.current = rec;
+      rec.ondataavailable = (e) => { if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data); };
+      rec.onstop = async () => {
+        try { stream.getTracks().forEach(t => t.stop()); } catch {}
+        mediaStreamRef.current = null;
+        const blob = new Blob(recordedChunksRef.current, { type: rec.mimeType || "audio/webm" });
+        recordedChunksRef.current = [];
+        if (blob.size === 0) { setRecordingError("No audio was captured. Try again."); return; }
+        try {
+          await idbPut(affirmationId, blob);
+          setCustomList(list => list.map(item => item.id === affirmationId ? { ...item, hasRecording: true } : item));
+        } catch (e) {
+          setRecordingError("Couldn't save the recording. Your browser storage may be full.");
+        }
+      };
+      rec.start();
+      setRecordingForId(affirmationId);
+      setRecordingSeconds(0);
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingSeconds(s => {
+          const next = s + 1;
+          if (next >= MAX_RECORD_SECONDS) { stopRecording(); }
+          return next;
+        });
+      }, 1000);
+    } catch (e) {
+      const msg = e?.name === "NotAllowedError"
+        ? "Microphone access was blocked. Allow it in your browser to record."
+        : "Couldn't start recording. Try again.";
+      setRecordingError(msg);
+    }
+  };
+
+  const stopRecording = () => {
+    if (recordingTimerRef.current) { clearInterval(recordingTimerRef.current); recordingTimerRef.current = null; }
+    try { mediaRecorderRef.current?.stop(); } catch {}
+    mediaRecorderRef.current = null;
+    setRecordingForId(null);
+    setRecordingSeconds(0);
+  };
+
+  const cancelRecording = () => {
+    if (recordingTimerRef.current) { clearInterval(recordingTimerRef.current); recordingTimerRef.current = null; }
+    try { mediaRecorderRef.current?.stop(); } catch {}
+    try { mediaStreamRef.current?.getTracks().forEach(t => t.stop()); } catch {}
+    mediaRecorderRef.current = null;
+    mediaStreamRef.current = null;
+    recordedChunksRef.current = [];
+    setRecordingForId(null);
+    setRecordingSeconds(0);
+  };
+
+  const deleteRecording = async (affirmationId) => {
+    try { await idbDelete(affirmationId); } catch {}
+    setCustomList(list => list.map(item => item.id === affirmationId ? { ...item, hasRecording: false } : item));
+  };
+
+  // Stop any active recording if user navigates away
+  useEffect(() => {
+    return () => {
+      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+      try { mediaRecorderRef.current?.stop(); } catch {}
+      try { mediaStreamRef.current?.getTracks().forEach(t => t.stop()); } catch {}
+    };
+  }, []);
 
   // ── Home view (category grid + custom entry) ──
   if (view === "home") {
@@ -473,6 +655,26 @@ export default function AffirmationsScreen({ onBack }) {
           </div>
         </div>
 
+        {/* Recording error banner (sticky-ish) */}
+        {recordingError && (
+          <div style={{ background: `${B.cream}10`, border: `1px solid ${B.gold}40`, borderRadius: 10, padding: "10px 12px", margin: "0 0 16px", display: "flex", alignItems: "center", gap: 10 }}>
+            <p style={{ flex: 1, fontSize: 12, color: B.cream, margin: 0, fontFamily: SF, lineHeight: 1.5 }}>{recordingError}</p>
+            <button onClick={() => setRecordingError("")} style={{ background: "none", border: "none", cursor: "pointer", color: B.muted, padding: 4 }}>
+              <X size={12} />
+            </button>
+          </div>
+        )}
+
+        {/* Inline science explainer — only show if there are saved affirmations to record */}
+        {customList.length > 0 && (
+          <div style={{ background: `${B.gold}08`, border: `1px solid ${B.gold}20`, borderRadius: 12, padding: "12px 14px", margin: "0 0 16px" }}>
+            <p style={{ fontSize: 10, letterSpacing: 2, color: B.gold, textTransform: "uppercase", fontFamily: SF, margin: "0 0 6px" }}>Why your own voice</p>
+            <p style={{ fontSize: 12, color: B.creamMuted, margin: 0, fontFamily: F, lineHeight: 1.6, fontStyle: "italic" }}>
+              Words you wrote, spoken in your own voice, tie your identity to the belief in a way no recording from someone else can. Tap the mic on any affirmation to record yourself.
+            </p>
+          </div>
+        )}
+
         {/* List */}
         {customList.length === 0 ? (
           <p style={{ fontSize: 13, color: B.muted, fontStyle: "italic", fontFamily: F, lineHeight: 1.6, textAlign: "center", marginTop: 40 }}>
@@ -481,27 +683,70 @@ export default function AffirmationsScreen({ onBack }) {
         ) : (
           <div>
             <p style={{ fontSize: 9, letterSpacing: 3, color: B.muted, textTransform: "uppercase", fontFamily: SF, margin: "0 0 12px" }}>Saved</p>
-            {customList.map((text, i) => (
-              <div key={i} style={{ background: B.card, border: `1px solid ${B.border}`, borderRadius: 12, padding: "12px 14px", marginBottom: 8, display: "flex", alignItems: "flex-start", gap: 10 }}>
-                <p style={{ flex: 1, fontSize: 14, color: B.cream, margin: 0, fontFamily: F, lineHeight: 1.5 }}>{text}</p>
-                <button onClick={() => removeCustom(i)} style={{ background: "none", border: "none", cursor: "pointer", color: B.muted, padding: 4, flexShrink: 0 }}>
-                  <Trash2 size={13} />
-                </button>
-              </div>
-            ))}
+            {customList.map((item, i) => {
+              const isRecordingThis = recordingForId === item.id;
+              const isRecordingSomethingElse = recordingForId && recordingForId !== item.id;
+              return (
+                <div key={item.id || i} style={{ background: B.card, border: `1px solid ${isRecordingThis ? B.gold + "60" : item.hasRecording ? B.gold + "30" : B.border}`, borderRadius: 12, padding: "12px 14px", marginBottom: 8 }}>
+                  {isRecordingThis ? (
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <CircleDot size={14} color="#E07A5F" style={{ animation: "rhei-rec-pulse 1.2s ease-in-out infinite", flexShrink: 0 }} />
+                      <p style={{ flex: 1, fontSize: 13, color: B.cream, margin: 0, fontFamily: F, lineHeight: 1.4 }}>
+                        Recording… <span style={{ color: B.muted, fontFamily: SF, fontSize: 11, letterSpacing: 0.5 }}>{String(Math.floor(recordingSeconds / 60)).padStart(1, "0")}:{String(recordingSeconds % 60).padStart(2, "0")} / 0:{String(MAX_RECORD_SECONDS).padStart(2, "0")}</span>
+                      </p>
+                      <button onClick={stopRecording} aria-label="Stop recording" style={{ background: B.gold, border: "none", borderRadius: 8, padding: "6px 10px", cursor: "pointer", color: B.warmBlack, display: "flex", alignItems: "center", gap: 4, fontFamily: SF, fontSize: 11, fontWeight: 600 }}>
+                        <Square size={11} fill={B.warmBlack} /> Stop
+                      </button>
+                      <button onClick={cancelRecording} aria-label="Cancel recording" style={{ background: "none", border: "none", cursor: "pointer", color: B.muted, padding: 4, flexShrink: 0 }}>
+                        <X size={13} />
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                      <p style={{ flex: 1, fontSize: 14, color: B.cream, margin: 0, fontFamily: F, lineHeight: 1.5 }}>
+                        {item.text}
+                        {item.hasRecording && (
+                          <span style={{ display: "inline-flex", alignItems: "center", gap: 4, marginLeft: 8, fontSize: 10, color: B.gold, fontFamily: SF, letterSpacing: 0.5, textTransform: "uppercase", verticalAlign: "middle" }}>
+                            <Mic size={9} /> Recorded
+                          </span>
+                        )}
+                      </p>
+                      <button
+                        onClick={() => startRecording(item.id)}
+                        disabled={isRecordingSomethingElse}
+                        aria-label={item.hasRecording ? "Re-record voice" : "Record your voice"}
+                        title={item.hasRecording ? "Re-record" : "Record your voice"}
+                        style={{ background: item.hasRecording ? `${B.gold}18` : "none", border: `1px solid ${item.hasRecording ? B.gold + "40" : B.border}`, borderRadius: 8, padding: "5px 8px", cursor: isRecordingSomethingElse ? "not-allowed" : "pointer", color: item.hasRecording ? B.gold : B.creamMuted, opacity: isRecordingSomethingElse ? 0.4 : 1, display: "flex", alignItems: "center", flexShrink: 0 }}>
+                        <Mic size={13} />
+                      </button>
+                      {item.hasRecording && (
+                        <button onClick={() => deleteRecording(item.id)} aria-label="Delete recording" title="Delete recording" style={{ background: "none", border: `1px solid ${B.border}`, borderRadius: 8, padding: "5px 8px", cursor: "pointer", color: B.muted, display: "flex", alignItems: "center", flexShrink: 0 }}>
+                          <MicOff size={13} />
+                        </button>
+                      )}
+                      <button onClick={() => removeCustom(i)} aria-label="Delete affirmation" style={{ background: "none", border: "none", cursor: "pointer", color: B.muted, padding: 4, flexShrink: 0 }}>
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             <button onClick={startCustom}
               style={{ width: "100%", marginTop: 16, background: B.goldGrad, border: "none", borderRadius: 22, padding: "12px 26px", cursor: "pointer", color: B.warmBlack, fontSize: 12, fontFamily: SF, letterSpacing: 1.5, fontWeight: 600, textTransform: "uppercase" }}>
               Play your affirmations
             </button>
           </div>
         )}
+        <style>{`@keyframes rhei-rec-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.9); } }`}</style>
       </div>
     );
   }
 
   // ── Player view ──
   if (view === "player") {
-    const current = activeList[playerIdx] || "";
+    const currentItem = activeList[playerIdx];
+    const current = (typeof currentItem === "string") ? currentItem : (currentItem?.text || "");
     const accent = activeCategory?.accent || B.gold;
     return (
       <div className="rhei-page" style={{ minHeight: "100vh", background: B.bgDeep, display: "flex", flexDirection: "column", padding: "56px 22px 56px", position:"relative", overflow:"hidden" }}>
