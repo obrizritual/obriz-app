@@ -1,5 +1,10 @@
-const CACHE_NAME = 'obriz-v2';
-const AUDIO_CACHE = 'obriz-audio-v1';
+// Version bumped 2026-05-18: previous SW intercepted /audio/rituals/* and
+// /audio/affirmations/* Range requests, which broke <audio> streaming
+// (Chrome stalls when it gets a 200 OK without Range support). New SW only
+// caches the five legacy reset files; everything else under /audio/ passes
+// straight through to Vercel's CDN so Range requests work natively.
+const CACHE_NAME = 'obriz-v3';
+const AUDIO_CACHE = 'obriz-audio-v2';
 const SVG_CACHE = 'obriz-svg-v1';
 
 const STATIC_ASSETS = [
@@ -43,15 +48,34 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Only the five legacy reset files are pre-cached for offline. Anything else
+// under /audio/ (rituals, affirmations) must pass through to network so that
+// <audio> Range requests work and Chrome doesn't stall on first play.
+const PRECACHED_AUDIO = new Set(AUDIO_FILES);
+
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // Audio: cache-first with network fallback
+  // Range requests must never be served from the Cache API — cached responses
+  // are always 200 OK with the full file, but <audio> needs 206 Partial Content
+  // with Content-Range to seek and stream. Bypass SW entirely for Range.
+  if (event.request.headers.get('range')) {
+    return; // not calling respondWith → browser handles natively
+  }
+
+  // Audio: only intercept the precached legacy reset files. Everything else
+  // (rituals, affirmations, future audio) passes through untouched.
   if (url.pathname.startsWith('/audio/')) {
+    if (!PRECACHED_AUDIO.has(url.pathname)) {
+      return; // not calling respondWith → browser handles natively
+    }
     event.respondWith(
       caches.open(AUDIO_CACHE).then(cache =>
         cache.match(event.request).then(cached => cached || fetch(event.request).then(resp => {
-          cache.put(event.request, resp.clone());
+          // Only cache opaque-clean full responses (200 OK). Skip partials, errors.
+          if (resp.ok && resp.status === 200) {
+            cache.put(event.request, resp.clone()).catch(() => {});
+          }
           return resp;
         }))
       )
