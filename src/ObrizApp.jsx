@@ -194,6 +194,23 @@ const rituals = [
       { title: "The drain", duration: 45, instruction: "From the bridge of the nose, sweep under each eye to the temple, then down in front of the ear to the jaw. The complete orbital drainage path. End here and feel what's shifted.", zone: "undereye", direction: "→ ↓ Full drain" },
     ]
   },
+  {
+    id: "belly-flow", title: "Soften the Belly", subtitle: "Abdominal Lymphatic Drainage — debloat and calm the gut",
+    duration: "6 min", isPremium: false, svgFile: "/svgs/face-base.svg",
+    description: "A real lymphatic drainage sequence for the abdomen — the kind massage therapists charge $200/hour for. Releases trapped fluid, eases bloating, and signals the gut that the bracing can stop. Follows the actual colonic and inguinal lymph pathways. Best done on an empty or near-empty stomach, lying down.",
+    tools: "Clean flat hands · body oil optional · skip if pregnant or recovering from abdominal surgery",
+    occasion: "evening", audioFollowUp: 5,
+    steps: [
+      { title: "Ground yourself first", duration: 30, instruction: "Lie back or sit tall. Hands flat on the lower belly. Three slow breaths — the kind where the belly rises before the chest. You're inviting the gut to soften. Don't rush this.", zone: "full", direction: "● Belly breathing" },
+      { title: "Open the drainage path", duration: 40, instruction: "Find the crease where your thigh meets your hip — both sides. Pulse gently with flat fingers, ten times each side. The lymphatic gates open here. You have to open the door before you move anything through it.", zone: "full", direction: "● Inguinal nodes" },
+      { title: "Wake the diaphragm", duration: 45, instruction: "Hands just under the ribs, fingers softly curved in. As you inhale, press gently down with your fingers. Exhale, release. Five slow rounds. This is where the lymph pump lives — most people have forgotten it's there.", zone: "full", direction: "↓ With breath" },
+      { title: "Down the left", duration: 45, instruction: "Flat hand on your left side, just under the ribs. Stroke firmly downward to your hip. Slow, sustained pressure. Five passes. This follows the descending colon. You're moving what's been stuck.", zone: "full", direction: "↓ Ribs to hip, left" },
+      { title: "Across the top", duration: 50, instruction: "From your right hip, sweep up to under the right ribs, then straight across to the left ribs, then down to the left hip. One smooth, unbroken pass. Three times. Every stroke moves things in the direction they want to go.", zone: "full", direction: "↑ → ↓ Full colon path" },
+      { title: "The I Love You", duration: 55, instruction: "Now the full sequence: an I down the left side, an inverted L across the top and down the left, and a U up the right, across, and down the left. Three full rounds. Yes, your gut knows it's being told something kind.", zone: "full", direction: "I · L · U · ×3" },
+      { title: "Around the navel", duration: 50, instruction: "Both hands stacked over your belly button. Ten slow clockwise circles — always clockwise, never against it. Light, then a little deeper. The colon is right under your hand. You're walking it home.", zone: "full", direction: "○ Clockwise, ×10" },
+      { title: "Drain it down", duration: 40, instruction: "Back to the inguinal crease. Press and hold both hands there for ten counts. Everything you just moved drains here. Three slow breaths. Notice what's softer than when you started.", zone: "full", direction: "● Hold · 10 counts" },
+    ]
+  },
 ];
 
 const fmt = (s) => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`;
