@@ -105,12 +105,45 @@ const sessions = [
 ];
 
 // ── Face states — drives ritual + meditation recommendations ──
+// ── Editorial mood pathway ──
+// Each state names an emotional posture, not a symptom. Mapped to existing
+// rituals + meditations so the adaptive engine keeps working. The `dominant`
+// key is preserved so generateAdaptiveRitual continues to re-order step zones.
 const nsStates = [
-  { id:"puffy",   label:"Puffy and heavy",         sublabel:"Face feels swollen, especially around the eyes", icon:Moon,     color:"#8A9BAF", dominant:"puffy",   ritualId:"lymphatic",  meditationId:3, message:"Your face is holding fluid today. Let's drain and restore." },
-  { id:"tight",   label:"Tight and held",          sublabel:"Jaw clenching, forehead tension, face feels locked", icon:Zap, color:"#C4786A", dominant:"tight",   ritualId:"buccal",     meditationId:4, message:"Your face is locked. Time to release what you've been holding." },
-  { id:"flat",    label:"Flat and dull",           sublabel:"No tone, face looks tired or grey",              icon:Brain,    color:"#A08BAA", dominant:"flat",    ritualId:"face-lift",  meditationId:1, message:"Your face needs a lift. Let's restore tone and light." },
-  { id:"tired",   label:"Tired around the eyes",  sublabel:"Under-eye heaviness, brow feels low",            icon:Sunset,   color:"#7A8B99", dominant:"tired",   ritualId:"eye-revival",meditationId:5, message:"Your eyes are carrying it today. Let's ease that." },
-  { id:"general", label:"Just need a reset",       sublabel:"No specific concern — full face refresh",        icon:Waves,    color:"#8BAA8B", dominant:"general", ritualId:"gua-sha",    meditationId:2, message:"A full reset feels right. Let's begin." },
+  { id:"overstimulated",   label:"Overstimulated",    sublabel:"Too much input. Every window open.",       icon:Zap,     color:"#C4786A", dominant:"tight",   ritualId:"buccal",     meditationId:4, message:"You've been holding too much input. Let's quiet the signal." },
+  { id:"depleted",         label:"Depleted",          sublabel:"Running on empty. Gentle effort only.",    icon:Moon,    color:"#8A9BAF", dominant:"puffy",   ritualId:"lymphatic",  meditationId:3, message:"You've given enough this week. Receive instead." },
+  { id:"puffy",            label:"Puffy",             sublabel:"The body is holding water.",               icon:Waves,   color:"#7A8B99", dominant:"puffy",   ritualId:"lymphatic",  meditationId:3, message:"There's fluid to move today. Long, slow strokes." },
+  { id:"holding-tension",  label:"Holding tension",   sublabel:"Jaw, neck, brow — locked in.",             icon:Shield,  color:"#A07D3A", dominant:"tight",   ritualId:"buccal",     meditationId:4, message:"You've been bracing. Let's release what's been doing all the work." },
+  { id:"restless",         label:"Restless",          sublabel:"The mind is moving faster than the body.", icon:Wind,    color:"#A08BAA", dominant:"general", ritualId:"face-lift",  meditationId:5, message:"Settle first. Everything else after." },
+  { id:"seeking-calm",     label:"Seeking calm",      sublabel:"You already know what you need.",          icon:Sunset,  color:"#7A8674", dominant:"general", ritualId:"gua-sha",    meditationId:5, message:"Welcome back to yourself." },
+  { id:"needing-grounding",label:"Needing grounding", sublabel:"Floating slightly above your body.",       icon:Brain,   color:"#8A9BAF", dominant:"tired",   ritualId:"eye-revival",meditationId:1, message:"Come back to the floor. Everything else can wait." },
+  { id:"wanting-softness", label:"Wanting softness",  sublabel:"Not a problem to solve. Just permission.", icon:Heart,   color:"#C49A4B", dominant:"flat",    ritualId:"belly-flow", meditationId:3, message:"You don't need a reason. Soften because you can." },
+];
+
+// ── Quiet Relief — micro-intervention copy ──
+// Editorial first, technical second. The 'secondary' line stays in the UI but
+// reads as a subtitle, not a feature description.
+const microInterventions = [
+  { id:"sigh",   title:"Soft Reset",        secondary:"Physiological sigh",  badge:"60 sec", desc:"The fastest way back to baseline." },
+  { id:"jaw",    title:"Release the Jaw",   secondary:"Vagus activation",    badge:"40 sec", desc:"Where most of us hold the day." },
+  { id:"ground", title:"Find the Floor",    secondary:"Sensory grounding",   badge:"90 sec", desc:"Five things, then four, then three." },
+  { id:"tap",    title:"Bilateral Soothe",  secondary:"Butterfly tap",       badge:"30 sec", desc:"Cross-body. Alternating. Slow." },
+];
+
+// ── Editorial Collections ──
+// Curated groupings of existing rituals by occasion / lifestyle moment.
+// Drives the "Curated" carousel on the Home screen and (next session) the
+// Rituals library editorial browser.
+const collections = [
+  { id:"morning-sculpt",       title:"Morning Sculpt",         subtitle:"The face you bring into the day",                  ritualIds:["gua-sha","face-lift"],          accent:"#D4AD6A" },
+  { id:"hotel-reset",          title:"Hotel Reset",            subtitle:"Long flight, foreign bathroom, full presence in an hour", ritualIds:["lymphatic","eye-revival"], accent:"#8A9BAF" },
+  { id:"before-dinner",        title:"Before Dinner",          subtitle:"The half hour between the day and the table",      ritualIds:["pre-event","gua-sha"],          accent:"#C49A4B" },
+  { id:"post-flight",          title:"Post-Flight Drainage",   subtitle:"When the body forgot what time zone it's in",      ritualIds:["lymphatic","belly-flow"],       accent:"#7A8B99" },
+  { id:"evening-softening",    title:"Evening Softening",      subtitle:"Putting the day down before bed",                  ritualIds:["buccal","belly-flow"],          accent:"#A08BAA" },
+  { id:"pre-event-glow",       title:"Pre-Event Glow",         subtitle:"For the room you're about to walk into",           ritualIds:["pre-event","face-lift"],        accent:"#D4AD6A" },
+  { id:"jaw-release",          title:"Jaw Release",            subtitle:"For the day that asked too much",                  ritualIds:["buccal"],                       accent:"#A07D3A" },
+  { id:"sunday-restoration",   title:"Sunday Restoration",     subtitle:"A longer practice for when there's time",          ritualIds:["belly-flow","lymphatic","gua-sha"], accent:"#7A8674" },
+  { id:"emotional-decompress", title:"Emotional Decompression",subtitle:"For after the hard conversation",                  ritualIds:["buccal","eye-revival"],         accent:"#C4786A" },
 ];
 
 // ── Adaptive ritual generator — re-orders steps by face state ──
@@ -1564,7 +1597,9 @@ export default function ObrizApp() {
   };
 
   const getSuggested=()=>{
-    if(checkinDone&&checkinState) return sessions.find(s=>s.id===checkinState.recommended[0]);
+    if(checkinDone&&checkinState){
+      return sessions.find(s=>s.id===checkinState.meditationId) || sessions[0];
+    }
     const c=timeCtx();
     if(c==="morning")return sessions[0]; if(c==="midday"||c==="afternoon")return sessions[1]; if(c==="evening")return sessions[2]; return sessions[4];
   };
@@ -1622,133 +1657,283 @@ export default function ObrizApp() {
   const renderHome=()=>{
     const tc = timeCtx();
     const arc = getArc(checkinDone?checkinState:null, tc);
-    const isFirstTime = totalSessions === 0;
     const ritualLocked = arc.ritual.isPremium && !isPremium;
-    const zoneMap = {"gua-sha":"jawline","lymphatic":"nodes","face-lift":"cheeks","buccal":"jawline","pre-event":"full","eye-revival":"undereye"};
+    const zoneMap = {"gua-sha":"jawline","lymphatic":"nodes","face-lift":"cheeks","buccal":"jawline","pre-event":"full","eye-revival":"undereye","belly-flow":"navel"};
     const ritualZone = zoneMap[arc.ritual.id]||"full";
     const personalizedMsg = checkinState?.message || null;
 
+    // ── Time-aware editorial daily statement ──
+    // Returns the headline + a single italic sub-line. Curated, not generated.
+    const dailyMessage = (() => {
+      if (tc === "morning")   return { h: "Today is for softening.",          s: "Begin in your own time." };
+      if (tc === "midday")    return { h: "The body has been waiting.",        s: "A short pause, before everything else." };
+      if (tc === "afternoon") return { h: "Loosen what tightened.",            s: "You don't have to carry it through the night." };
+      if (tc === "evening")   return { h: "Putting the day down.",             s: "What needs to land, lands here." };
+      return                          { h: "You're already where you need to be.", s: "Stay for a moment." };
+    })();
+
+    const firstName = userName ? userName.split(/\s+/)[0] : "";
+    const greeting = (() => {
+      if (tc === "morning")   return firstName ? `Good morning, ${firstName}.` : "Good morning.";
+      if (tc === "evening")   return firstName ? `Good evening, ${firstName}.` : "Good evening.";
+      if (tc === "night")     return firstName ? `Still here, ${firstName}.`   : "Still here.";
+      return firstName ? `Hello, ${firstName}.` : "Hello.";
+    })();
+
     return (
-    <div className="rhei-page" style={{padding:"56px 22px 120px"}}>
+    <div className="rhei-page" style={{
+      position:"relative",
+      padding:"calc(env(safe-area-inset-top, 0px) + 28px) 24px 140px",
+      minHeight:"100vh",
+      background:"linear-gradient(180deg, #241509 0%, #1A0F06 50%, #0F0905 100%)",
+      overflow:"hidden",
+    }}>
+      {/* ── Atmospheric layers ── */}
+      <div style={{
+        position:"absolute", top:"15%", left:"60%",
+        width:"110vmin", height:"110vmin", borderRadius:"50%",
+        background:"radial-gradient(circle, rgba(212,173,106,0.13) 0%, rgba(196,154,75,0.04) 35%, transparent 65%)",
+        filter:"blur(32px)",
+        transform:"translate(-50%, -50%)",
+        animation:"rhei-atmosphere-1 26s ease-in-out infinite",
+        pointerEvents:"none", zIndex:0,
+      }}/>
+      <div style={{
+        position:"absolute", top:"80%", left:"25%",
+        width:"90vmin", height:"90vmin", borderRadius:"50%",
+        background:"radial-gradient(circle, rgba(232,210,164,0.05) 0%, transparent 65%)",
+        filter:"blur(40px)",
+        transform:"translate(-50%, -50%)",
+        animation:"rhei-atmosphere-2 32s ease-in-out infinite",
+        pointerEvents:"none", zIndex:0,
+      }}/>
+      <div className="rhei-grain" style={{zIndex:0}}/>
 
-      {/* Header */}
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:28}}>
-        <div>
-          <h1 style={{fontSize:24,letterSpacing:0,color:B.cream,fontWeight:400,margin:"0 0 4px",fontFamily:F,lineHeight:1}}>Rhei.</h1>
-          <p style={{fontSize:22,fontWeight:400,color:B.cream,margin:0,fontFamily:F}}>{greetUser(userName)}</p>
-        </div>
-        <button onClick={()=>setScreen("premium")} style={{background:"none",border:`1px solid ${B.border}`,borderRadius:20,padding:"6px 14px",cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
-          <Crown size={11} color={isPremium?B.gold:B.muted}/>
-          <span style={{fontSize:10,color:isPremium?B.gold:B.muted,fontFamily:SF,letterSpacing:0.5}}>{isPremium?"Premium":"Unlock"}</span>
-        </button>
-      </div>
+      {/* Content sits above atmosphere */}
+      <div style={{position:"relative", zIndex:1, maxWidth:430, margin:"0 auto"}}>
 
-      {/* Install prompt */}
-      {showInstallPrompt&&!isStandalone&&(
-        <div style={{background:`${B.gold}0A`,border:`1px solid ${B.borderActive}`,borderRadius:14,padding:"12px 16px",marginBottom:16,display:"flex",alignItems:"center",gap:12,position:"relative"}}>
-          <button onClick={dismissInstall} style={{position:"absolute",top:8,right:8,background:"none",border:"none",cursor:"pointer",padding:4}}><X size={11} color={B.muted}/></button>
-          <button onClick={installApp} style={{flex:1,background:"none",border:"none",cursor:"pointer",textAlign:"left",padding:0}}>
-            <p style={{fontSize:12,color:B.cream,margin:0,fontFamily:SF}}>Add RHEI to your home screen</p>
+        {/* ── Top eyebrow row: tiny brand + premium chip ── */}
+        <div className="rhei-rise rhei-rise-1" style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:48}}>
+          <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(248,242,229,0.55)",margin:0}}>RHEI · {tc === "night" ? "Tonight" : tc === "morning" ? "Today" : tc === "evening" ? "This evening" : "Now"}</p>
+          <button
+            className="rhei-press"
+            onClick={()=>setScreen("premium")}
+            style={{background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:`1px solid ${isPremium?"rgba(196,154,75,0.35)":"rgba(248,242,229,0.10)"}`,borderRadius:100,padding:"5px 11px",cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
+            <Crown size={10} color={isPremium?B.polished:"rgba(248,242,229,0.55)"} strokeWidth={1.5}/>
+            <span style={{fontSize:9,color:isPremium?B.polished:"rgba(248,242,229,0.65)",fontFamily:SF,letterSpacing:"0.18em",textTransform:"uppercase",fontWeight:500}}>{isPremium?"Member":"Enter"}</span>
           </button>
-          <ArrowRight size={12} color={B.gold}/>
         </div>
-      )}
 
-      {/* Personalized state message OR first-visit prompt */}
-      {personalizedMsg ? (
-        <div style={{background:`${B.gold}08`,border:`1px solid ${B.border}`,borderRadius:14,padding:"14px 18px",marginBottom:22,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div style={{flex:1}}>
-            <p style={{fontSize:13,color:B.cream,margin:0,fontFamily:F,fontWeight:400,fontStyle:"italic"}}>{personalizedMsg}</p>
+        {/* ── Cinematic hero — greeting + daily message ── */}
+        <div className="rhei-rise rhei-rise-2" style={{marginBottom:52}}>
+          <p style={{fontFamily:F,fontSize:15,fontStyle:"italic",color:"rgba(248,242,229,0.55)",margin:"0 0 16px",letterSpacing:"-0.005em"}}>{greeting}</p>
+          <h1 style={{fontFamily:F,fontSize:"clamp(34px, 8.5vw, 44px)",fontWeight:300,color:B.vellum,letterSpacing:"-0.02em",lineHeight:1.05,margin:"0 0 14px",maxWidth:380,fontVariationSettings:"'opsz' 60"}}>{dailyMessage.h}</h1>
+          <p style={{fontFamily:F,fontStyle:"italic",fontSize:15,fontWeight:400,color:"rgba(248,242,229,0.6)",lineHeight:1.55,margin:0,maxWidth:340}}>{dailyMessage.s}</p>
+        </div>
+
+        {/* ── PWA install whisper (low priority, easy to dismiss) ── */}
+        {showInstallPrompt && !isStandalone && (
+          <div className="rhei-rise rhei-rise-3" style={{background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(248,242,229,0.08)",borderRadius:18,padding:"14px 18px",marginBottom:24,display:"flex",alignItems:"center",gap:14,position:"relative"}}>
+            <button onClick={dismissInstall} style={{position:"absolute",top:10,right:10,background:"none",border:"none",cursor:"pointer",padding:4}}><X size={11} color="rgba(248,242,229,0.4)"/></button>
+            <button onClick={installApp} style={{flex:1,background:"none",border:"none",cursor:"pointer",textAlign:"left",padding:0,paddingRight:18}}>
+              <p style={{fontFamily:F,fontSize:13,color:B.paper,margin:"0 0 2px"}}>Keep RHEI close.</p>
+              <p style={{fontFamily:F,fontStyle:"italic",fontSize:11,color:"rgba(248,242,229,0.55)",margin:0}}>Add to home screen.</p>
+            </button>
+            <ArrowRight size={13} color={B.polished}/>
           </div>
-          <button onClick={()=>{setCheckinDone(false);setCheckinState(null);}} style={{background:"none",border:"none",cursor:"pointer",color:B.muted,fontSize:10,fontFamily:SF,marginLeft:12,flexShrink:0}}>Change</button>
-        </div>
-      ) : (
-        <div style={{marginBottom:22}}>
-          <p style={{fontSize:13,color:B.muted,fontFamily:SF,fontStyle:"italic"}}>Your face reflects your nervous system — both work together.</p>
-        </div>
-      )}
+        )}
 
-      {/* ── Section 1: Face Ritual ── */}
-      <div style={{marginBottom:10}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-          <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,margin:0}}>Face Ritual</p>
-          <button onClick={()=>setScreen("rituals")} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:3,color:B.muted,fontSize:10,fontFamily:SF}}>
-            <span>All rituals</span><ArrowRight size={10}/>
-          </button>
-        </div>
-        <button onClick={()=>{if(ritualLocked){setScreen("premium");}else{setActiveRitual(generateAdaptiveRitual(arc.ritual,checkinState));}}}
-          style={{width:"100%",background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"20px 18px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden"}}>
-          <div style={{position:"absolute",top:-40,right:-40,width:160,height:160}}><Orb active={false} size={160}/></div>
-          {ritualLocked&&<div style={{position:"absolute",top:13,right:13,display:"flex",alignItems:"center",gap:4,background:`${B.gold}12`,padding:"3px 8px",borderRadius:7}}><Lock size={9} color={B.gold}/><span style={{fontSize:8,letterSpacing:1,color:B.gold,fontFamily:SF}}>PREMIUM</span></div>}
-          <div style={{position:"relative",zIndex:2}}>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
-              <div style={{width:40,height:40,borderRadius:11,background:`${B.gold}08`,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                <FaceGuideIllustration zone={ritualZone} size={30}/>
-              </div>
+        {/* ── Mood pathway OR personalized state echo ── */}
+        {personalizedMsg ? (
+          <div className="rhei-rise rhei-rise-3" style={{marginBottom:36}}>
+            <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:"0 0 14px"}}>For where you are</p>
+            <div style={{background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(196,154,75,0.18)",borderRadius:20,padding:"22px 22px 18px"}}>
+              <p style={{fontFamily:F,fontSize:18,fontStyle:"italic",color:B.vellum,lineHeight:1.4,margin:"0 0 16px",fontWeight:300}}>{personalizedMsg}</p>
+              <button
+                className="rhei-press"
+                onClick={()=>{setCheckinDone(false);setCheckinState(null);}}
+                style={{background:"none",border:"none",cursor:"pointer",color:"rgba(248,242,229,0.55)",fontFamily:SF,fontSize:10,fontWeight:400,letterSpacing:"0.18em",textTransform:"uppercase",padding:0}}>
+                Change state →
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="rhei-rise rhei-rise-3" style={{marginBottom:36}}>
+            <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:"0 0 18px"}}>How you arrive</p>
+            <button
+              className="rhei-press"
+              onClick={()=>setShowCheckin(true)}
+              style={{width:"100%",background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(248,242,229,0.10)",borderRadius:20,padding:"22px 22px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",justifyContent:"space-between",gap:14}}>
               <div>
-                <h2 style={{fontSize:18,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>{arc.ritual.title}</h2>
-                <p style={{fontSize:11,color:B.muted,margin:"1px 0 0",fontFamily:SF}}>{arc.ritual.subtitle}</p>
+                <p style={{fontFamily:F,fontSize:17,color:B.vellum,margin:"0 0 4px",fontWeight:400,lineHeight:1.3}}>Tell me how you arrived.</p>
+                <p style={{fontFamily:F,fontStyle:"italic",fontSize:12,color:"rgba(248,242,229,0.55)",margin:0,lineHeight:1.4}}>Eight ways to begin. Pick the closest.</p>
               </div>
-            </div>
-            <div style={{display:"flex",alignItems:"center",gap:12,marginTop:12}}>
-              <div style={{background:B.goldGrad,borderRadius:20,padding:"8px 20px",boxShadow:`0 4px 16px ${B.gold}22`}}>
-                <span style={{fontSize:12,color:B.warmBlack,fontFamily:SF,fontWeight:600}}>Begin ritual</span>
-              </div>
-              <span style={{fontSize:11,color:B.muted,fontFamily:SF}}>{arc.ritual.duration}</span>
-            </div>
+              <ArrowRight size={16} color={B.polished} strokeWidth={1.5}/>
+            </button>
           </div>
-        </button>
-      </div>
+        )}
 
-      {/* ── Section 2: Meditation ── */}
-      <div style={{marginBottom:28}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-          <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,margin:0}}>Meditation</p>
-          <button onClick={()=>setScreen("meditations")} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:3,color:B.muted,fontSize:10,fontFamily:SF}}>
-            <span>All meditations</span><ArrowRight size={10}/>
-          </button>
-        </div>
-        <button onClick={()=>{const locked=arc.audio.id!==1&&!isPremium;if(locked){setScreen("premium");}else{startSession(arc.audio.id);}}}
-          style={{width:"100%",background:`${B.card}CC`,border:`1px solid ${B.border}`,borderRadius:16,padding:"14px 16px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:14}}>
-          <div style={{width:38,height:38,borderRadius:"50%",background:`${B.gold}10`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-            <Play size={13} color={B.gold} fill={B.gold} style={{marginLeft:2}}/>
+        {/* ── FEATURED RITUAL — oversized, editorial, the daily anchor ── */}
+        <div className="rhei-rise rhei-rise-4" style={{marginBottom:44}}>
+          <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:18}}>
+            <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:0}}>Today's Ritual</p>
+            <button onClick={()=>setScreen("rituals")} className="rhei-press" style={{background:"none",border:"none",cursor:"pointer",color:"rgba(248,242,229,0.55)",fontFamily:SF,fontSize:10,fontWeight:400,letterSpacing:"0.18em",textTransform:"uppercase",padding:0}}>
+              All →
+            </button>
           </div>
-          <div style={{flex:1}}>
-            <h3 style={{fontSize:15,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>{arc.audio.title}</h3>
-            <p style={{fontSize:11,color:B.muted,margin:"1px 0 6px",fontFamily:SF}}>{arc.audio.subtitle}</p>
-            {arc.audio.technique && (
-              <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-                {arc.audio.technique.split(" · ").slice(0,2).map((tech, i) => (
-                  <span key={i} style={{fontSize:7.5,color:B.goldMuted,background:"transparent",border:`1px solid ${B.border}`,padding:"2px 6px",borderRadius:4,letterSpacing:1,textTransform:"uppercase",fontFamily:SF,fontWeight:500}}>{tech}</span>
-                ))}
+          <button
+            onClick={()=>{if(ritualLocked){setScreen("premium");}else{setActiveRitual(generateAdaptiveRitual(arc.ritual,checkinState));}}}
+            className="rhei-press"
+            style={{width:"100%",background:"linear-gradient(180deg, rgba(58,37,22,0.65) 0%, rgba(36,21,9,0.85) 100%)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(196,154,75,0.22)",borderRadius:24,padding:"24px 22px 22px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",boxShadow:"0 24px 60px -20px rgba(15,9,5,0.7), 0 8px 20px rgba(15,9,5,0.4)"}}>
+            {/* Soft warm light bleed in upper-right */}
+            <div style={{position:"absolute",top:"-20%",right:"-15%",width:200,height:200,borderRadius:"50%",background:"radial-gradient(circle, rgba(212,173,106,0.18) 0%, transparent 60%)",filter:"blur(20px)",pointerEvents:"none"}}/>
+            {/* Embossed FaceGuide */}
+            <div style={{position:"absolute",top:-12,right:-18,width:160,height:200,opacity:0.7,pointerEvents:"none"}}>
+              <RitualIllustration ritualId={arc.ritual.id} zone={ritualZone} size={120}/>
+            </div>
+            {ritualLocked && (
+              <div style={{position:"absolute",top:14,left:14,display:"flex",alignItems:"center",gap:5,background:"rgba(196,154,75,0.14)",backdropFilter:"blur(8px)",padding:"4px 9px",borderRadius:100,border:"1px solid rgba(196,154,75,0.25)"}}>
+                <Lock size={8} color={B.polished} strokeWidth={2}/>
+                <span style={{fontSize:8,letterSpacing:"0.18em",color:B.polished,fontFamily:SF,textTransform:"uppercase",fontWeight:500}}>Member</span>
               </div>
             )}
-          </div>
-          <span style={{fontSize:10,color:B.muted,fontFamily:SF}}>{Math.ceil(arc.audio.duration/60)}m</span>
-        </button>
-      </div>
-
-      {/* Divider */}
-      <div style={{height:1,background:`rgba(196,154,75,0.08)`,marginBottom:22}}/>
-
-      {/* Quick relief */}
-      <div style={{marginBottom:8}}>
-        <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",marginBottom:12,fontFamily:SF}}>Quick relief</p>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-          {[
-            {id:"sigh",  title:"Physiological Sigh", badge:"60 sec", desc:"Fastest nervous system reset."},
-            {id:"jaw",   title:"Jaw Release",         badge:"40 sec", desc:"Release where you hold tension."},
-            {id:"ground",title:"5-4-3-2-1 Ground",   badge:"90 sec", desc:"Anchor to the present moment."},
-            {id:"tap",   title:"Butterfly Tap",       badge:"30 sec", desc:"Bilateral tapping, calms fast."},
-          ].map(mi=>(
-            <button key={mi.id} onClick={()=>openMicro(mi.id)}
-              style={{background:B.card,border:`1px solid ${B.border}`,borderRadius:14,padding:"13px 12px",cursor:"pointer",textAlign:"left"}}>
-              <p style={{fontSize:9,color:B.gold,fontFamily:SF,margin:"0 0 7px",background:`${B.gold}10`,display:"inline-block",padding:"2px 7px",borderRadius:5}}>{mi.badge}</p>
-              <p style={{fontSize:13,color:B.cream,margin:"0 0 3px",fontFamily:F,fontWeight:400}}>{mi.title}</p>
-              <p style={{fontSize:11,color:B.muted,margin:0,fontFamily:SF,lineHeight:1.4}}>{mi.desc}</p>
-            </button>
-          ))}
+            <div style={{position:"relative",zIndex:2,maxWidth:"68%"}}>
+              <p style={{fontFamily:SF,fontSize:9,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.8)",margin:"0 0 12px"}}>{arc.ritual.duration}</p>
+              <h2 style={{fontFamily:F,fontSize:"clamp(26px, 7vw, 32px)",fontWeight:300,color:B.vellum,letterSpacing:"-0.018em",lineHeight:1.08,margin:"0 0 8px",fontVariationSettings:"'opsz' 60"}}>{arc.ritual.title}</h2>
+              <p style={{fontFamily:F,fontStyle:"italic",fontSize:13,color:"rgba(248,242,229,0.6)",margin:"0 0 22px",lineHeight:1.5}}>{arc.ritual.subtitle}</p>
+              <div style={{display:"inline-flex",alignItems:"center",gap:10,background:B.paper,borderRadius:100,padding:"11px 22px",boxShadow:"0 8px 24px -8px rgba(248,242,229,0.25), 0 4px 12px rgba(15,9,5,0.4)"}}>
+                <span style={{fontFamily:SF,fontSize:13,color:B.espresso,fontWeight:500,letterSpacing:"0.04em"}}>{ritualLocked ? "Enter the collection" : "Begin"}</span>
+                <ArrowRight size={13} color={B.espresso} strokeWidth={2}/>
+              </div>
+            </div>
+          </button>
         </div>
+
+        {/* ── EDITORIAL COLLECTIONS — horizontal scroll ── */}
+        <div className="rhei-rise rhei-rise-4" style={{marginBottom:44}}>
+          <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:18,paddingRight:0}}>
+            <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:0}}>Curated</p>
+            <p style={{fontFamily:F,fontStyle:"italic",fontSize:11,color:"rgba(248,242,229,0.45)",margin:0}}>Swipe through</p>
+          </div>
+          <div style={{display:"flex",gap:12,overflowX:"auto",scrollSnapType:"x mandatory",scrollPaddingLeft:0,margin:"0 -24px",padding:"0 24px 8px",WebkitOverflowScrolling:"touch",scrollbarWidth:"none"}}>
+            <style>{`.rhei-collection-strip::-webkit-scrollbar{display:none;}`}</style>
+            {collections.slice(0,6).map((c, i)=>{
+              const firstRitual = rituals.find(r => r.id === c.ritualIds[0]);
+              const locked = firstRitual?.isPremium && !isPremium;
+              return (
+                <button
+                  key={c.id}
+                  className="rhei-press"
+                  onClick={()=>{if(firstRitual){if(locked){setScreen("premium");}else{setActiveRitual(generateAdaptiveRitual(firstRitual,checkinState));}}}}
+                  style={{flex:"0 0 auto",width:200,scrollSnapAlign:"start",background:`linear-gradient(180deg, ${c.accent}1A 0%, rgba(36,21,9,0.85) 100%)`,backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(248,242,229,0.08)",borderRadius:20,padding:"18px 16px 16px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",minHeight:160,display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
+                  {/* Soft accent glow */}
+                  <div style={{position:"absolute",top:-30,right:-30,width:120,height:120,borderRadius:"50%",background:`radial-gradient(circle, ${c.accent}26 0%, transparent 60%)`,filter:"blur(16px)",pointerEvents:"none"}}/>
+                  <div style={{position:"relative",zIndex:1}}>
+                    <p style={{fontFamily:SF,fontSize:9,fontWeight:500,letterSpacing:"0.22em",textTransform:"uppercase",color:c.accent,margin:"0 0 8px",opacity:0.9}}>{c.ritualIds.length} ritual{c.ritualIds.length>1?"s":""}</p>
+                    <h3 style={{fontFamily:F,fontSize:18,fontWeight:400,color:B.vellum,letterSpacing:"-0.005em",lineHeight:1.15,margin:"0 0 6px"}}>{c.title}</h3>
+                    <p style={{fontFamily:F,fontStyle:"italic",fontSize:11.5,color:"rgba(248,242,229,0.55)",lineHeight:1.45,margin:0}}>{c.subtitle}</p>
+                  </div>
+                  <div style={{position:"relative",zIndex:1,display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:14}}>
+                    <span style={{fontFamily:SF,fontSize:10,color:"rgba(248,242,229,0.75)",letterSpacing:"0.04em"}}>Begin</span>
+                    <ArrowRight size={11} color="rgba(248,242,229,0.75)" strokeWidth={1.5}/>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── MEDITATION — single elegant row, not a card ── */}
+        <div className="rhei-rise rhei-rise-4" style={{marginBottom:44}}>
+          <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:18}}>
+            <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:0}}>Audio</p>
+            <button onClick={()=>setScreen("meditations")} className="rhei-press" style={{background:"none",border:"none",cursor:"pointer",color:"rgba(248,242,229,0.55)",fontFamily:SF,fontSize:10,fontWeight:400,letterSpacing:"0.18em",textTransform:"uppercase",padding:0}}>
+              All →
+            </button>
+          </div>
+          <button
+            className="rhei-press"
+            onClick={()=>{const locked=arc.audio.id!==1&&!isPremium;if(locked){setScreen("premium");}else{startSession(arc.audio.id);}}}
+            style={{width:"100%",background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(248,242,229,0.10)",borderRadius:18,padding:"18px 18px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:16}}>
+            <div style={{width:46,height:46,borderRadius:"50%",background:"linear-gradient(135deg, rgba(212,173,106,0.18), rgba(196,154,75,0.06))",border:"1px solid rgba(196,154,75,0.25)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              <Play size={14} color={B.polished} fill={B.polished} style={{marginLeft:2}}/>
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <h3 style={{fontFamily:F,fontSize:17,color:B.vellum,margin:"0 0 3px",fontWeight:400,lineHeight:1.25,letterSpacing:"-0.005em"}}>{arc.audio.title}</h3>
+              <p style={{fontFamily:F,fontStyle:"italic",fontSize:12,color:"rgba(248,242,229,0.55)",margin:0,lineHeight:1.4}}>{arc.audio.subtitle}</p>
+            </div>
+            <span style={{fontFamily:SF,fontSize:11,color:"rgba(248,242,229,0.45)",letterSpacing:"0.04em",flexShrink:0}}>{Math.ceil(arc.audio.duration/60)} min</span>
+          </button>
+        </div>
+
+        {/* ── QUIET RELIEF — editorial grid, new copy ── */}
+        <div className="rhei-rise rhei-rise-5" style={{marginBottom:44}}>
+          <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:18}}>
+            <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:0}}>Quiet Relief</p>
+            <p style={{fontFamily:F,fontStyle:"italic",fontSize:11,color:"rgba(248,242,229,0.45)",margin:0}}>Under two minutes</p>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            {microInterventions.map(mi=>(
+              <button
+                key={mi.id}
+                className="rhei-press"
+                onClick={()=>openMicro(mi.id)}
+                style={{background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(248,242,229,0.08)",borderRadius:16,padding:"16px 14px",cursor:"pointer",textAlign:"left",minHeight:118,display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
+                <div>
+                  <p style={{fontFamily:F,fontSize:15,color:B.vellum,margin:"0 0 4px",fontWeight:400,lineHeight:1.25,letterSpacing:"-0.005em"}}>{mi.title}</p>
+                  <p style={{fontFamily:F,fontStyle:"italic",fontSize:11,color:"rgba(248,242,229,0.5)",margin:"0 0 8px",lineHeight:1.4}}>{mi.secondary}</p>
+                </div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:8}}>
+                  <span style={{fontFamily:SF,fontSize:9,color:"rgba(196,154,75,0.85)",letterSpacing:"0.18em",textTransform:"uppercase",fontWeight:500}}>{mi.badge}</span>
+                  <ArrowRight size={10} color="rgba(248,242,229,0.4)" strokeWidth={1.5}/>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* ── QUIET JOURNEY INDICATOR — discreet, hairline ── */}
+        {(streak > 0 || meditationStreak > 0 || totalSessions > 0) && (
+          <div className="rhei-rise rhei-rise-5" style={{marginBottom:44,paddingTop:32,borderTop:"1px solid rgba(248,242,229,0.06)"}}>
+            <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:"0 0 18px"}}>This week, quietly</p>
+            <div style={{display:"flex",gap:0,alignItems:"baseline"}}>
+              <div style={{flex:1,paddingRight:16}}>
+                <p style={{fontFamily:F,fontSize:32,fontWeight:300,color:B.vellum,margin:"0",letterSpacing:"-0.02em",lineHeight:1,fontVariationSettings:"'opsz' 60"}}>{Math.max(streak, meditationStreak)}</p>
+                <p style={{fontFamily:F,fontStyle:"italic",fontSize:11,color:"rgba(248,242,229,0.5)",margin:"6px 0 0",lineHeight:1.4}}>days returning</p>
+              </div>
+              <div style={{width:1,alignSelf:"stretch",background:"rgba(248,242,229,0.08)"}}/>
+              <div style={{flex:1,paddingLeft:16}}>
+                <p style={{fontFamily:F,fontSize:32,fontWeight:300,color:B.vellum,margin:"0",letterSpacing:"-0.02em",lineHeight:1,fontVariationSettings:"'opsz' 60"}}>{totalSessions}</p>
+                <p style={{fontFamily:F,fontStyle:"italic",fontSize:11,color:"rgba(248,242,229,0.5)",margin:"6px 0 0",lineHeight:1.4}}>moments kept</p>
+              </div>
+              <button onClick={()=>setScreen("journey")} className="rhei-press" style={{background:"none",border:"none",cursor:"pointer",color:"rgba(248,242,229,0.55)",fontFamily:SF,fontSize:10,fontWeight:400,letterSpacing:"0.18em",textTransform:"uppercase",padding:0,alignSelf:"center"}}>
+                Full journey →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── PREMIUM WHISPER (only if not member) ── */}
+        {!isPremium && (
+          <div className="rhei-rise rhei-rise-5" style={{marginBottom:24}}>
+            <button
+              className="rhei-press"
+              onClick={()=>setScreen("premium")}
+              style={{width:"100%",background:"linear-gradient(180deg, rgba(212,173,106,0.10) 0%, rgba(36,21,9,0.85) 100%)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(196,154,75,0.22)",borderRadius:22,padding:"24px 22px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",top:-30,right:-30,width:160,height:160,borderRadius:"50%",background:"radial-gradient(circle, rgba(212,173,106,0.18) 0%, transparent 65%)",filter:"blur(20px)",pointerEvents:"none"}}/>
+              <div style={{position:"relative",zIndex:1}}>
+                <p style={{fontFamily:SF,fontSize:9,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:B.polished,margin:"0 0 12px"}}>Membership</p>
+                <h3 style={{fontFamily:F,fontSize:22,fontWeight:300,color:B.vellum,letterSpacing:"-0.015em",lineHeight:1.15,margin:"0 0 8px",maxWidth:300,fontVariationSettings:"'opsz' 60"}}>Enter the full collection.</h3>
+                <p style={{fontFamily:F,fontStyle:"italic",fontSize:13,color:"rgba(248,242,229,0.6)",margin:"0 0 18px",lineHeight:1.5,maxWidth:340}}>Every ritual, every meditation. The whole practice, open to you.</p>
+                <div style={{display:"inline-flex",alignItems:"center",gap:8}}>
+                  <span style={{fontFamily:SF,fontSize:11,color:B.polished,letterSpacing:"0.18em",textTransform:"uppercase",fontWeight:500}}>See what's inside</span>
+                  <ArrowRight size={12} color={B.polished} strokeWidth={1.5}/>
+                </div>
+              </div>
+            </button>
+          </div>
+        )}
+
       </div>
     </div>
   );};
@@ -2254,33 +2439,123 @@ export default function ObrizApp() {
 
   // ══════════ CHECK-IN MODAL (Redesigned) ══════════
   const renderCheckin=()=>(
-    <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:`${B.warmBlack}F5`,zIndex:100,display:"flex",alignItems:"center",justifyContent:"center",overflowY:"auto"}}>
-      <div style={{width:"100%",maxWidth:390,padding:"32px 22px"}}>
-        <button onClick={()=>{setShowCheckin(false);setSelectedCheckin(null);}} style={{position:"absolute",top:18,right:18,background:"none",border:"none",cursor:"pointer"}}><X size={18} color={B.muted}/></button>
-        <div style={{textAlign:"center",marginBottom:24}}>
-          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,marginBottom:10}}>Face check-in</p>
-          <h2 style={{fontSize:20,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>What are you noticing{userName?`, ${userName}`:""}?</h2>
-          <p style={{fontSize:12,color:B.muted,fontStyle:"italic",marginBottom:4}}>Your answer shapes today's ritual.</p>
-        </div>
-        {nsStates.map(state=>{const Icon=state.icon; const selected=selectedCheckin?.id===state.id; return(
-          <button key={state.id} onClick={()=>setSelectedCheckin(state)} style={{width:"100%",background:selected?`${state.color}15`:B.card,border:`2px solid ${selected?state.color:B.border}`,borderRadius:14,padding:"15px 16px",marginBottom:8,cursor:"pointer",display:"flex",alignItems:"center",gap:12,textAlign:"left",transition:"all 0.2s",position:"relative"}}>
-            {/* Radio indicator */}
-            <div style={{width:22,height:22,borderRadius:"50%",border:`2px solid ${selected?state.color:`${B.gold}30`}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,transition:"all 0.2s"}}>
-              {selected && <div style={{width:12,height:12,borderRadius:"50%",background:state.color,transition:"all 0.2s"}}/>}
-            </div>
-            <div style={{width:36,height:36,borderRadius:"50%",background:`${state.color}15`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-              <Icon size={16} color={state.color}/>
-            </div>
-            <div style={{flex:1}}>
-              <p style={{fontSize:14,color:selected?B.cream:B.creamMuted,margin:"0 0 2px",fontFamily:SF,fontWeight:selected?500:400}}>{state.label}</p>
-              <p style={{fontSize:11,color:B.muted,margin:0,fontFamily:SF}}>{state.sublabel}</p>
-            </div>
-            {selected && <div style={{position:"absolute",top:8,right:12,fontSize:8,letterSpacing:1,color:state.color,fontFamily:SF,textTransform:"uppercase",fontWeight:600}}>Selected</div>}
-          </button>
-        );})}
-        <button onClick={()=>{if(selectedCheckin) doCheckin(selectedCheckin);}} disabled={!selectedCheckin} style={{width:"100%",marginTop:12,background:selectedCheckin?B.goldGrad:`${B.gold}20`,border:"none",borderRadius:28,padding:"15px",cursor:selectedCheckin?"pointer":"not-allowed",color:selectedCheckin?B.warmBlack:B.muted,fontSize:14,fontFamily:SF,letterSpacing:1,fontWeight:600,opacity:selectedCheckin?1:0.4,transition:"all 0.3s"}}>
-          {selectedCheckin?`Recommend my ritual →`:"Select to continue"}
+    <div style={{
+      position:"fixed",inset:0,zIndex:100,
+      background:"linear-gradient(180deg, #241509 0%, #1A0F06 55%, #0F0905 100%)",
+      overflowY:"auto",overflowX:"hidden",
+    }}>
+      {/* Atmospheric light */}
+      <div style={{position:"fixed",top:"25%",left:"50%",width:"110vmin",height:"110vmin",borderRadius:"50%",background:"radial-gradient(circle, rgba(212,173,106,0.13) 0%, rgba(196,154,75,0.04) 35%, transparent 65%)",filter:"blur(28px)",transform:"translate(-50%, -50%)",animation:"rhei-atmosphere-1 22s ease-in-out infinite",pointerEvents:"none",zIndex:0}}/>
+      <div style={{position:"fixed",top:"78%",left:"30%",width:"85vmin",height:"85vmin",borderRadius:"50%",background:"radial-gradient(circle, rgba(232,210,164,0.05) 0%, transparent 65%)",filter:"blur(40px)",transform:"translate(-50%, -50%)",animation:"rhei-atmosphere-2 32s ease-in-out infinite",pointerEvents:"none",zIndex:0}}/>
+      <div className="rhei-grain" style={{position:"fixed",zIndex:0}}/>
+
+      <div style={{position:"relative",zIndex:1,maxWidth:430,margin:"0 auto",padding:"calc(env(safe-area-inset-top, 0px) + 28px) 24px 80px"}}>
+        {/* Close — top right, discreet */}
+        <button
+          onClick={()=>{setShowCheckin(false);setSelectedCheckin(null);}}
+          className="rhei-press"
+          style={{position:"absolute",top:"calc(env(safe-area-inset-top, 0px) + 22px)",right:22,background:"none",border:"none",cursor:"pointer",padding:8,zIndex:2,color:"rgba(248,242,229,0.55)",fontFamily:SF,fontSize:10,fontWeight:400,letterSpacing:"0.22em",textTransform:"uppercase"}}>
+          Close
         </button>
+
+        {/* Eyebrow + hero question */}
+        <div className="rhei-rise rhei-rise-1" style={{marginTop:36,marginBottom:42,textAlign:"left"}}>
+          <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.85)",margin:"0 0 22px"}}>How you arrive</p>
+          <h2 style={{fontFamily:F,fontSize:"clamp(30px, 8vw, 38px)",fontWeight:300,color:B.vellum,letterSpacing:"-0.018em",lineHeight:1.1,margin:"0 0 14px",maxWidth:360,fontVariationSettings:"'opsz' 60"}}>
+            {userName ? `Where are you tonight, ${userName.split(/\s+/)[0]}?` : "Where are you tonight?"}
+          </h2>
+          <p style={{fontFamily:F,fontStyle:"italic",fontSize:14,color:"rgba(248,242,229,0.6)",lineHeight:1.55,margin:"0",maxWidth:340}}>
+            Pick the closest. Your answer shapes the ritual.
+          </p>
+        </div>
+
+        {/* States as elegant hairline-divided list — not radio buttons */}
+        <div className="rhei-rise rhei-rise-2" style={{marginBottom:32,borderTop:"1px solid rgba(248,242,229,0.08)"}}>
+          {nsStates.map((state, idx)=>{
+            const selected = selectedCheckin?.id === state.id;
+            return (
+              <button
+                key={state.id}
+                onClick={()=>setSelectedCheckin(state)}
+                className="rhei-press"
+                style={{
+                  width:"100%",
+                  background: selected ? "rgba(196,154,75,0.05)" : "transparent",
+                  border:"none",
+                  borderBottom:"1px solid rgba(248,242,229,0.08)",
+                  padding:"22px 4px",
+                  cursor:"pointer",
+                  display:"flex",
+                  alignItems:"center",
+                  gap:18,
+                  textAlign:"left",
+                  position:"relative",
+                  transition:"background 0.5s var(--rhei-ease)",
+                }}>
+                {/* Numeral marker — Roman, low-opacity Fraunces italic */}
+                <p style={{
+                  fontFamily:F, fontStyle:"italic", fontSize:13, fontWeight:400,
+                  color: selected ? B.polished : "rgba(248,242,229,0.35)",
+                  letterSpacing:"0.04em",
+                  margin:0, width:24, flexShrink:0,
+                  transition:"color 0.4s var(--rhei-ease)",
+                }}>{String(idx+1).padStart(2,"0")}</p>
+
+                <div style={{flex:1,minWidth:0}}>
+                  <p style={{
+                    fontFamily:F, fontSize:17, fontWeight:400,
+                    color: selected ? B.vellum : "rgba(248,242,229,0.78)",
+                    letterSpacing:"-0.005em",
+                    margin:"0 0 4px",
+                    lineHeight:1.25,
+                    transition:"color 0.4s var(--rhei-ease)",
+                  }}>{state.label}</p>
+                  <p style={{
+                    fontFamily:F, fontStyle:"italic", fontSize:12.5, fontWeight:400,
+                    color:"rgba(248,242,229,0.5)",
+                    lineHeight:1.4,
+                    margin:0,
+                  }}>{state.sublabel}</p>
+                </div>
+
+                {/* Selected indicator — a single gold hairline mark */}
+                <div style={{
+                  width: selected ? 24 : 12,
+                  height: 1,
+                  background: selected ? B.polished : "rgba(248,242,229,0.2)",
+                  transition:"width 0.5s var(--rhei-ease), background 0.5s var(--rhei-ease)",
+                  flexShrink:0,
+                }}/>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* CTA — paper button */}
+        <div className="rhei-rise rhei-rise-3" style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
+          <button
+            className="rhei-press"
+            onClick={()=>{if(selectedCheckin) doCheckin(selectedCheckin);}}
+            disabled={!selectedCheckin}
+            style={{
+              width:"100%", maxWidth:360,
+              background: selectedCheckin ? B.paper : "rgba(248,242,229,0.10)",
+              border:"none", borderRadius:100, padding:"18px 24px",
+              cursor: selectedCheckin ? "pointer" : "not-allowed",
+              color: selectedCheckin ? B.espresso : "rgba(248,242,229,0.4)",
+              fontFamily:SF, fontSize:14, fontWeight:500, letterSpacing:"0.04em",
+              boxShadow: selectedCheckin ? "0 16px 48px -16px rgba(248,242,229,0.3), 0 6px 16px rgba(15,9,5,0.5)" : "none",
+              transition:"all 0.4s var(--rhei-ease)",
+            }}>
+            {selectedCheckin ? "Begin where I am" : "Choose a state"}
+          </button>
+          <button
+            onClick={()=>{setShowCheckin(false);setSelectedCheckin(null);}}
+            className="rhei-press"
+            style={{background:"none",border:"none",cursor:"pointer",color:"rgba(248,242,229,0.5)",fontFamily:SF,fontSize:11,fontWeight:400,letterSpacing:"0.18em",textTransform:"uppercase",padding:8}}>
+            Not now
+          </button>
+        </div>
       </div>
     </div>
   );
