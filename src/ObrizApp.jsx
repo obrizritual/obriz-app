@@ -191,100 +191,115 @@ const meditationStates = [
 ];
 
 // ── Ritual Guide Data ──
+//
+// Design discipline (see comment in conversation 2026-05-18): every ritual has
+// a signature anatomy, signature tool/finger configuration, and signature
+// techniques that appear nowhere else in the app. References:
+//   - Gua sha: Britta Plug / Sandra Lanshin Chiu protocols (15° angle, 3-5 reps)
+//   - Lymphatic: Vodder method MLD (feather pressure, pumps + lifts, no sliding)
+//   - Face lift: Carole Maggio Facercise + Danielle Collins (isometric holds)
+//   - Buccal: Nichola Joss method (hand inside the mouth, masseter + buccinator)
+//   - Pre-event: Joanna Czech / Georgia Louise pre-shoot facials (cold + percussion + speed)
+//   - Eye revival: targeted orbital MLD (ring fingers only, tear trough → temple)
+//   - Belly flow: abdominal lymphatic + "I Love You" colon massage
+//
 const rituals = [
   {
-    id: "gua-sha", title: "Sculpt & Define", subtitle: "Gua Sha — Jawline, cheekbones, and neck",
-    duration: "8 min", isPremium: false, svgFile: "/svgs/gua-sha-zones.svg",
-    description: "Firm sweeping strokes along the jawline and cheekbones to drain lymphatic fluid, reduce puffiness, and define bone structure. The most visibly immediate result of any ritual here. Uses a gua sha stone or clean fingers.",
-    tools: "Gua sha stone or clean fingers · facial oil",
+    id: "gua-sha", title: "Sculpt & Define", subtitle: "Gua Sha — stone work for the jawline, cheekbones, and neck",
+    duration: "6 min", isPremium: false, svgFile: "/svgs/gua-sha-zones.svg",
+    description: "True gua sha protocol with a stone tool held at a fifteen-degree angle. Every stroke is firm, outward, and repeated three to five times — the classical sequence used in Chinese facial practice and adapted by modern practitioners. Visible sculpting after a single session.",
+    tools: "Gua sha stone (rose quartz, jade, or bian) · facial oil · about 6 minutes",
     occasion: "morning", audioFollowUp: 1,
     steps: [
-      { title: "Ground yourself first", duration: 30, instruction: "Oil your hands. Warm the stone between your palms until it disappears into heat. One slow breath before you touch your face.", zone: "full" },
-      { title: "Open the path", duration: 45, instruction: "Start behind the ear — where your jaw tension drains. Long, slow strokes down each side of your neck. You're making space for what's about to release.", zone: "neck", direction: "↓ Ear to collarbone" },
-      { title: "Find your jaw", duration: 60, instruction: "Start at the center of your chin. Feel the line of your jaw — that ridge where you've been holding everything. Sweep firmly outward toward the ear. Five times each side.", zone: "jawline", direction: "→ Outward from chin" },
-      { title: "Lift the cheek", duration: 60, instruction: "From the corner of your mouth, sweep upward across your cheekbone toward the temple. Slow, deliberate pressure. You're asking the muscle to let go.", zone: "cheeks", direction: "↗ Up and outward" },
-      { title: "The lightest touch", duration: 45, instruction: "Under your eye — lightest touch you own. From inner corner outward along the bone. This area holds what you haven't said yet. Gentle.", zone: "undereye", direction: "→ Inner to outer" },
-      { title: "Between your brows", duration: 45, instruction: "Between your brows is where concentration lives. Sweep outward toward the temple. Feel the muscle soften as you go.", zone: "brow", direction: "→ Brow to temple" },
-      { title: "Sweep upward", duration: 60, instruction: "Brows to hairline. Center, then sides. Your forehead holds more than you think. Sweep it up.", zone: "forehead", direction: "↑ Up to hairline" },
-      { title: "Let it drain", duration: 30, instruction: "Back to the neck. Three long strokes from behind each ear down to the collarbone. You've done the work. Let it go.", zone: "neck", direction: "↓ Final release" },
+      { title: "Warm the stone", duration: 30, instruction: "Oil your face generously. Hold the gua sha stone between your palms until it disappears into heat — the stone should never feel cold against the skin. One slow exhale before you begin.", zone: "full", direction: "● Centering" },
+      { title: "Drain the neck first", duration: 40, instruction: "Long edge of the stone against your neck at a fifteen degree angle — never flat, never perpendicular. Five slow firm strokes down each side, from behind the ear to the collarbone. You're opening the path before anything moves through it.", zone: "neck", direction: "↓ 15° angle, ×5 each side" },
+      { title: "Scrape the jaw", duration: 55, instruction: "Center of the chin. Long edge of the stone, firm pressure but never bruising. Sweep outward along the jawline all the way to the ear. Five passes each side. This is the ridge that holds the day.", zone: "jawline", direction: "→ Chin to ear, ×5 each side" },
+      { title: "Lift the marionette line", duration: 45, instruction: "Place the stone at the corner of your mouth. Sweep on a diagonal up to the top of the ear. Firm, slow, repeatable. Five passes each side. This is the lift gua sha does like nothing else.", zone: "marionette", direction: "↗ Diagonal, ×5 each side" },
+      { title: "Undersweep the cheekbone", duration: 50, instruction: "Hook the curved edge of the stone under your cheekbone — not over it, under it. Sweep firmly outward toward the temple. Five passes each side. You're feeding fluid up and out toward the lymph.", zone: "cheeks", direction: "↗ Under bone, outward, ×5" },
+      { title: "Dissolve the nasolabial fold", duration: 45, instruction: "Beside each nostril. Stone at a fifteen degree angle, diagonal sweep up to the temple along the nasolabial line. Five patient passes per side. This is the line that softens with consistency, not force.", zone: "nasolabial", direction: "↗ Beside nose to temple, ×5" },
+      { title: "Lift the brow bone", duration: 40, instruction: "If your stone has a notch, hook it under your brow bone. If not, use the curved edge. Three pressure points — inner, middle, outer — and lift each upward for three seconds. The brow opens immediately.", zone: "brow", direction: "↑ Three points, hold 3s each" },
+      { title: "Finish at the forehead", duration: 35, instruction: "Whole long edge against your forehead. Three slow upward sweeps — center first, then each side. End at the hairline. You've finished. Set the stone down and feel the difference.", zone: "forehead", direction: "↑ Three sweeps to hairline" },
     ]
   },
   {
-    id: "lymphatic", title: "Depuff & Restore Glow", subtitle: "Lymphatic Drainage — restore circulation",
+    id: "lymphatic", title: "Depuff & Restore Glow", subtitle: "Manual Lymphatic Drainage — fingers only, feather pressure",
     duration: "6 min", isPremium: false, svgFile: "/svgs/lymphatic-paths.svg",
-    description: "Light fingertip pressure along the lymphatic pathways to drain the fluid that causes morning puffiness, under-eye swelling, and dull skin. No tools needed. Results are visible immediately — especially effective in the morning.",
-    tools: "Clean fingertips only — no tools needed",
+    description: "True manual lymphatic drainage in the Vodder tradition. Pressure is featherlight — about five grams — because lymph vessels sit just under the skin and collapse if pressed harder. The work is pumps and lifts, never sliding. Always start and end at the collarbone terminus, where everything ultimately drains.",
+    tools: "Clean fingertips and flat palms · no tools, no oil",
     occasion: "morning", audioFollowUp: 5,
     steps: [
-      { title: "Start here", duration: 30, instruction: "Find the groove behind each ear where your skull meets your neck. Press gently and pulse. Ten times. This is where everything begins.", zone: "nodes" },
-      { title: "Open the path", duration: 45, instruction: "Flat fingers down each side of the neck. Light — you're not working muscle, you're asking fluid to move. Ear to collarbone. Twice.", zone: "neck", direction: "↓ Ear to collarbone" },
-      { title: "The forehead", duration: 40, instruction: "All fingers across your forehead. Sweep outward toward the temples, then down in front of the ears. You're draining what accumulated while you were thinking.", zone: "forehead", direction: "→ then ↓" },
-      { title: "Around the eye", duration: 45, instruction: "Ring fingers only. Under the eye from inner corner outward, up and over the brow, back to start. A full slow circle. This is where fatigue shows first.", zone: "orbital", direction: "○ Full orbital" },
-      { title: "Across the cheek", duration: 45, instruction: "Beside the nose, sweep outward toward the ears. The skin here remembers every hard day. Move it gently.", zone: "cheeks", direction: "→ Nose to ears" },
-      { title: "Along the jaw", duration: 40, instruction: "Trace your jaw from chin to ear. Gentle. This chain carries everything the jaw has been holding.", zone: "jawline", direction: "→ Chin to ear" },
-      { title: "End at the collar", duration: 45, instruction: "Return to the neck. Down from ear to collarbone. End at the collarbone — press and hold for ten counts. Everything goes here. Let it.", zone: "neck", direction: "↓ Final flush" },
+      { title: "Open the terminus", duration: 35, instruction: "Flat palms across both collarbones. Press gently down and release. Ten slow pumps. This is the lymphatic terminus — the drain into the venous system. Everything you move today eventually arrives here, so you open it first.", zone: "neck", direction: "● Collarbone pump, ×10" },
+      { title: "Pulse the parotid", duration: 30, instruction: "Flat fingertips on the soft place just in front of each ear. Tiny inward circles, eight rotations. These are the parotid lymph nodes. They handle most of the face's traffic.", zone: "nodes", direction: "○ In front of ears, ×8" },
+      { title: "Circle under the jaw", duration: 35, instruction: "Flat fingers along the soft underside of your jawline. Press and release rhythmically — ten times. Do not slide. This is pumping, not stroking. The lymph moves between presses.", zone: "jawline", direction: "● Submandibular pump, ×10" },
+      { title: "Lift the cheek, don't slide", duration: 45, instruction: "Place flat fingers on each cheek beside the nose. Lift the skin gently up and outward toward the ear — then place it back down without sliding. Reset. Repeat eight times each side. Five grams of pressure. That's all.", zone: "cheeks", direction: "↗ Lift and place, ×8" },
+      { title: "Ring-finger eye circles", duration: 45, instruction: "Ring fingers only — they apply the least pressure of any finger naturally. Tiny circles around the orbital bone, three full slow circles each eye. You should barely feel your own finger.", zone: "orbital", direction: "○ Ring finger, ×3 circles" },
+      { title: "Cascade the forehead", duration: 40, instruction: "Flat palms on your forehead. Lift the skin outward toward the temples and place it down — never drag. Lift, place. Ten passes. There is no friction in lymphatic work.", zone: "forehead", direction: "↗ Lift and place, ×10" },
+      { title: "Drain behind the ear", duration: 35, instruction: "Trace a single fingertip line from your temple down behind your ear to the side of your neck. Slow. Light. Three passes each side. This is where everything you just moved travels next.", zone: "nodes", direction: "↓ Temple to neck, ×3" },
+      { title: "Close the terminus", duration: 35, instruction: "Return to the collarbones. Same flat-palm press and release, ten times. You opened the gate. You close it softly. The work continues for hours after you stop moving.", zone: "neck", direction: "● Collarbone pump, ×10" },
     ]
   },
   {
-    id: "face-lift", title: "Lift & Firm", subtitle: "Face Lifting — pressure points and technique",
+    id: "face-lift", title: "Lift & Firm", subtitle: "Face Yoga — isometric holds against finger resistance",
     duration: "7 min", isPremium: false, svgFile: "/svgs/face-lifting-points.svg",
-    description: "Hook-and-lift technique on the cheekbones, brow bone presses, and knuckle sweeps along the jaw — targeting the specific points that gravity and tension pull downward. You'll feel the result while you're doing it.",
+    description: "This is not massage — this is muscle work. Isometric contractions against fingertip resistance, in the tradition of facial yoga (Carole Maggio, Danielle Collins). The face has over forty muscles and most of them have forgotten they're there. Holds are five to ten seconds. Repetitions matter. Visible tone with consistency.",
     tools: "Clean fingertips · facial oil",
     occasion: "evening", audioFollowUp: 3,
     steps: [
-      { title: "The temples", duration: 35, instruction: "Fingertips on your temples. Firm, slow circles for ten rotations. The temporal fascia holds everything above it. Release it first.", zone: "temples" },
-      { title: "The brow bone", duration: 45, instruction: "Find the bony ridge above your eye. Three pressure points: inner, middle, outer. Hold each five seconds. Then sweep the whole thing upward.", zone: "brow", direction: "↑ Press, then lift" },
-      { title: "The cheekbone", duration: 50, instruction: "Hook your fingertips under the cheekbone. Lift upward while you open your mouth slightly. Hold five seconds. Release. Do it five times each side. Feel it.", zone: "cheeks", direction: "↑ Hook and lift" },
-      { title: "The nasolabial fold", duration: 45, instruction: "Beside each nostril. Sweep firmly outward and upward toward the cheekbone. You're redirecting the pull of the face upward.", zone: "nasolabial", direction: "↗ Out and up" },
-      { title: "The jawline", duration: 50, instruction: "Make a fist. Knuckles along the jaw from chin to ear — firm, slow, upward pressure. This lifts the whole lower face.", zone: "jawline", direction: "→↑ Knuckle sweep" },
-      { title: "The corners", duration: 40, instruction: "Fingers at the corners of your mouth. Press and sweep upward toward the cheekbone. This is what the marionette lines are asking for.", zone: "marionette", direction: "↑ Corner to cheek" },
-      { title: "The neck", duration: 50, instruction: "Both hands flat on your chest. Sweep upward along the front of the neck to the chin. The platysma — the muscle that pulls the jaw down — releases here.", zone: "neck", direction: "↑ Chest to chin" },
-      { title: "Hold it", duration: 30, instruction: "Cup your entire face in your palms. Light lifting pressure. Hold ten seconds. Release slowly. Notice the difference.", zone: "full" },
+      { title: "Settle the breath", duration: 30, instruction: "Sit tall. Spine long. Three slow exhales. You are not massaging the face today — you are training the muscles underneath it. This is the only ritual where you contract instead of release.", zone: "full", direction: "● Three exhales" },
+      { title: "Forehead resistance hold", duration: 50, instruction: "Three fingers flat across your brow bone, pressing gently down. Raise your brows upward against that pressure. Hold ten seconds. Release. Five rounds. The frontalis muscle remembers.", zone: "forehead", direction: "↑ Hold 10s, ×5" },
+      { title: "Wide-eye flash", duration: 40, instruction: "Anchor each temple with a single fingertip. Open your eyes wide — wider than feels normal. Hold five seconds. Blink hard ten times. Close. Three rounds. This trains the orbicularis oculi.", zone: "orbital", direction: "● Open, hold, blink, ×3 rounds" },
+      { title: "Cheekbone lift hold", duration: 55, instruction: "Place your index fingers on top of your cheekbones. Smile up into them — lift your cheeks against the resistance of your fingertips. Hold eight seconds. Release slowly. Eight rounds. The zygomaticus is doing real work.", zone: "cheeks", direction: "↗ Hold 8s, ×8" },
+      { title: "The slow O", duration: 45, instruction: "Make an extreme oval shape with your mouth — like you're hiding your teeth completely with your lips. Push your jaw slightly forward. Hold ten seconds. Release. Five rounds. The orbicularis oris activates.", zone: "marionette", direction: "● Extreme oval, hold 10s, ×5" },
+      { title: "Smile against resistance", duration: 40, instruction: "Place an index fingertip at each corner of your mouth. Smile wide against the resistance — try to push your fingers outward with the muscle of your smile. Hold eight seconds. Six rounds.", zone: "marionette", direction: "↔ Push against fingers, ×6" },
+      { title: "Platysma engage", duration: 45, instruction: "Tilt your head back gently. Reach your lower lip down toward your chin — hard. You'll feel the entire front of your neck engage. That's the platysma waking up. Hold ten seconds. Release. Five rounds.", zone: "neck", direction: "↓ Lower lip down, hold 10s, ×5" },
+      { title: "Cup and release", duration: 30, instruction: "Cup your entire face in warm palms. Light pressure. Hold ten seconds. Release slowly. Notice what feels lifted from the inside out — not pulled from the outside in.", zone: "full", direction: "● Palms covering, 10s" },
     ]
   },
   {
-    id: "buccal", title: "Release & Decompress", subtitle: "Buccal Massage — deep jaw and cheek release",
+    id: "buccal", title: "Release & Decompress", subtitle: "Buccal Massage — hands inside the mouth, the deepest release",
     duration: "5 min", isPremium: false, svgFile: "/svgs/face-base.svg",
-    description: "Targets the masseter and buccinator — the two muscles that hold the most stress tension in the face. Most people find far more tension here than expected. Hands only, no tools needed. Immediate release.",
-    tools: "Clean hands · facial oil",
+    description: "Buccal massage in the Nichola Joss tradition — the technique used in private facials at Claridge's and Le Bristol. The thumb enters the mouth and works the masseter, buccinator, and pterygoid muscles directly, from inside. Most face tension lives in these muscles and cannot be reached any other way. Intimate, surprising, and unmistakably effective. Wash your hands.",
+    tools: "Washed hands or single-use glove · facial oil · about 5 minutes",
     occasion: "recovery", audioFollowUp: 4,
     steps: [
-      { title: "The jaw hinge", duration: 45, instruction: "Press your fingertips into the hinge of your jaw — where it opens and closes. Apply firm, slow circles inward and upward. You're reaching the muscle that's been clenching since before you noticed.", zone: "jawline", direction: "○ Inward and up" },
-      { title: "The cheek", duration: 50, instruction: "Move to your cheeks. Press firmly against the bone. Hold three seconds, then drag slowly upward toward the cheekbone. Feel what releases under your fingers.", zone: "cheeks", direction: "↑ Hold, then lift" },
-      { title: "The deep hold", duration: 45, instruction: "Knuckle pressure into the fleshy center of each cheek — between cheekbone and jaw. Hold five seconds, release, move along the line. There will be more tension here than you expected.", zone: "cheeks", direction: "— Hold and release" },
-      { title: "Jaw Decompression", duration: 60, instruction: "Interlock fingers under your chin. Apply gentle upward traction while slowly tilting your head back slightly. Hold 5 seconds. This decompresses the jaw joint — you may hear a subtle release.", zone: "jawline", direction: "↑ Gentle traction" },
-      { title: "TMJ Integration", duration: 40, instruction: "Return to the jaw hinge. Alternate between pressing and releasing rhythmically, allowing the joint to settle. Finish with three slow, wide jaw openings. Exhale on each open.", zone: "jawline", direction: "○ Press, breathe, release" },
-      { title: "Final Drain", duration: 40, instruction: "Long, slow strokes from behind the ears down the neck to the collarbone. Three passes each side. This drains everything the jaw just released into the lymphatic system.", zone: "neck", direction: "↓ Behind ear to collar" },
+      { title: "Cleanse the threshold", duration: 35, instruction: "Wash your hands thoroughly with hot water and soap. This is intimate work — your fingers are about to enter your mouth. If you have a single-use glove, use it. Otherwise, hands clean and dry. The threshold matters.", zone: "full", direction: "● Wash hands first" },
+      { title: "Warm the masseter outside", duration: 35, instruction: "Place your knuckles on the muscle in front of each ear. Clench your jaw and you'll feel it pop out — that's the masseter. Slow circles on the outside, twenty seconds. Warm it first, before going inside.", zone: "jawline", direction: "○ Outside circles, 20s" },
+      { title: "Milk the masseter from inside", duration: 60, instruction: "Clean thumb inside your cheek, against the masseter. Your other fingers anchor outside, opposite the thumb. Slow firm milking strokes from the top of the muscle to the bottom — five passes each side. This may feel intense. That's the day leaving.", zone: "jawline", direction: "↓ Thumb inside, ×5 each side" },
+      { title: "Circle the cheek pillow", duration: 50, instruction: "Thumb still inside. Move to the soft fleshy cushion of the cheek — the buccinator. Slow firm circles from inside, five rotations each side. Notice the difference between where it's holding and where it has released.", zone: "cheeks", direction: "○ Inside circles, ×5 each side" },
+      { title: "Pinch from both sides", duration: 45, instruction: "Thumb inside, index finger outside. Pinch the cheek gently between them. Walk this pinch slowly from the corner of your mouth toward the ear, releasing as you go. Three passes each side. The marionette line is held inside this exact pinch.", zone: "marionette", direction: "● Inside-outside pinch, ×3" },
+      { title: "Sweep the upper buccal fold", duration: 40, instruction: "Thumb above your upper teeth, in the fold where gum meets lip. Slow firm glide from one corner of your mouth to the other. Three passes. The nasolabial line on the outside is the same muscle as this on the inside.", zone: "nasolabial", direction: "→ Above the teeth, ×3" },
+      { title: "Return to the surface", duration: 35, instruction: "Hands back outside. Glide your warm palms over the same areas you just worked — masseter, cheek, jaw. Notice how the face feels different from this side now. Wash your hands again. That's the practice.", zone: "full", direction: "● Outside integration · wash hands" },
     ]
   },
   {
-    id: "pre-event", title: "Show Up Glowing", subtitle: "Pre-Event Ritual — define and depuff in 5 min",
-    duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg",
-    description: "Drains under-eye puffiness, defines the jawline, and lifts the cheekbone in five minutes. Designed for before a presentation, shoot, dinner, or any moment that requires you looking and feeling your best.",
-    tools: "Gua sha stone or clean fingertips · facial oil",
+    id: "pre-event", title: "Show Up Glowing", subtitle: "Pre-Event Ritual — cold, percussion, and speed",
+    duration: "4 min", isPremium: true, svgFile: "/svgs/face-base.svg",
+    description: "The technique facialists use before a shoot or red carpet. Cold tools for instant vasoconstriction, rapid percussion tapping to bring blood to the surface, fast lymphatic flushing, and a cold seal at the end. The opposite tempo of the other rituals — urgency is the technique. Four minutes, visible result.",
+    tools: "Chilled gua sha stone or cold spoons (from the freezer) · facial oil · about 4 minutes",
     occasion: "event", audioFollowUp: 2,
     steps: [
-      { title: "Open the drain", duration: 30, instruction: "Five quick taps behind each ear, then sweep down both sides of the neck. Opens the lymphatic path before anything else moves. Do this first. Always.", zone: "nodes", direction: "↓ Neck first" },
-      { title: "The eyes", duration: 45, instruction: "Ring fingers or a cold tool. Under each eye, sweep from inner corner outward. Lightest touch. Three passes. You'll see the difference before you're done.", zone: "undereye", direction: "→ Inner to outer" },
-      { title: "The cheekbone", duration: 45, instruction: "Hook under the cheekbone. Sweep upward and outward in one fluid motion. Five passes each side, increasing firmness. Visible lift within seconds.", zone: "cheeks", direction: "↗ Hook and lift" },
-      { title: "The jaw", duration: 45, instruction: "From center of chin, sweep firmly along the jawline to the ear. Five passes each side. This is the most visible single move. Don't skip it.", zone: "jawline", direction: "→ Chin to ear" },
-      { title: "The forehead", duration: 30, instruction: "Three sweeping passes from brow to hairline. Lifts the brow. Smooths what's been furrowed. Use the flat of the tool or all four fingers together.", zone: "forehead", direction: "↑ Brow to hairline" },
-      { title: "You're ready", duration: 30, instruction: "One complete pass: neck down, jaw out, cheek up, forehead up. Light, fast, fluid. This seals it.", zone: "full", direction: "The seal" },
+      { title: "Cold prep on the eyes", duration: 30, instruction: "Cold stone, chilled spoons from the freezer, or even ice wrapped in a tea towel. Press to your closed eyes for thirty seconds. Vasoconstriction — the most reliable instant depuff in skincare. Do not skip this.", zone: "orbital", direction: "● Cold on closed eyes, 30s" },
+      { title: "Speed drainage", duration: 40, instruction: "Fingers or stone. Fast firm strokes down both sides of the neck, eight per side at a pace twice what feels comfortable. We're not relaxing — we're opening the drain. Quickly.", zone: "neck", direction: "↓ Fast neck strokes, ×8" },
+      { title: "Percussion tapping", duration: 50, instruction: "Fingertips across your entire face — tap rapidly for forty-five seconds. Like soft rain. Forehead, cheekbones, jaw, neck. This is the move facialists do before every shoot. It wakes the circulation completely.", zone: "full", direction: "● Rapid tapping, 45s" },
+      { title: "Snap-lift the cheekbone", duration: 35, instruction: "Flat fingers under each cheekbone. Quick firm lifts up and out toward the temple — snap, snap, snap. Eight per side. No slow elegance here. Speed creates visible lift in under a minute.", zone: "cheeks", direction: "↗ Fast lifts, ×8 each side" },
+      { title: "Brow flicks", duration: 30, instruction: "Short upward flicking strokes along the brow bone with the pads of your fingers. Ten per side. The brow opens. The eye opens with it. The face wakes up.", zone: "brow", direction: "↑ Quick flicks, ×10 each side" },
+      { title: "Cold seal", duration: 30, instruction: "Wash your hands in cold water until your palms are cold. Press them flat against your entire face. Hold ten seconds. Release. Pores tightened. Lift sealed. You're ready.", zone: "full", direction: "● Cold palms, hold 10s" },
     ]
   },
   {
-    id: "eye-revival", title: "Brighten & Open", subtitle: "Eye Revival — depuff and reduce dark circles",
+    id: "eye-revival", title: "Brighten & Open", subtitle: "Eye Revival — ring fingers and the orbital bone, nothing else",
     duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg",
-    description: "Drains the orbital area using ring finger pressure points and sweeping motions. Reduces dark circles, depuffs the under-eye, and releases the corrugator — the muscle responsible for the heavy, hooded look. Ring fingers only.",
-    tools: "Ring fingers · eye cream or serum",
+    description: "Targeted orbital drainage. The under-eye skin is the thinnest on the body — about 0.5 millimeters — and the ring finger is the only finger that can move it without overpressuring it. Every step is built around specific landmarks on the orbital bone: the tear trough, the brow trio, the temple anchor. Cold tools amplify it. Never pull skin.",
+    tools: "Ring fingers only · optional chilled spoon or eye stone · serum",
     occasion: "morning", audioFollowUp: 5,
     steps: [
-      { title: "The full orbit", duration: 40, instruction: "Trace the full orbital bone — inner corner, under the eye, outer corner, over the brow, back to start. Three full slow circles. Light as you've ever touched anything.", zone: "undereye", direction: "○ Full orbital circle" },
-      { title: "The tear duct", duration: 35, instruction: "Press your ring finger into the inner corner of each eye. Hold five seconds. Breathe. Release. This is where dark circles drain from. Press it.", zone: "undereye", direction: "● Hold 5 seconds" },
-      { title: "The outer corner", duration: 45, instruction: "Ring fingers at the outer corner of each eye. Tiny, gentle circles. Lightest possible pressure. The orbicularis oculi muscle holds more tension here than you know.", zone: "undereye", direction: "○ Tiny circles" },
-      { title: "The upper lid", duration: 40, instruction: "Eyes closed. Ring fingers on your upper lids. Sweep from inner corner to outer — featherlight, three slow passes. You're moving what's been pooling here while you slept.", zone: "undereye", direction: "→ Inner to outer lid" },
-      { title: "The brow bone", duration: 35, instruction: "Three pressure points along the brow bone: inner, middle, outer edge. Press firmly, five seconds each. This releases the corrugator — the muscle that pulls the brow down and makes the eye look heavy.", zone: "brow", direction: "● Three points" },
-      { title: "The drain", duration: 45, instruction: "From the bridge of the nose, sweep under each eye to the temple, then down in front of the ear to the jaw. The complete orbital drainage path. End here and feel what's shifted.", zone: "undereye", direction: "→ ↓ Full drain" },
+      { title: "Cold compress", duration: 30, instruction: "Chilled spoons, a cold gua sha stone, or simply your washed-cold ring fingertips. Hold them gently against your closed eyes. Thirty seconds. The cold does most of the work before you've moved at all.", zone: "orbital", direction: "● Cold on closed eyes, 30s" },
+      { title: "Tear trough press", duration: 35, instruction: "Ring fingertip at the inner corner of each eye, where the eye socket meets the nose. Press straight down — not into the eye, into the bone underneath. Five seconds, release, repeat three times. This is where dark circles drain from.", zone: "orbital", direction: "● Hold 5s, ×3 each side" },
+      { title: "Inner-to-outer under-eye", duration: 40, instruction: "Ring finger only. Glide gently from the inner corner of the eye along the orbital bone outward to the temple. Five passes each side. If the skin moves with your finger, you're pressing too hard.", zone: "undereye", direction: "→ Ring finger only, ×5 each" },
+      { title: "Brow bone trio", duration: 40, instruction: "Three points along the brow bone — inner edge, middle, outer edge. Press each firmly with your ring finger for five seconds. This releases the corrugator and the procerus, the two muscles that pull the brow down. The eye opens visibly from this alone.", zone: "brow", direction: "● Three points, hold 5s each" },
+      { title: "Crow's-feet anchor", duration: 35, instruction: "Pin the skin firmly at your temple with one fingertip — anchor it, don't release. With your other ring finger, micro-circle at the outer corner of the eye. The skin stretches instead of crinkling. Ten circles each side.", zone: "orbital", direction: "○ Temple anchor + circles, ×10" },
+      { title: "Upper lid glide — reverse direction", duration: 30, instruction: "Eyes closed. Ring finger pads on your upper eyelids. Glide from the outer corner inward — the opposite direction of every other under-eye stroke. Three slow passes. This is the upper lid's own drainage path. It only works this way.", zone: "orbital", direction: "← Outer to inner, ×3" },
+      { title: "Drain to the ear", duration: 30, instruction: "From the outer corner of each eye, glide down in front of the ear to the lymph node at your jaw. Three passes each side. Everything you just moved goes here. Then it's gone.", zone: "nodes", direction: "↓ Outer eye to jaw, ×3" },
     ]
   },
   {
@@ -535,10 +550,13 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
     try { localStorage.setItem("rhei_mirror_voice", voiceEnabled ? "1" : "0"); } catch {}
   }, [voiceEnabled]);
 
-  // Voiceover: play Lulu's pre-recorded MP3 for this step; fall back to browser TTS
+  // Voiceover — Lulu's MP3 for this step, TTS fallback only if file is missing.
+  // The `stopped` flag (closure-scoped per effect run) prevents any late event
+  // — late-arriving error, delayed play() rejection, etc. — from firing TTS or
+  // restarting audio AFTER we've torn down. This eliminates the desync where
+  // the previous step's audio could ghost-fire into the next step.
   useEffect(() => {
     if (!voiceEnabled) {
-      // If user just muted, stop anything currently playing
       try { window.speechSynthesis?.cancel(); } catch {}
       if (voiceAudioRef.current) { try { voiceAudioRef.current.pause(); } catch {} voiceAudioRef.current = null; }
       return;
@@ -548,15 +566,15 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
     if (!stepData) return;
     const text = `${stepData.title}. ${stepData.instruction || ""}`.trim();
 
+    // Synchronously tear down anything still going from the previous step
     try { window.speechSynthesis?.cancel(); } catch {}
     if (voiceAudioRef.current) { try { voiceAudioRef.current.pause(); } catch {} voiceAudioRef.current = null; }
 
-    const url = `/audio/rituals/${ritual.id}-${step}.mp3`;
-    const audio = new Audio(url);
-    audio.volume = 0.95;
-    voiceAudioRef.current = audio;
-    let speakingBrowserTts = false;
-    audio.addEventListener("error", () => {
+    let stopped = false;
+    let usingTts = false;
+
+    const playTts = () => {
+      if (stopped) return;
       if (!("speechSynthesis" in window)) return;
       try {
         const u = new SpeechSynthesisUtterance(text);
@@ -565,15 +583,42 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
         const preferred = voices.find(v => /en/i.test(v.lang) && /(samantha|ava|jenny|aria|female)/i.test(v.name))
                        || voices.find(v => /en/i.test(v.lang));
         if (preferred) u.voice = preferred;
-        speakingBrowserTts = true;
+        usingTts = true;
         window.speechSynthesis.speak(u);
       } catch {}
+    };
+
+    const url = `/audio/rituals/${ritual.id}-${step}.mp3`;
+    const audio = new Audio(url);
+    audio.volume = 0.95;
+    audio.preload = "auto";
+    voiceAudioRef.current = audio;
+
+    audio.addEventListener("error", () => {
+      if (stopped) return;
+      // Genuine load failure — fall back to TTS
+      if (voiceAudioRef.current === audio) voiceAudioRef.current = null;
+      playTts();
     });
-    audio.play().catch(() => { /* error handler covers fallback */ });
+
+    audio.play().catch(() => {
+      // play() rejected. Wait one tick — if neither error nor playback fires,
+      // and we're still the current audio and we haven't been stopped, fall to TTS.
+      setTimeout(() => {
+        if (stopped) return;
+        if (voiceAudioRef.current === audio && audio.paused && audio.currentTime === 0) {
+          if (voiceAudioRef.current === audio) voiceAudioRef.current = null;
+          playTts();
+        }
+      }, 400);
+    });
 
     return () => {
+      stopped = true;
       try { audio.pause(); } catch {}
-      if (speakingBrowserTts) { try { window.speechSynthesis.cancel(); } catch {} }
+      try { audio.src = ""; } catch {}   // Force release of any in-flight network request
+      if (voiceAudioRef.current === audio) voiceAudioRef.current = null;
+      if (usingTts) { try { window.speechSynthesis.cancel(); } catch {} }
     };
   }, [step, voiceEnabled, ritual, totalSteps]);
 
