@@ -14,8 +14,8 @@ const B = {
   border: "rgba(196,154,75,0.12)", borderSoft: "rgba(196,154,75,0.18)", borderActive: "rgba(196,154,75,0.3)",
   goldGrad: "linear-gradient(135deg, #C49A4B 0%, #D4AD6A 50%, #C49A4B 100%)",
 };
-const F  = "'Georgia','Times New Roman',serif";
-const SF = "system-ui,-apple-system,sans-serif";
+const F  = "'Fraunces', Georgia, 'Times New Roman', serif";
+const SF = "'Inter', system-ui, -apple-system, sans-serif";
 
 // ── Curated starter affirmations — "quietly powerful" voice ──
 export const AFFIRMATION_CATEGORIES = [

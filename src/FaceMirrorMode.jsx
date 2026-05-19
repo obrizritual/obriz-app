@@ -16,8 +16,8 @@ const B = {
   border: "rgba(196,154,75,0.14)",
   borderActive: "rgba(196,154,75,0.35)",
 };
-const F  = "'Georgia','Times New Roman',serif";
-const SF = "system-ui,-apple-system,sans-serif";
+const F  = "'Fraunces', Georgia, 'Times New Roman', serif";
+const SF = "'Inter', system-ui, -apple-system, sans-serif";
 
 // ── Zone → tension profile → ritual ──────────────────────────────────────────
 const ZONES = [

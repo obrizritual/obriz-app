@@ -23,22 +23,69 @@ import FaceMirrorMode from "./FaceMirrorMode";
    v3.0 — Face-first. Everything else follows.
    ═══════════════════════════════════════════ */
 
+// ═══════════════════════════════════════════
+//  DESIGN TOKENS — see RHEI_Design_System.md for the brand bible
+// ═══════════════════════════════════════════
 const B = {
-  bg: "#2D1B0E", bgDeep: "#231408", card: "#3A2516", cardHover: "#45301E",
-  // aliases kept for compatibility
-  cardHigh: "#45301E", cardElevated: "#45301E", bgMid: "#231408",
-  gold: "#C49A4B", goldLight: "#D4AD6A", goldMuted: "#A07D3A",
-  goldBright: "#D4AD6A", goldDim: "rgba(196,154,75,0.4)", goldGradSimple: "linear-gradient(135deg, #C49A4B 0%, #D4AD6A 50%, #C49A4B 100%)",
+  // ── Dark surfaces (Obsidian → Suede) ──
+  obsidian: "#0F0905",
+  espresso: "#1A0F06",   // primary dark
+  walnut:   "#241509",
+  cocoa:    "#2D1B0E",
+  bark:     "#3A2516",
+  suede:    "#4A3120",
+
+  // ── Champagne / metallics ──
+  antique:    "#A07D3A",
+  champagne:  "#C49A4B",   // primary brand gold
+  polished:   "#D4AD6A",   // hover / lustre
+  vellumGold: "#E8D2A4",
+
+  // ── Creams / paper ──
+  vellum:   "#F8F2E5",
+  paper:    "#F2E8D9",   // primary cream
+  eggshell: "#E2D3B9",
+  linen:    "#C9B99F",
+
+  // ── Accents ──
+  smoke: "#8A7560",
+  sage:  "#7A8674",
+  rouge: "#C4786A",
+  ash:   "#5C4B3A",
+
+  // ── Glass / hairlines ──
+  glassThin:   "rgba(248,242,229,0.04)",
+  glassMed:    "rgba(248,242,229,0.06)",
+  glassDeep:   "rgba(248,242,229,0.08)",
+  hairline:    "rgba(248,242,229,0.08)",
+  hairlineGold:"rgba(196,154,75,0.18)",
+
+  // ── Gradients & shadows ──
+  goldGrad:  "linear-gradient(135deg, #C49A4B 0%, #D4AD6A 50%, #A07D3A 100%)",
+  darkGrad:  "linear-gradient(180deg, #241509 0%, #0F0905 100%)",
+  warmShadow:    "0 24px 60px -20px rgba(15,9,5,0.7), 0 8px 20px rgba(15,9,5,0.4)",
+  warmShadowSm:  "0 12px 32px -8px rgba(15,9,5,0.55), 0 4px 12px rgba(15,9,5,0.3)",
+  goldGlow:      "0 6px 32px rgba(196,154,75,0.22)",
+  goldGlowSm:    "0 4px 18px rgba(196,154,75,0.18)",
+
+  // ── Motion ──
+  ease:        "cubic-bezier(0.22, 0.61, 0.36, 1)",
+  easeEnter:   "cubic-bezier(0.16, 1, 0.3, 1)",
+  easeIn:      "cubic-bezier(0.7, 0, 0.84, 0)",
+
+  // ── Legacy aliases (kept so the rest of the app still compiles; will deprecate
+  //     as screens are redesigned). Map old names → new tokens.
+  bg: "#2D1B0E", bgDeep: "#1A0F06", bgMid: "#241509",
+  card: "#3A2516", cardHover: "#4A3120", cardHigh: "#4A3120", cardElevated: "#4A3120",
+  gold: "#C49A4B", goldLight: "#D4AD6A", goldMuted: "#A07D3A", goldBright: "#D4AD6A",
+  goldDim: "rgba(196,154,75,0.4)", goldGradSimple: "linear-gradient(135deg, #C49A4B 0%, #D4AD6A 50%, #C49A4B 100%)",
   cream: "#F2E8D9", creamMuted: "#C9B99F", muted: "#8A7560",
   white: "#FFFAF3", warmBlack: "#1A0F06",
   border: "rgba(196,154,75,0.12)", borderSoft: "rgba(196,154,75,0.18)", borderActive: "rgba(196,154,75,0.3)",
-  goldGrad: "linear-gradient(135deg, #C49A4B 0%, #D4AD6A 50%, #C49A4B 100%)",
-  darkGrad: "linear-gradient(180deg, #2D1B0E 0%, #231408 100%)",
-  goldGlow: "0 6px 24px rgba(196,154,75,0.22)", goldGlowSm: "0 4px 16px rgba(196,154,75,0.18)",
   cardShadow: "0 2px 12px rgba(26,15,6,0.4)",
 };
-const F  = "'Georgia','Times New Roman',serif";
-const SF = "system-ui,-apple-system,sans-serif";
+const F  = "'Fraunces', Georgia, 'Times New Roman', serif";
+const SF = "'Inter', system-ui, -apple-system, sans-serif";
 
 const GLOBAL_CSS = `
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -694,60 +741,127 @@ function Onboarding({ onComplete, authUser }) {
   if (step === "splash") {
     return (
       <div style={{
-        position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:200,
-        // Full-bleed hero photograph as background. Fallback to dark gradient if image fails.
-        backgroundColor:B.warmBlack,
-        backgroundImage:`linear-gradient(180deg, rgba(26,15,6,0) 0%, rgba(26,15,6,0) 55%, rgba(26,15,6,0.35) 75%, rgba(26,15,6,0.85) 100%), url('/images/splash-hero.jpg')`,
-        backgroundSize:"cover",
-        backgroundPosition:"center",
-        backgroundRepeat:"no-repeat",
-        display:"flex",flexDirection:"column",justifyContent:"space-between",
-        padding:"60px 28px 48px",
+        position:"fixed",inset:0,zIndex:200,
+        background:`linear-gradient(180deg, #241509 0%, #1A0F06 50%, #0F0905 100%)`,
+        overflow:"hidden",
       }}>
-        {/* Top + center: empty — the 'Rhei.' wordmark is already embedded in the photograph itself */}
-        <div/>
-        <div/>
+        {/* Layer 1 — Primary warm light source (upper-third, breathing) */}
+        <div style={{
+          position:"absolute", top:"30%", left:"50%",
+          width:"140vmin", height:"140vmin", borderRadius:"50%",
+          background:"radial-gradient(circle, rgba(212,173,106,0.18) 0%, rgba(196,154,75,0.08) 28%, rgba(196,154,75,0.02) 50%, transparent 70%)",
+          filter:"blur(24px)",
+          transform:"translate(-50%, -50%)",
+          animation:"rhei-atmosphere-1 22s ease-in-out infinite",
+          pointerEvents:"none",
+        }}/>
 
-        {/* Bottom: CTAs */}
-        <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:14}}>
-          {/* Primary — create account */}
-          <button
-            onClick={()=>{setAuthMode("signup");setStep("email");}}
-            style={{
-              width:"100%",maxWidth:320,
-              background:"rgba(242,232,217,0.96)",
-              backdropFilter:"blur(8px)",
-              border:"none",borderRadius:32,padding:"17px",
-              cursor:"pointer",color:B.warmBlack,
-              fontSize:14,fontFamily:F,letterSpacing:0.5,fontWeight:400,
-              boxShadow:"0 8px 32px rgba(0,0,0,0.25)",
-            }}>
-            Create account
-          </button>
+        {/* Layer 2 — Counter-light, cooler tone (lower-right, slower) */}
+        <div style={{
+          position:"absolute", top:"78%", left:"75%",
+          width:"95vmin", height:"95vmin", borderRadius:"50%",
+          background:"radial-gradient(circle, rgba(232,210,164,0.07) 0%, rgba(232,210,164,0.02) 40%, transparent 70%)",
+          filter:"blur(36px)",
+          transform:"translate(-50%, -50%)",
+          animation:"rhei-atmosphere-2 28s ease-in-out infinite",
+          pointerEvents:"none",
+        }}/>
 
-          {/* Secondary — sign in */}
-          <button
-            onClick={()=>{setAuthMode("signin");setStep("email");}}
-            style={{
-              background:"none",border:"none",cursor:"pointer",
-              color:B.cream,fontSize:14,fontFamily:F,padding:"6px 18px",
-              textShadow:"0 1px 8px rgba(0,0,0,0.5)",
-            }}>
-            Sign in
-          </button>
+        {/* Layer 3 — Atmospheric depth vignette */}
+        <div style={{
+          position:"absolute", inset:0,
+          background:"radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(15,9,5,0.25) 65%, rgba(15,9,5,0.65) 100%)",
+          pointerEvents:"none",
+        }}/>
 
-          {/* Tertiary — skip auth, very subtle */}
-          <button
-            onClick={()=>setStep(0)}
-            style={{
-              background:"none",border:"none",cursor:"pointer",
-              color:"rgba(242,232,217,0.55)",
-              fontSize:11,fontFamily:SF,padding:"4px",letterSpacing:1,
-              marginTop:6,
-              textShadow:"0 1px 6px rgba(0,0,0,0.4)",
-            }}>
-            Continue without account
-          </button>
+        {/* Layer 4 — Film grain */}
+        <div className="rhei-grain"/>
+
+        {/* Content */}
+        <div style={{
+          position:"relative", zIndex:1,
+          height:"100%",
+          display:"flex", flexDirection:"column",
+          padding:"calc(env(safe-area-inset-top, 0px) + 56px) 28px calc(env(safe-area-inset-bottom, 0px) + 40px)",
+        }}>
+          {/* Top eyebrow — tiny, kerned, atmospheric */}
+          <div className="rhei-rise rhei-rise-1" style={{textAlign:"center"}}>
+            <p style={{
+              fontFamily:SF, fontSize:10, fontWeight:500,
+              letterSpacing:"0.32em", textTransform:"uppercase",
+              color:"rgba(248,242,229,0.7)",
+              margin:0,
+              textShadow:"0 1px 8px rgba(0,0,0,0.6)",
+            }}>A nervous system practice</p>
+          </div>
+
+          {/* Spacer to push wordmark + tagline to lower-mid composition */}
+          <div style={{flex:1}}/>
+
+          {/* Wordmark + tagline — the hero composition */}
+          <div className="rhei-rise rhei-rise-2" style={{textAlign:"center", marginBottom:"auto"}}>
+            <h1 style={{
+              fontFamily:F, fontSize:"clamp(72px, 22vw, 112px)", fontWeight:300,
+              color:B.vellum, letterSpacing:"-0.025em", lineHeight:0.92,
+              margin:0,
+              textShadow:"0 4px 32px rgba(0,0,0,0.55), 0 1px 2px rgba(0,0,0,0.4)",
+              fontVariationSettings:"'opsz' 144, 'SOFT' 30",
+            }}>Rhei.</h1>
+            <p style={{
+              fontFamily:F, fontStyle:"italic", fontSize:16, fontWeight:400,
+              color:"rgba(248,242,229,0.85)",
+              letterSpacing:"0.02em", lineHeight:1.5,
+              margin:"22px auto 0", maxWidth:280,
+              textShadow:"0 2px 12px rgba(0,0,0,0.55)",
+            }}>Return to yourself.</p>
+          </div>
+
+          {/* CTAs — bottom anchor */}
+          <div className="rhei-rise rhei-rise-4" style={{display:"flex", flexDirection:"column", alignItems:"center", gap:14}}>
+            <button
+              className="rhei-press"
+              onClick={()=>{setAuthMode("signup");setStep("email");}}
+              style={{
+                width:"100%", maxWidth:340,
+                background:B.paper,
+                border:"none", borderRadius:100, padding:"18px 24px",
+                cursor:"pointer", color:B.espresso,
+                fontFamily:SF, fontSize:14, fontWeight:500,
+                letterSpacing:"0.04em",
+                boxShadow:"0 20px 60px -20px rgba(248,242,229,0.35), 0 8px 20px rgba(15,9,5,0.5)",
+              }}>
+              Enter
+            </button>
+
+            <button
+              className="rhei-press"
+              onClick={()=>{setAuthMode("signin");setStep("email");}}
+              style={{
+                background:"none", border:"none", cursor:"pointer",
+                color:"rgba(248,242,229,0.78)",
+                fontFamily:SF, fontSize:13, fontWeight:400,
+                letterSpacing:"0.04em",
+                padding:"10px 18px",
+                textShadow:"0 1px 8px rgba(0,0,0,0.5)",
+              }}>
+              I've been here before
+            </button>
+
+            <button
+              className="rhei-press"
+              onClick={()=>setStep(0)}
+              style={{
+                background:"none", border:"none", cursor:"pointer",
+                color:"rgba(248,242,229,0.5)",
+                fontFamily:SF, fontSize:11, fontWeight:400,
+                letterSpacing:"0.18em", textTransform:"uppercase",
+                padding:"6px",
+                marginTop:4,
+                textShadow:"0 1px 6px rgba(0,0,0,0.5)",
+              }}>
+              Just look around
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -758,68 +872,131 @@ function Onboarding({ onComplete, authUser }) {
     const isSignup = authMode === "signup";
     return (
       <div style={{
-        position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:200,
-        backgroundColor:B.warmBlack,
-        backgroundImage:`linear-gradient(180deg, rgba(26,15,6,0.7) 0%, rgba(26,15,6,0.55) 30%, rgba(26,15,6,0.85) 100%), url('/images/splash-hero.jpg')`,
-        backgroundSize:"cover",
-        backgroundPosition:"center",
-        backgroundRepeat:"no-repeat",
-        display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 22px",
+        position:"fixed",inset:0,zIndex:200,
+        background:`linear-gradient(180deg, #241509 0%, #1A0F06 55%, #0F0905 100%)`,
+        overflow:"hidden",
       }}>
-        <div style={{textAlign:"center",maxWidth:420,width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}>
-          {/* Back to splash */}
-          <button
-            onClick={()=>{setStep("splash");setAuthError("");}}
-            style={{position:"absolute",top:24,left:24,background:"none",border:"none",cursor:"pointer",color:B.creamMuted,fontSize:12,fontFamily:SF,padding:8,display:"flex",alignItems:"center",gap:4,textShadow:"0 1px 6px rgba(0,0,0,0.5)"}}>
-            <ChevronLeft size={14}/> Back
-          </button>
+        {/* Atmospheric light source */}
+        <div style={{
+          position:"absolute", top:"22%", left:"50%",
+          width:"120vmin", height:"120vmin", borderRadius:"50%",
+          background:"radial-gradient(circle, rgba(212,173,106,0.13) 0%, rgba(196,154,75,0.04) 35%, transparent 65%)",
+          filter:"blur(28px)",
+          transform:"translate(-50%, -50%)",
+          animation:"rhei-atmosphere-1 22s ease-in-out infinite",
+          pointerEvents:"none",
+        }}/>
+        <div className="rhei-grain"/>
 
-          <div style={{marginBottom:32,width:"100%"}}>
-            <div style={{width:48,height:48,borderRadius:"50%",background:"rgba(196,154,75,0.18)",border:`1px solid ${B.borderActive}`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px",backdropFilter:"blur(6px)"}}>
-              <Mail size={20} color={B.gold} strokeWidth={1.5}/>
-            </div>
-            <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 12px",textShadow:"0 1px 6px rgba(0,0,0,0.5)"}}>
-              {isSignup ? "Create your account" : "Welcome back"}
-            </p>
-            <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 12px",fontFamily:F,lineHeight:1.35,textShadow:"0 2px 12px rgba(0,0,0,0.5)"}}>
-              {isSignup ? "What email should we use?" : "What email did you sign up with?"}
+        {/* Back chevron */}
+        <button
+          className="rhei-press"
+          onClick={()=>{setStep("splash");setAuthError("");}}
+          style={{
+            position:"absolute", top:"calc(env(safe-area-inset-top, 0px) + 22px)", left:22,
+            background:"none", border:"none", cursor:"pointer",
+            color:"rgba(248,242,229,0.65)",
+            fontFamily:SF, fontSize:11, fontWeight:400, letterSpacing:"0.18em", textTransform:"uppercase",
+            padding:8, display:"flex", alignItems:"center", gap:6, zIndex:2,
+          }}>
+          <ChevronLeft size={13}/> Back
+        </button>
+
+        {/* Content */}
+        <div style={{
+          position:"relative", zIndex:1,
+          height:"100%",
+          display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center",
+          padding:"56px 28px",
+        }}>
+          <div style={{maxWidth:420, width:"100%", textAlign:"center"}}>
+            <p className="rhei-rise rhei-rise-1" style={{
+              fontFamily:SF, fontSize:10, fontWeight:500,
+              letterSpacing:"0.32em", textTransform:"uppercase",
+              color:"rgba(196,154,75,0.85)",
+              margin:"0 0 28px",
+            }}>{isSignup ? "Begin" : "Continue"}</p>
+
+            <h2 className="rhei-rise rhei-rise-2" style={{
+              fontFamily:F, fontSize:"clamp(34px, 9vw, 44px)", fontWeight:300,
+              color:B.vellum, letterSpacing:"-0.015em", lineHeight:1.08,
+              margin:"0 0 18px",
+              fontVariationSettings:"'opsz' 60",
+            }}>
+              {isSignup ? "Tell me where to find you." : "Welcome back."}
             </h2>
-            <p style={{fontSize:13,color:B.creamMuted,fontFamily:F,fontStyle:"italic",lineHeight:1.5,margin:"0 auto",maxWidth:320,textShadow:"0 1px 6px rgba(0,0,0,0.5)"}}>
-              We'll send a magic link. No password to remember.
-            </p>
+
+            <p className="rhei-rise rhei-rise-3" style={{
+              fontFamily:F, fontStyle:"italic", fontSize:15, fontWeight:400,
+              color:"rgba(248,242,229,0.7)",
+              lineHeight:1.55,
+              margin:"0 auto 44px", maxWidth:300,
+            }}>{isSignup ? "We'll send a link. No passwords." : "The email you came in with."}</p>
+
+            {/* Email input — bark surface, hairline, Fraunces italic placeholder */}
+            <div className="rhei-rise rhei-rise-4" style={{position:"relative", maxWidth:360, margin:"0 auto"}}>
+              <input
+                type="email"
+                value={email}
+                onChange={e=>setEmail(e.target.value)}
+                onKeyDown={e=>{if(e.key==="Enter")sendMagicLink();}}
+                placeholder="you@yours.com"
+                autoFocus
+                disabled={authLoading}
+                style={{
+                  width:"100%",
+                  background:"rgba(248,242,229,0.04)",
+                  backdropFilter:"blur(20px) saturate(1.2)",
+                  WebkitBackdropFilter:"blur(20px) saturate(1.2)",
+                  border:`1px solid ${email ? "rgba(196,154,75,0.45)" : "rgba(248,242,229,0.10)"}`,
+                  borderRadius:100,
+                  padding:"17px 26px",
+                  color:B.vellum,
+                  fontSize:16, fontFamily:F, fontStyle:email?"normal":"italic",
+                  outline:"none", textAlign:"center",
+                  boxSizing:"border-box",
+                  transition:"border-color 0.4s var(--rhei-ease), background 0.4s var(--rhei-ease)",
+                }}
+              />
+            </div>
+
+            {authError && (
+              <p style={{fontSize:13, color:B.rouge, fontFamily:F, fontStyle:"italic", margin:"16px auto 0", maxWidth:300, lineHeight:1.5}}>{authError}</p>
+            )}
+
+            <div className="rhei-rise rhei-rise-5" style={{marginTop:18, display:"flex", flexDirection:"column", alignItems:"center", gap:14}}>
+              <button
+                className="rhei-press"
+                onClick={sendMagicLink}
+                disabled={!email.trim() || authLoading}
+                style={{
+                  width:"100%", maxWidth:360,
+                  background: email.trim() && !authLoading ? B.paper : "rgba(248,242,229,0.10)",
+                  border:"none", borderRadius:100, padding:"18px 24px",
+                  cursor: email.trim() && !authLoading ? "pointer" : "not-allowed",
+                  color: email.trim() && !authLoading ? B.espresso : "rgba(248,242,229,0.4)",
+                  fontFamily:SF, fontSize:14, fontWeight:500, letterSpacing:"0.04em",
+                  boxShadow: email.trim() && !authLoading ? "0 16px 48px -16px rgba(248,242,229,0.3), 0 6px 16px rgba(15,9,5,0.5)" : "none",
+                  opacity: authLoading ? 0.6 : 1,
+                  transition:"all 0.4s var(--rhei-ease)",
+                }}>
+                {authLoading ? "Sending the link…" : "Send my link"}
+              </button>
+
+              <button
+                className="rhei-press"
+                onClick={()=>setStep(0)}
+                style={{
+                  background:"none", border:"none", cursor:"pointer",
+                  color:"rgba(248,242,229,0.5)",
+                  fontFamily:SF, fontSize:11, fontWeight:400,
+                  letterSpacing:"0.18em", textTransform:"uppercase",
+                  padding:8,
+                }}>
+                Set this up later
+              </button>
+            </div>
           </div>
-
-          {/* Email input */}
-          <input
-            type="email"
-            value={email}
-            onChange={e=>setEmail(e.target.value)}
-            onKeyDown={e=>{if(e.key==="Enter")sendMagicLink();}}
-            placeholder="you@example.com"
-            autoFocus
-            disabled={authLoading}
-            style={{width:"100%",maxWidth:340,background:B.card,border:`1px solid ${email?B.borderActive:B.border}`,borderRadius:14,padding:"16px 18px",color:B.cream,fontSize:16,fontFamily:SF,outline:"none",textAlign:"center",boxSizing:"border-box",transition:"border-color 0.3s",marginBottom:14}}
-          />
-
-          {/* Error message */}
-          {authError && (
-            <p style={{fontSize:12,color:"#C4786A",fontFamily:SF,margin:"0 0 14px",maxWidth:320,lineHeight:1.5}}>{authError}</p>
-          )}
-
-          {/* Send button */}
-          <button
-            onClick={sendMagicLink}
-            disabled={!email.trim() || authLoading}
-            style={{width:"100%",maxWidth:300,background:email.trim()&&!authLoading?B.goldGrad:`${B.gold}20`,border:"none",borderRadius:28,padding:"15px",cursor:email.trim()&&!authLoading?"pointer":"not-allowed",color:email.trim()&&!authLoading?B.warmBlack:B.muted,fontSize:13,fontFamily:SF,letterSpacing:2,fontWeight:700,opacity:email.trim()&&!authLoading?1:0.5,transition:"all 0.3s",marginBottom:16}}>
-            {authLoading ? "Sending..." : "Send magic link"}
-          </button>
-
-          {/* Skip */}
-          <button
-            onClick={()=>setStep(0)}
-            style={{background:"none",border:"none",cursor:"pointer",color:B.muted,fontSize:11,fontFamily:SF,padding:6,letterSpacing:0.5}}>
-            I'll set this up later
-          </button>
         </div>
       </div>
     );
@@ -829,145 +1006,335 @@ function Onboarding({ onComplete, authUser }) {
   if (step === "linkSent") {
     return (
       <div style={{
-        position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:200,
-        backgroundColor:B.warmBlack,
-        backgroundImage:`linear-gradient(180deg, rgba(26,15,6,0.65) 0%, rgba(26,15,6,0.5) 35%, rgba(26,15,6,0.85) 100%), url('/images/splash-hero.jpg')`,
-        backgroundSize:"cover",
-        backgroundPosition:"center",
-        backgroundRepeat:"no-repeat",
-        display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 22px",
+        position:"fixed",inset:0,zIndex:200,
+        background:`linear-gradient(180deg, #241509 0%, #1A0F06 55%, #0F0905 100%)`,
+        overflow:"hidden",
       }}>
-        <div style={{textAlign:"center",maxWidth:420,width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}>
-          <div style={{width:64,height:64,borderRadius:"50%",background:"rgba(196,154,75,0.18)",border:`1px solid ${B.borderActive}`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 28px",backdropFilter:"blur(6px)"}}>
-            <Check size={26} color={B.gold} strokeWidth={1.5}/>
+        {/* Slowly breathing light — the email is in flight, this screen waits */}
+        <div style={{
+          position:"absolute", top:"40%", left:"50%",
+          width:"110vmin", height:"110vmin", borderRadius:"50%",
+          background:"radial-gradient(circle, rgba(212,173,106,0.16) 0%, rgba(196,154,75,0.05) 35%, transparent 65%)",
+          filter:"blur(28px)",
+          transform:"translate(-50%, -50%)",
+          animation:"rhei-atmosphere-1 14s ease-in-out infinite",
+          pointerEvents:"none",
+        }}/>
+        <div className="rhei-grain"/>
+
+        <div style={{
+          position:"relative", zIndex:1,
+          height:"100%",
+          display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center",
+          padding:"56px 28px", textAlign:"center",
+        }}>
+          <div style={{maxWidth:420, width:"100%"}}>
+            <p className="rhei-rise rhei-rise-1" style={{
+              fontFamily:SF, fontSize:10, fontWeight:500,
+              letterSpacing:"0.32em", textTransform:"uppercase",
+              color:"rgba(196,154,75,0.85)",
+              margin:"0 0 28px",
+            }}>Sent</p>
+
+            <h2 className="rhei-rise rhei-rise-2" style={{
+              fontFamily:F, fontSize:"clamp(34px, 9vw, 44px)", fontWeight:300,
+              color:B.vellum, letterSpacing:"-0.015em", lineHeight:1.08,
+              margin:"0 0 22px",
+              fontVariationSettings:"'opsz' 60",
+            }}>Check your inbox.</h2>
+
+            <p className="rhei-rise rhei-rise-3" style={{
+              fontFamily:F, fontStyle:"italic", fontSize:15, fontWeight:400,
+              color:"rgba(248,242,229,0.7)",
+              lineHeight:1.6,
+              margin:"0 auto 14px", maxWidth:340,
+            }}>
+              The link is on its way to <span style={{color:B.vellum, fontStyle:"normal"}}>{email}</span>.
+            </p>
+            <p className="rhei-rise rhei-rise-3" style={{
+              fontFamily:F, fontStyle:"italic", fontSize:13, fontWeight:400,
+              color:"rgba(248,242,229,0.5)",
+              lineHeight:1.6,
+              margin:"0 auto 44px", maxWidth:320,
+            }}>Open it from this device. It may take a moment.</p>
+
+            <div className="rhei-rise rhei-rise-4" style={{display:"flex", flexDirection:"column", alignItems:"center", gap:14}}>
+              <button
+                className="rhei-press"
+                onClick={()=>{setStep("email");setAuthError("");}}
+                style={{
+                  background:"rgba(248,242,229,0.04)",
+                  backdropFilter:"blur(20px) saturate(1.2)",
+                  WebkitBackdropFilter:"blur(20px) saturate(1.2)",
+                  border:"1px solid rgba(248,242,229,0.10)", borderRadius:100,
+                  padding:"14px 26px", cursor:"pointer",
+                  color:B.paper,
+                  fontFamily:SF, fontSize:13, fontWeight:400, letterSpacing:"0.04em",
+                }}>
+                Use a different email
+              </button>
+
+              <button
+                className="rhei-press"
+                onClick={()=>setStep(0)}
+                style={{
+                  background:"none", border:"none", cursor:"pointer",
+                  color:"rgba(248,242,229,0.5)",
+                  fontFamily:SF, fontSize:11, fontWeight:400,
+                  letterSpacing:"0.18em", textTransform:"uppercase",
+                  padding:8,
+                }}>
+                Look around without one
+              </button>
+            </div>
           </div>
-          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 14px",textShadow:"0 1px 6px rgba(0,0,0,0.5)"}}>Check your inbox</p>
-          <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 14px",fontFamily:F,lineHeight:1.35,maxWidth:340,textShadow:"0 2px 12px rgba(0,0,0,0.5)"}}>
-            A magic link is on its way.
-          </h2>
-          <p style={{fontSize:14,color:B.creamMuted,fontFamily:F,fontStyle:"italic",lineHeight:1.6,margin:"0 0 8px",maxWidth:340,textShadow:"0 1px 6px rgba(0,0,0,0.5)"}}>
-            We sent it to <span style={{color:B.cream,fontStyle:"normal"}}>{email}</span>.
-          </p>
-          <p style={{fontSize:12,color:B.creamMuted,fontFamily:F,lineHeight:1.55,margin:"0 0 36px",maxWidth:320,textShadow:"0 1px 6px rgba(0,0,0,0.5)"}}>
-            Tap the link in the email to come back, signed in. It might take a minute to arrive — check spam if you don't see it.
-          </p>
-
-          {/* Try a different email */}
-          <button
-            onClick={()=>{setStep("email");setAuthError("");}}
-            style={{background:"none",border:`1px solid ${B.border}`,borderRadius:22,padding:"10px 22px",cursor:"pointer",color:B.cream,fontSize:12,fontFamily:SF,letterSpacing:0.5,marginBottom:12}}>
-            Try a different email
-          </button>
-
-          {/* Skip — continue without waiting */}
-          <button
-            onClick={()=>setStep(0)}
-            style={{background:"none",border:"none",cursor:"pointer",color:B.muted,fontSize:11,fontFamily:SF,padding:6,letterSpacing:0.5}}>
-            Continue without account
-          </button>
         </div>
       </div>
     );
   }
 
-  // Explainer screens (steps 0, 1, 2) share a layout — content varies by step
+  // Explainer screens (steps 0, 1, 2) — three declarative moments, not a tutorial.
+  // Each screen is one statement. The body line either expands or contradicts it.
+  // Voice: Joan Didion meets Phoebe Philo. No instructions, no marketing.
   const explainerSteps = [
     {
-      eyebrow: "What this is",
-      heading: "A practice for the over-feeling, over-doing nervous system.",
-      body: "Three-minute resets. Quick face rituals. Tools to come back to yourself, between everything that asks for your attention.",
+      numeral: "I",
+      heading: "There is nothing to fix.",
+      body: "This is not a goal. It's a place to come back to.",
     },
     {
-      eyebrow: "Why your face",
-      heading: "Your face holds what your nervous system holds.",
-      body: "The jaw clench. The brow tension. The puffiness after a heavy week. Working with the face is one of the fastest ways to regulate the system underneath it.",
+      numeral: "II",
+      heading: "Your face is the surface of your nervous system.",
+      body: "Working with the surface is one of the fastest ways to settle what's underneath.",
     },
     {
-      eyebrow: "How it works",
-      heading: "Open it when you need it. That's the practice.",
-      body: "Tell us how you're showing up today. We'll match you with what your body needs — an audio reset, a face ritual, or a quick intervention. Three minutes or less. As often as you want.",
+      numeral: "III",
+      heading: "Take what you need. Leave the rest.",
+      body: "Open it when something is too much. Close it when something is enough.",
     },
   ];
 
   if (step <= 2) {
     const s = explainerSteps[step];
-    const isFirst = step === 0;
-    // Step 0 ("What this is") gets a lighter overlay so the image is more present.
-    // Steps 1-2 use a heavier overlay since they have more body copy that needs to read clearly.
-    const overlay = isFirst
-      ? "linear-gradient(180deg, rgba(26,15,6,0.5) 0%, rgba(26,15,6,0.55) 40%, rgba(26,15,6,0.85) 100%)"
-      : "linear-gradient(180deg, rgba(26,15,6,0.78) 0%, rgba(26,15,6,0.82) 50%, rgba(26,15,6,0.92) 100%)";
     return (
       <div style={{
-        position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:200,
-        backgroundColor:B.warmBlack,
-        backgroundImage:`${overlay}, url('/images/splash-hero.jpg')`,
-        backgroundSize:"cover",
-        backgroundPosition:"center",
-        backgroundRepeat:"no-repeat",
-        display:"flex",alignItems:"center",justifyContent:"center",padding:"32px 22px",
+        position:"fixed",inset:0,zIndex:200,
+        background:`linear-gradient(180deg, #241509 0%, #1A0F06 55%, #0F0905 100%)`,
+        overflow:"hidden",
       }}>
-        <div style={{textAlign:"center",maxWidth:420,width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}>
-          {/* Logo, only on first screen */}
-          {isFirst && (
-            <div style={{marginBottom:36}}>
-              <h1 style={{fontSize:42,letterSpacing:0,color:B.cream,fontWeight:400,margin:"0 0 14px",fontFamily:F,lineHeight:1,textShadow:"0 2px 16px rgba(0,0,0,0.55)"}}>Rhei.</h1>
-              <div style={{width:50,height:1,background:B.gold,margin:"0 auto",opacity:0.5}}/>
+        {/* Atmospheric light source — shifts position per step for visual variation */}
+        <div style={{
+          position:"absolute",
+          top: step === 0 ? "28%" : step === 1 ? "42%" : "58%",
+          left: step === 1 ? "70%" : "50%",
+          width:"130vmin", height:"130vmin", borderRadius:"50%",
+          background:"radial-gradient(circle, rgba(212,173,106,0.16) 0%, rgba(196,154,75,0.05) 35%, transparent 65%)",
+          filter:"blur(28px)",
+          transform:"translate(-50%, -50%)",
+          animation:"rhei-atmosphere-1 22s ease-in-out infinite",
+          pointerEvents:"none",
+        }}/>
+        {/* Counter light, cooler */}
+        <div style={{
+          position:"absolute",
+          top: step === 0 ? "80%" : step === 1 ? "20%" : "85%",
+          left: step === 1 ? "20%" : "75%",
+          width:"100vmin", height:"100vmin", borderRadius:"50%",
+          background:"radial-gradient(circle, rgba(232,210,164,0.06) 0%, transparent 60%)",
+          filter:"blur(36px)",
+          transform:"translate(-50%, -50%)",
+          animation:"rhei-atmosphere-2 28s ease-in-out infinite",
+          pointerEvents:"none",
+        }}/>
+        <div className="rhei-grain"/>
+
+        {/* Skip — discreet, top-right */}
+        <button
+          className="rhei-press"
+          onClick={()=>setStep(3)}
+          style={{
+            position:"absolute", top:"calc(env(safe-area-inset-top, 0px) + 22px)", right:22,
+            background:"none", border:"none", cursor:"pointer",
+            color:"rgba(248,242,229,0.45)",
+            fontFamily:SF, fontSize:10, fontWeight:400,
+            letterSpacing:"0.22em", textTransform:"uppercase",
+            padding:8, zIndex:2,
+          }}>
+          Skip
+        </button>
+
+        {/* Content */}
+        <div key={step} style={{
+          position:"relative", zIndex:1,
+          height:"100%",
+          display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center",
+          padding:"56px 28px", textAlign:"center",
+        }}>
+          <div style={{maxWidth:480, width:"100%"}}>
+            {/* Numeral — large, Fraunces, low-opacity, atmospheric */}
+            <p key={`n-${step}`} className="rhei-rise rhei-rise-1" style={{
+              fontFamily:F, fontStyle:"italic",
+              fontSize:14, fontWeight:400,
+              color:"rgba(196,154,75,0.7)",
+              letterSpacing:"0.08em",
+              margin:"0 0 56px",
+            }}>{s.numeral}</p>
+
+            {/* Heading — the statement */}
+            <h2 key={`h-${step}`} className="rhei-rise rhei-rise-2" style={{
+              fontFamily:F, fontSize:"clamp(30px, 8vw, 42px)", fontWeight:300,
+              color:B.vellum, letterSpacing:"-0.015em", lineHeight:1.12,
+              margin:"0 0 28px",
+              maxWidth:460,
+              fontVariationSettings:"'opsz' 60",
+            }}>{s.heading}</h2>
+
+            {/* Body — the breath after */}
+            <p key={`b-${step}`} className="rhei-rise rhei-rise-3" style={{
+              fontFamily:F, fontStyle:"italic", fontSize:16, fontWeight:400,
+              color:"rgba(248,242,229,0.62)",
+              lineHeight:1.55,
+              margin:"0 auto 64px", maxWidth:380,
+            }}>{s.body}</p>
+
+            {/* Progress — hairline marks, not dots */}
+            <div className="rhei-rise rhei-rise-4" style={{display:"flex", justifyContent:"center", gap:8, marginBottom:48}}>
+              {[0,1,2].map(i => (
+                <div key={i} style={{
+                  width: i === step ? 32 : 12,
+                  height: 1,
+                  background: i === step ? B.polished : i < step ? "rgba(212,173,106,0.5)" : "rgba(248,242,229,0.18)",
+                  transition: "width 0.6s var(--rhei-ease), background 0.6s var(--rhei-ease)",
+                }}/>
+              ))}
             </div>
-          )}
 
-          {/* Eyebrow */}
-          <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 14px",textShadow:"0 1px 6px rgba(0,0,0,0.5)"}}>{s.eyebrow}</p>
-
-          {/* Heading */}
-          <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 18px",fontFamily:F,lineHeight:1.35,textShadow:"0 2px 12px rgba(0,0,0,0.5)"}}>{s.heading}</h2>
-
-          {/* Body */}
-          <p style={{fontSize:14,color:B.creamMuted,fontFamily:F,fontStyle:"italic",lineHeight:1.6,margin:"0 0 40px",maxWidth:340,textShadow:"0 1px 8px rgba(0,0,0,0.55)"}}>{s.body}</p>
-
-          {/* Progress dots */}
-          <div style={{display:"flex",gap:6,marginBottom:32}}>
-            {[0,1,2].map(i => (
-              <div key={i} style={{width:i===step?16:5,height:5,borderRadius:3,background:i===step?B.gold:`${B.gold}30`,transition:"width 0.3s"}}/>
-            ))}
+            {/* CTA — Paper button, the brand's primary surface */}
+            <div className="rhei-rise rhei-rise-5" style={{display:"flex", flexDirection:"column", alignItems:"center", gap:12}}>
+              <button
+                className="rhei-press"
+                onClick={()=>setStep(step+1)}
+                style={{
+                  width:"100%", maxWidth:320,
+                  background:B.paper,
+                  border:"none", borderRadius:100, padding:"17px 24px",
+                  cursor:"pointer", color:B.espresso,
+                  fontFamily:SF, fontSize:14, fontWeight:500, letterSpacing:"0.04em",
+                  boxShadow:"0 16px 48px -16px rgba(248,242,229,0.25), 0 6px 16px rgba(15,9,5,0.5)",
+                }}>
+                {step === 2 ? "Begin" : "Continue"}
+              </button>
+            </div>
           </div>
-
-          {/* Continue button */}
-          <button
-            onClick={()=>setStep(step+1)}
-            style={{width:"100%",maxWidth:280,background:B.goldGrad,border:"none",borderRadius:28,padding:"15px",cursor:"pointer",color:B.warmBlack,fontSize:13,fontFamily:SF,letterSpacing:2,fontWeight:700,boxShadow:B.goldGlow}}
-            className="rhei-gold-shimmer">
-            {step === 2 ? "Begin" : "Continue"}
-          </button>
-
-          {/* Skip intro link */}
-          <button
-            onClick={()=>setStep(3)}
-            style={{background:"none",border:"none",cursor:"pointer",color:B.creamMuted,fontSize:11,fontFamily:SF,marginTop:18,padding:6,letterSpacing:0.5,textShadow:"0 1px 6px rgba(0,0,0,0.5)"}}>
-            Skip intro
-          </button>
         </div>
       </div>
     );
   }
 
-  // Step 3: name input
+  // Step 3: name input — the threshold moment
   return (
-    <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:B.darkGrad,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center"}}>
-      <div style={{textAlign:"center",padding:"32px 28px",maxWidth:380,width:"100%"}}>
-        <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,marginBottom:20}}>Personalize your experience</p>
-        <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 8px",fontFamily:F}}>What should we call you?</h2>
-        <p style={{fontSize:13,color:B.muted,fontStyle:"italic",marginBottom:36}}>This is your space. Make it yours.</p>
-        <input
-          type="text" value={name} onChange={e=>setName(e.target.value)}
-          placeholder="Your first name"
-          autoFocus
-          style={{width:"100%",background:B.card,border:`1px solid ${name?B.borderActive:B.border}`,borderRadius:14,padding:"16px 18px",color:B.cream,fontSize:16,fontFamily:SF,outline:"none",textAlign:"center",boxSizing:"border-box",transition:"border-color 0.3s"}}
-        />
-        <button onClick={()=>{if(name.trim()){save('userName',name.trim());onComplete(name.trim());}}} disabled={!name.trim()} style={{width:"100%",marginTop:20,background:name.trim()?B.goldGrad:`${B.gold}20`,border:"none",borderRadius:28,padding:"16px",cursor:name.trim()?"pointer":"not-allowed",color:name.trim()?B.warmBlack:B.muted,fontSize:14,fontFamily:SF,letterSpacing:1,fontWeight:600,opacity:name.trim()?1:0.5,transition:"all 0.3s"}}>
-          Continue
-        </button>
-        <button onClick={()=>{save('userName','');onComplete('');}} style={{background:"none",border:"none",cursor:"pointer",color:B.muted,fontSize:12,fontFamily:SF,marginTop:16,padding:8}}>Skip for now</button>
+    <div style={{
+      position:"fixed", inset:0, zIndex:200,
+      background:`linear-gradient(180deg, #241509 0%, #1A0F06 55%, #0F0905 100%)`,
+      overflow:"hidden",
+    }}>
+      {/* Atmospheric light — settled, low, warm */}
+      <div style={{
+        position:"absolute", top:"55%", left:"50%",
+        width:"120vmin", height:"120vmin", borderRadius:"50%",
+        background:"radial-gradient(circle, rgba(212,173,106,0.16) 0%, rgba(196,154,75,0.05) 35%, transparent 65%)",
+        filter:"blur(28px)",
+        transform:"translate(-50%, -50%)",
+        animation:"rhei-atmosphere-1 22s ease-in-out infinite",
+        pointerEvents:"none",
+      }}/>
+      <div className="rhei-grain"/>
+
+      <div style={{
+        position:"relative", zIndex:1,
+        height:"100%",
+        display:"flex", flexDirection:"column", justifyContent:"center", alignItems:"center",
+        padding:"56px 28px", textAlign:"center",
+      }}>
+        <div style={{maxWidth:420, width:"100%"}}>
+          <p className="rhei-rise rhei-rise-1" style={{
+            fontFamily:SF, fontSize:10, fontWeight:500,
+            letterSpacing:"0.32em", textTransform:"uppercase",
+            color:"rgba(196,154,75,0.85)",
+            margin:"0 0 28px",
+          }}>One more thing</p>
+
+          <h2 className="rhei-rise rhei-rise-2" style={{
+            fontFamily:F, fontSize:"clamp(34px, 9vw, 44px)", fontWeight:300,
+            color:B.vellum, letterSpacing:"-0.015em", lineHeight:1.1,
+            margin:"0 0 18px",
+            fontVariationSettings:"'opsz' 60",
+          }}>What should I call you?</h2>
+
+          <p className="rhei-rise rhei-rise-3" style={{
+            fontFamily:F, fontStyle:"italic", fontSize:15, fontWeight:400,
+            color:"rgba(248,242,229,0.65)",
+            lineHeight:1.55,
+            margin:"0 auto 44px", maxWidth:300,
+          }}>This stays between us.</p>
+
+          <div className="rhei-rise rhei-rise-4" style={{position:"relative", maxWidth:360, margin:"0 auto"}}>
+            <input
+              type="text"
+              value={name}
+              onChange={e=>setName(e.target.value)}
+              onKeyDown={e=>{if(e.key==="Enter" && name.trim()){save('userName',name.trim());onComplete(name.trim());}}}
+              placeholder="Your name"
+              autoFocus
+              style={{
+                width:"100%",
+                background:"rgba(248,242,229,0.04)",
+                backdropFilter:"blur(20px) saturate(1.2)",
+                WebkitBackdropFilter:"blur(20px) saturate(1.2)",
+                border:`1px solid ${name ? "rgba(196,154,75,0.45)" : "rgba(248,242,229,0.10)"}`,
+                borderRadius:100,
+                padding:"17px 26px",
+                color:B.vellum,
+                fontSize:16, fontFamily:F, fontStyle:name?"normal":"italic",
+                outline:"none", textAlign:"center",
+                boxSizing:"border-box",
+                transition:"border-color 0.4s var(--rhei-ease), background 0.4s var(--rhei-ease)",
+              }}
+            />
+          </div>
+
+          <div className="rhei-rise rhei-rise-5" style={{marginTop:20, display:"flex", flexDirection:"column", alignItems:"center", gap:14}}>
+            <button
+              className="rhei-press"
+              onClick={()=>{if(name.trim()){save('userName',name.trim());onComplete(name.trim());}}}
+              disabled={!name.trim()}
+              style={{
+                width:"100%", maxWidth:360,
+                background: name.trim() ? B.paper : "rgba(248,242,229,0.10)",
+                border:"none", borderRadius:100, padding:"18px 24px",
+                cursor: name.trim() ? "pointer" : "not-allowed",
+                color: name.trim() ? B.espresso : "rgba(248,242,229,0.4)",
+                fontFamily:SF, fontSize:14, fontWeight:500, letterSpacing:"0.04em",
+                boxShadow: name.trim() ? "0 16px 48px -16px rgba(248,242,229,0.3), 0 6px 16px rgba(15,9,5,0.5)" : "none",
+                transition:"all 0.4s var(--rhei-ease)",
+              }}>
+              Enter
+            </button>
+
+            <button
+              className="rhei-press"
+              onClick={()=>{save('userName','');onComplete('');}}
+              style={{
+                background:"none", border:"none", cursor:"pointer",
+                color:"rgba(248,242,229,0.5)",
+                fontFamily:SF, fontSize:11, fontWeight:400,
+                letterSpacing:"0.18em", textTransform:"uppercase",
+                padding:8,
+              }}>
+              Skip
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

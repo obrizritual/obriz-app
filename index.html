@@ -3,46 +3,170 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#2D1B0E" />
+  <meta name="theme-color" content="#1A0F06" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="RHEI" />
-  <meta name="description" content="RHEI — Luxury Nervous System Wellness. Precision regulation for those who run everything." />
+  <meta name="description" content="RHEI — A practice for the nervous system that runs everything." />
   <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="msapplication-TileColor" content="#2D1B0E" />
-  <meta name="msapplication-navbutton-color" content="#2D1B0E" />
-  <meta property="og:title" content="RHEI — Nervous System Wellness" />
-  <meta property="og:description" content="Precision nervous system regulation for those who run everything." />
+  <meta name="msapplication-TileColor" content="#1A0F06" />
+  <meta name="msapplication-navbutton-color" content="#1A0F06" />
+  <meta property="og:title" content="RHEI" />
+  <meta property="og:description" content="A practice for the nervous system that runs everything." />
   <meta property="og:type" content="website" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="apple-touch-icon" href="/icon-192.png" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
   <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
-  <!-- iOS splash screens — generic fallback -->
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>RHEI — Nervous System Wellness</title>
+
+  <!-- Typography: Fraunces (variable serif) + Inter (UI sans). Preconnect for fastest paint. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Inter:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Inter:wght@400;500;600&display=swap">
+
+  <title>RHEI</title>
+
   <style>
+    /* ── Reset ─────────────────────────────────────────────────────────────── */
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    html, body, #root { width: 100%; height: 100%; background: #2D1B0E; overflow-x: hidden; }
-    body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    html, body, #root { width: 100%; height: 100%; background: #0F0905; overflow-x: hidden; }
+    body {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: #F2E8D9;
+      text-rendering: optimizeLegibility;
+    }
     @media (display-mode: standalone) {
       body { padding-top: env(safe-area-inset-top); }
     }
-    /* Splash / loading state before React hydrates */
+
+    /* ── Design system CSS variables ───────────────────────────────────────── */
+    :root {
+      --rhei-obsidian: #0F0905;
+      --rhei-espresso: #1A0F06;
+      --rhei-walnut:   #241509;
+      --rhei-cocoa:    #2D1B0E;
+      --rhei-bark:     #3A2516;
+      --rhei-suede:    #4A3120;
+
+      --rhei-antique:    #A07D3A;
+      --rhei-champagne:  #C49A4B;
+      --rhei-polished:   #D4AD6A;
+      --rhei-vellum-gold:#E8D2A4;
+
+      --rhei-vellum: #F8F2E5;
+      --rhei-paper:  #F2E8D9;
+      --rhei-eggshell:#E2D3B9;
+      --rhei-linen:  #C9B99F;
+
+      --rhei-smoke: #8A7560;
+      --rhei-sage:  #7A8674;
+      --rhei-rouge: #C4786A;
+      --rhei-ash:   #5C4B3A;
+
+      --rhei-ease:       cubic-bezier(0.22, 0.61, 0.36, 1);
+      --rhei-ease-in:    cubic-bezier(0.7, 0, 0.84, 0);
+      --rhei-ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+
+      --rhei-font-serif: 'Fraunces', 'Tiempos', Georgia, serif;
+      --rhei-font-sans:  'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* ── Pre-hydration splash ─────────────────────────────────────────────── */
     #root:empty {
       display: flex; align-items: center; justify-content: center;
+      background:
+        radial-gradient(ellipse at 50% 35%, rgba(196,154,75,0.10) 0%, transparent 55%),
+        radial-gradient(ellipse at 30% 100%, rgba(196,154,75,0.04) 0%, transparent 60%),
+        linear-gradient(180deg, #1A0F06 0%, #0F0905 100%);
     }
     #root:empty::after {
-      content: 'RHEI';
-      font-family: Georgia, 'Times New Roman', serif;
-      font-size: 2.4rem;
-      letter-spacing: 0.25em;
-      color: #C49A4B;
-      animation: pulse 1.8s ease-in-out infinite;
+      content: 'Rhei.';
+      font-family: 'Fraunces', Georgia, serif;
+      font-size: 3.2rem;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      color: var(--rhei-paper);
+      animation: rhei-splash-breath 2.4s var(--rhei-ease) infinite alternate;
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 0.3; }
-      50% { opacity: 1; }
+    @keyframes rhei-splash-breath {
+      0%   { opacity: 0.55; transform: translateY(2px); }
+      100% { opacity: 1;    transform: translateY(0); }
+    }
+
+    /* ── Atmospheric utilities ────────────────────────────────────────────── */
+
+    /* Ken Burns: slow, alternating scale + drift for hero photography */
+    @keyframes rhei-kenburns {
+      0%   { transform: scale(1.02) translate(0, 0); }
+      100% { transform: scale(1.10) translate(-1.2%, -1.5%); }
+    }
+    .rhei-kenburns {
+      animation: rhei-kenburns 24s var(--rhei-ease) infinite alternate;
+      will-change: transform;
+    }
+
+    /* Atmospheric breathing — for the radial light sources on dark backgrounds */
+    @keyframes rhei-atmosphere-1 {
+      0%, 100% { opacity: 0.55; transform: translate(-50%, -50%) scale(1); }
+      50%      { opacity: 0.85; transform: translate(-50%, -50%) scale(1.15); }
+    }
+    @keyframes rhei-atmosphere-2 {
+      0%, 100% { opacity: 0.35; transform: translate(-50%, -50%) scale(1.1) rotate(0deg); }
+      50%      { opacity: 0.6;  transform: translate(-50%, -50%) scale(0.92) rotate(-8deg); }
+    }
+
+    /* Fade-up entrance for content reveals (use on key text) */
+    @keyframes rhei-rise {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .rhei-rise { animation: rhei-rise 0.9s var(--rhei-ease-enter) both; }
+    .rhei-rise-1 { animation-delay: 0.05s; }
+    .rhei-rise-2 { animation-delay: 0.22s; }
+    .rhei-rise-3 { animation-delay: 0.42s; }
+    .rhei-rise-4 { animation-delay: 0.62s; }
+    .rhei-rise-5 { animation-delay: 0.82s; }
+
+    /* Film grain via SVG turbulence — sits at 5% opacity over backgrounds */
+    .rhei-grain {
+      position: absolute; inset: 0;
+      pointer-events: none;
+      opacity: 0.07;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.95  0 0 0 0 0.85  0 0 0 0 0.65  0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    }
+
+    /* Button press feedback — universal */
+    .rhei-press { transition: transform 0.18s var(--rhei-ease), opacity 0.18s var(--rhei-ease); }
+    .rhei-press:active { transform: scale(0.97); opacity: 0.92; }
+
+    /* Hairline border helper */
+    .rhei-hairline { border: 1px solid rgba(248,242,229,0.08); }
+
+    /* Glass surfaces */
+    .rhei-glass-thin {
+      background: rgba(248,242,229,0.04);
+      backdrop-filter: blur(12px) saturate(1.2);
+      -webkit-backdrop-filter: blur(12px) saturate(1.2);
+    }
+    .rhei-glass {
+      background: rgba(248,242,229,0.06);
+      backdrop-filter: blur(20px) saturate(1.2);
+      -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    }
+    .rhei-glass-deep {
+      background: rgba(248,242,229,0.08);
+      backdrop-filter: blur(36px) saturate(1.4);
+      -webkit-backdrop-filter: blur(36px) saturate(1.4);
+    }
+
+    /* Long press shimmer on primary CTAs */
+    @keyframes rhei-shimmer {
+      0% { background-position: -120% 0; }
+      100% { background-position: 220% 0; }
     }
   </style>
 </head>
