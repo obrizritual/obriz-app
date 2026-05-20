@@ -168,6 +168,28 @@
       0% { background-position: -120% 0; }
       100% { background-position: 220% 0; }
     }
+
+    /* Ember pulse — for the bright core of a sun-bloom. Smaller, faster than atmosphere-1. */
+    @keyframes rhei-ember {
+      0%, 100% { opacity: 0.85; transform: translate(-50%, -50%) scale(1); }
+      50%      { opacity: 1;    transform: translate(-50%, -50%) scale(1.12); }
+    }
+
+    /* Golden dust particles — three drift cycles so they don't move in lockstep */
+    @keyframes rhei-drift-0 {
+      0%, 100% { transform: translate(0, 0); opacity: 0.4; }
+      33%      { transform: translate(8vmin, -6vmin); opacity: 0.85; }
+      66%      { transform: translate(-4vmin, 4vmin); opacity: 0.55; }
+    }
+    @keyframes rhei-drift-1 {
+      0%, 100% { transform: translate(0, 0); opacity: 0.35; }
+      40%      { transform: translate(-10vmin, -8vmin); opacity: 0.7; }
+      70%      { transform: translate(6vmin, 5vmin); opacity: 0.5; }
+    }
+    @keyframes rhei-drift-2 {
+      0%, 100% { transform: translate(0, 0); opacity: 0.5; }
+      50%      { transform: translate(5vmin, -10vmin); opacity: 0.85; }
+    }
   </style>
 </head>
 <body>

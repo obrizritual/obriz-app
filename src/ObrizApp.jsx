@@ -35,11 +35,14 @@ const B = {
   bark:     "#3A2516",
   suede:    "#4A3120",
 
-  // ── Champagne / metallics ──
+  // ── Champagne / metallics — the brand's "light source" within the night ──
   antique:    "#A07D3A",
   champagne:  "#C49A4B",   // primary brand gold
   polished:   "#D4AD6A",   // hover / lustre
   vellumGold: "#E8D2A4",
+  amberGlow:  "#E8C088",   // warm bloom hue (radial gradient cores)
+  honeyDeep:  "#B88940",   // deeper honey for layered glow
+  emberCore:  "#F5D89A",   // brightest spot in a sun-bloom radial
 
   // ── Creams / paper ──
   vellum:   "#F8F2E5",
@@ -769,6 +772,102 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
 
 
 // ══════════════════════════════════
+// GOLDEN-HOUR ATMOSPHERE
+// ══════════════════════════════════
+// Reusable cinematic light stack used on every full-screen surface.
+// Composes: ember core, sun bloom, deep haze, god rays, drifting dust,
+// edge vignette, film grain. Light DOMINATES the visible area; dark walnut
+// is preserved at the edges as atmospheric containment.
+//
+// Tunable: light position (so each screen has its own light direction),
+// intensity (0-1), and whether to render the particle layer (skip on
+// dense content screens).
+function GoldenHourAtmosphere({
+  top = "34%", left = "50%",
+  intensity = 1,
+  particles = true,
+  vignette = true,
+}) {
+  // Scale opacity values by intensity so it's easy to dial up/down per screen.
+  const ember = 0.55 * intensity;
+  const bloomCore = 0.42 * intensity;
+  const bloomMid = 0.22 * intensity;
+  const bloomEdge = 0.10 * intensity;
+  const haze = 0.20 * intensity;
+  return (
+    <>
+      {/* Ember core — brightest hot point */}
+      <div style={{
+        position:"absolute", top, left,
+        width:"42vmin", height:"42vmin", borderRadius:"50%",
+        background:`radial-gradient(circle, rgba(245,216,154,${ember}) 0%, rgba(232,192,136,${ember*0.55}) 30%, transparent 65%)`,
+        filter:"blur(22px)",
+        transform:"translate(-50%, -50%)",
+        animation:"rhei-ember 14s ease-in-out infinite",
+        pointerEvents:"none", mixBlendMode:"screen",
+      }}/>
+      {/* Sun bloom — large warm halo */}
+      <div style={{
+        position:"absolute", top, left,
+        width:"145vmin", height:"145vmin", borderRadius:"50%",
+        background:`radial-gradient(circle, rgba(232,192,136,${bloomCore}) 0%, rgba(212,173,106,${bloomMid}) 22%, rgba(196,154,75,${bloomEdge}) 42%, rgba(196,154,75,${bloomEdge*0.3}) 60%, transparent 75%)`,
+        filter:"blur(32px)",
+        transform:"translate(-50%, -50%)",
+        animation:"rhei-atmosphere-1 22s ease-in-out infinite",
+        pointerEvents:"none", mixBlendMode:"screen",
+      }}/>
+      {/* Counter haze — deeper amber, opposite corner */}
+      <div style={{
+        position:"absolute", top:"82%", left:"22%",
+        width:"110vmin", height:"110vmin", borderRadius:"50%",
+        background:`radial-gradient(circle, rgba(184,137,64,${haze}) 0%, rgba(160,125,58,${haze*0.4}) 35%, transparent 65%)`,
+        filter:"blur(50px)",
+        transform:"translate(-50%, -50%)",
+        animation:"rhei-atmosphere-2 32s ease-in-out infinite",
+        pointerEvents:"none", mixBlendMode:"screen",
+      }}/>
+      {/* God rays — two soft diagonal shafts */}
+      <div style={{
+        position:"absolute", inset:0,
+        background:`
+          linear-gradient(108deg, transparent 38%, rgba(232,192,136,${0.10*intensity}) 50%, transparent 60%),
+          linear-gradient(118deg, transparent 42%, rgba(245,216,154,${0.07*intensity}) 52%, transparent 58%)
+        `,
+        mixBlendMode:"screen", pointerEvents:"none", opacity:0.85,
+      }}/>
+      {/* Drifting golden dust */}
+      {particles && (
+        <div style={{position:"absolute", inset:0, pointerEvents:"none", overflow:"hidden"}}>
+          {Array.from({length: 14}).map((_, i) => (
+            <span key={i} style={{
+              position:"absolute",
+              left: `${(i * 7.3) % 100}%`,
+              top: `${(i * 11.7 + 8) % 90}%`,
+              width: 3 + (i%3), height: 3 + (i%3),
+              borderRadius:"50%",
+              background: i%2 ? `rgba(245,216,154,${0.55*intensity})` : `rgba(232,192,136,${0.40*intensity})`,
+              filter:"blur(1.5px)",
+              animation: `rhei-drift-${i%3} ${22 + (i%5)*3}s ease-in-out infinite`,
+              animationDelay: `${i * 0.4}s`,
+            }}/>
+          ))}
+        </div>
+      )}
+      {/* Edge vignette — frames the light */}
+      {vignette && (
+        <div style={{
+          position:"absolute", inset:0,
+          background:"radial-gradient(ellipse at 50% 40%, transparent 35%, rgba(15,9,5,0.35) 72%, rgba(15,9,5,0.75) 100%)",
+          pointerEvents:"none",
+        }}/>
+      )}
+      {/* Film grain (always last) */}
+      <div className="rhei-grain"/>
+    </>
+  );
+}
+
+// ══════════════════════════════════
 // ONBOARDING COMPONENT
 // ══════════════════════════════════
 function Onboarding({ onComplete, authUser }) {
@@ -820,40 +919,11 @@ function Onboarding({ onComplete, authUser }) {
     return (
       <div style={{
         position:"fixed",inset:0,zIndex:200,
-        background:`linear-gradient(180deg, #241509 0%, #1A0F06 50%, #0F0905 100%)`,
+        background:`linear-gradient(180deg, #2D1B0E 0%, #1A0F06 60%, #0F0905 100%)`,
         overflow:"hidden",
       }}>
-        {/* Layer 1 — Primary warm light source (upper-third, breathing) */}
-        <div style={{
-          position:"absolute", top:"30%", left:"50%",
-          width:"140vmin", height:"140vmin", borderRadius:"50%",
-          background:"radial-gradient(circle, rgba(212,173,106,0.18) 0%, rgba(196,154,75,0.08) 28%, rgba(196,154,75,0.02) 50%, transparent 70%)",
-          filter:"blur(24px)",
-          transform:"translate(-50%, -50%)",
-          animation:"rhei-atmosphere-1 22s ease-in-out infinite",
-          pointerEvents:"none",
-        }}/>
-
-        {/* Layer 2 — Counter-light, cooler tone (lower-right, slower) */}
-        <div style={{
-          position:"absolute", top:"78%", left:"75%",
-          width:"95vmin", height:"95vmin", borderRadius:"50%",
-          background:"radial-gradient(circle, rgba(232,210,164,0.07) 0%, rgba(232,210,164,0.02) 40%, transparent 70%)",
-          filter:"blur(36px)",
-          transform:"translate(-50%, -50%)",
-          animation:"rhei-atmosphere-2 28s ease-in-out infinite",
-          pointerEvents:"none",
-        }}/>
-
-        {/* Layer 3 — Atmospheric depth vignette */}
-        <div style={{
-          position:"absolute", inset:0,
-          background:"radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(15,9,5,0.25) 65%, rgba(15,9,5,0.65) 100%)",
-          pointerEvents:"none",
-        }}/>
-
-        {/* Layer 4 — Film grain */}
-        <div className="rhei-grain"/>
+        {/* Cinematic golden-hour stack — dark walnut room at sunset */}
+        <GoldenHourAtmosphere top="34%" left="50%" intensity={1} />
 
         {/* Content */}
         <div style={{
@@ -951,20 +1021,10 @@ function Onboarding({ onComplete, authUser }) {
     return (
       <div style={{
         position:"fixed",inset:0,zIndex:200,
-        background:`linear-gradient(180deg, #241509 0%, #1A0F06 55%, #0F0905 100%)`,
+        background:`linear-gradient(180deg, #2D1B0E 0%, #1A0F06 60%, #0F0905 100%)`,
         overflow:"hidden",
       }}>
-        {/* Atmospheric light source */}
-        <div style={{
-          position:"absolute", top:"22%", left:"50%",
-          width:"120vmin", height:"120vmin", borderRadius:"50%",
-          background:"radial-gradient(circle, rgba(212,173,106,0.13) 0%, rgba(196,154,75,0.04) 35%, transparent 65%)",
-          filter:"blur(28px)",
-          transform:"translate(-50%, -50%)",
-          animation:"rhei-atmosphere-1 22s ease-in-out infinite",
-          pointerEvents:"none",
-        }}/>
-        <div className="rhei-grain"/>
+        <GoldenHourAtmosphere top="24%" left="50%" intensity={0.88} />
 
         {/* Back chevron */}
         <button
@@ -1085,20 +1145,10 @@ function Onboarding({ onComplete, authUser }) {
     return (
       <div style={{
         position:"fixed",inset:0,zIndex:200,
-        background:`linear-gradient(180deg, #241509 0%, #1A0F06 55%, #0F0905 100%)`,
+        background:`linear-gradient(180deg, #2D1B0E 0%, #1A0F06 60%, #0F0905 100%)`,
         overflow:"hidden",
       }}>
-        {/* Slowly breathing light — the email is in flight, this screen waits */}
-        <div style={{
-          position:"absolute", top:"40%", left:"50%",
-          width:"110vmin", height:"110vmin", borderRadius:"50%",
-          background:"radial-gradient(circle, rgba(212,173,106,0.16) 0%, rgba(196,154,75,0.05) 35%, transparent 65%)",
-          filter:"blur(28px)",
-          transform:"translate(-50%, -50%)",
-          animation:"rhei-atmosphere-1 14s ease-in-out infinite",
-          pointerEvents:"none",
-        }}/>
-        <div className="rhei-grain"/>
+        <GoldenHourAtmosphere top="38%" left="50%" intensity={0.92} />
 
         <div style={{
           position:"relative", zIndex:1,
@@ -1194,37 +1244,16 @@ function Onboarding({ onComplete, authUser }) {
 
   if (step <= 2) {
     const s = explainerSteps[step];
+    // Light position shifts per step so the room "rotates" with the user's progress
+    const lightTop  = step === 0 ? "28%" : step === 1 ? "42%" : "58%";
+    const lightLeft = step === 1 ? "68%" : "50%";
     return (
       <div style={{
         position:"fixed",inset:0,zIndex:200,
-        background:`linear-gradient(180deg, #241509 0%, #1A0F06 55%, #0F0905 100%)`,
+        background:`linear-gradient(180deg, #2D1B0E 0%, #1A0F06 60%, #0F0905 100%)`,
         overflow:"hidden",
       }}>
-        {/* Atmospheric light source — shifts position per step for visual variation */}
-        <div style={{
-          position:"absolute",
-          top: step === 0 ? "28%" : step === 1 ? "42%" : "58%",
-          left: step === 1 ? "70%" : "50%",
-          width:"130vmin", height:"130vmin", borderRadius:"50%",
-          background:"radial-gradient(circle, rgba(212,173,106,0.16) 0%, rgba(196,154,75,0.05) 35%, transparent 65%)",
-          filter:"blur(28px)",
-          transform:"translate(-50%, -50%)",
-          animation:"rhei-atmosphere-1 22s ease-in-out infinite",
-          pointerEvents:"none",
-        }}/>
-        {/* Counter light, cooler */}
-        <div style={{
-          position:"absolute",
-          top: step === 0 ? "80%" : step === 1 ? "20%" : "85%",
-          left: step === 1 ? "20%" : "75%",
-          width:"100vmin", height:"100vmin", borderRadius:"50%",
-          background:"radial-gradient(circle, rgba(232,210,164,0.06) 0%, transparent 60%)",
-          filter:"blur(36px)",
-          transform:"translate(-50%, -50%)",
-          animation:"rhei-atmosphere-2 28s ease-in-out infinite",
-          pointerEvents:"none",
-        }}/>
-        <div className="rhei-grain"/>
+        <GoldenHourAtmosphere top={lightTop} left={lightLeft} intensity={0.95} />
 
         {/* Skip — discreet, top-right */}
         <button
@@ -1313,20 +1342,10 @@ function Onboarding({ onComplete, authUser }) {
   return (
     <div style={{
       position:"fixed", inset:0, zIndex:200,
-      background:`linear-gradient(180deg, #241509 0%, #1A0F06 55%, #0F0905 100%)`,
+      background:`linear-gradient(180deg, #2D1B0E 0%, #1A0F06 60%, #0F0905 100%)`,
       overflow:"hidden",
     }}>
-      {/* Atmospheric light — settled, low, warm */}
-      <div style={{
-        position:"absolute", top:"55%", left:"50%",
-        width:"120vmin", height:"120vmin", borderRadius:"50%",
-        background:"radial-gradient(circle, rgba(212,173,106,0.16) 0%, rgba(196,154,75,0.05) 35%, transparent 65%)",
-        filter:"blur(28px)",
-        transform:"translate(-50%, -50%)",
-        animation:"rhei-atmosphere-1 22s ease-in-out infinite",
-        pointerEvents:"none",
-      }}/>
-      <div className="rhei-grain"/>
+      <GoldenHourAtmosphere top="52%" left="50%" intensity={0.95} />
 
       <div style={{
         position:"relative", zIndex:1,
@@ -1730,29 +1749,11 @@ export default function ObrizApp() {
       position:"relative",
       padding:"calc(env(safe-area-inset-top, 0px) + 28px) 24px 140px",
       minHeight:"100vh",
-      background:"linear-gradient(180deg, #241509 0%, #1A0F06 50%, #0F0905 100%)",
+      background:"linear-gradient(180deg, #2D1B0E 0%, #1A0F06 50%, #0F0905 100%)",
       overflow:"hidden",
     }}>
-      {/* ── Atmospheric layers ── */}
-      <div style={{
-        position:"absolute", top:"15%", left:"60%",
-        width:"110vmin", height:"110vmin", borderRadius:"50%",
-        background:"radial-gradient(circle, rgba(212,173,106,0.13) 0%, rgba(196,154,75,0.04) 35%, transparent 65%)",
-        filter:"blur(32px)",
-        transform:"translate(-50%, -50%)",
-        animation:"rhei-atmosphere-1 26s ease-in-out infinite",
-        pointerEvents:"none", zIndex:0,
-      }}/>
-      <div style={{
-        position:"absolute", top:"80%", left:"25%",
-        width:"90vmin", height:"90vmin", borderRadius:"50%",
-        background:"radial-gradient(circle, rgba(232,210,164,0.05) 0%, transparent 65%)",
-        filter:"blur(40px)",
-        transform:"translate(-50%, -50%)",
-        animation:"rhei-atmosphere-2 32s ease-in-out infinite",
-        pointerEvents:"none", zIndex:0,
-      }}/>
-      <div className="rhei-grain" style={{zIndex:0}}/>
+      {/* Cinematic golden-hour stack — the room you walk into */}
+      <GoldenHourAtmosphere top="18%" left="60%" intensity={0.85} />
 
       {/* Content sits above atmosphere */}
       <div style={{position:"relative", zIndex:1, maxWidth:430, margin:"0 auto"}}>
