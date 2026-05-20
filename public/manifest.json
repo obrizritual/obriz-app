@@ -4,8 +4,8 @@
   "description": "Precision nervous system regulation for those who run everything.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0C0907",
-  "theme_color": "#0C0907",
+  "background_color": "#2D1B0E",
+  "theme_color": "#2D1B0E",
   "orientation": "portrait",
   "categories": ["health", "lifestyle", "wellness"],
   "icons": [
