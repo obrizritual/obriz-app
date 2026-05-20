@@ -1,157 +1,121 @@
 // ════════════════════════════════════════════════════════════
-// RHEI — Shared cinematic atmosphere primitives
-// Used across Meditations, Rituals, Affirmations, Journey, Premium
-// to give every screen the same Luminar god-rays signature.
+// RHEI — Editorial primitives
+// Aesop / Open / Apple grammar. Near-monochrome. Photo-led. Restrained.
+// No saturated gold, no fairy-dust, no theatrical light shafts.
+// One warm light source. Deep shadows. Editorial typography.
 // ════════════════════════════════════════════════════════════
 
 /**
- * DramaticGodRays — theatrical diagonal shafts streaming from a pierce point
- * just above the frame. Sits absolute-positioned over a dark gradient parent.
+ * EditorialAmbient — a single restrained light wash from the top.
+ * Replaces the previous DramaticGodRays. No diagonal shafts, no motes.
+ * Just a soft warm bias against deep espresso, like a museum gallery.
  *
  * Props:
- *   intensity — 0..1.2, default 1. Scales every layer's opacity together.
- *   pierce    — CSS x-position of the "sun above the frame" (e.g. "50%", "30%").
- *   vignette  — bool, default true. Side-vignette that pulls eye to center.
- *   floor     — bool, default true. Warm spill at the bottom of the frame.
- *   motes     — bool, default true. Drifting dust in the beams.
+ *   tone       — "warm" | "cool" | "neutral"  (default "warm")
+ *   intensity  — 0..1, default 0.55. Lower than before. Restraint.
+ *   pierce     — x-position of the implied light source. default "70%"
+ *   floor      — bool, optional warm spill at bottom (default false)
  */
-export function DramaticGodRays({
-  intensity = 1,
-  pierce = "50%",
-  vignette = true,
-  floor = true,
-  motes = true,
+export function EditorialAmbient({
+  tone = "warm",
+  intensity = 0.55,
+  pierce = "70%",
+  floor = false,
 }) {
+  // Palette per tone — kept dim, editorial, never saturated
+  const palettes = {
+    warm:    { core: "232, 196, 152", edge: "180, 140, 90"  },
+    cool:    { core: "210, 220, 230", edge: "140, 160, 180" },
+    neutral: { core: "230, 222, 210", edge: "175, 165, 150" },
+  };
+  const p = palettes[tone] || palettes.warm;
+
   return (
     <>
-      {/* Top ambient wash — pulls eye upward */}
+      {/* Single soft wash from the implied light source — that's it. */}
       <div style={{
         position:"absolute", inset:0,
-        background:`radial-gradient(ellipse 120% 70% at ${pierce} -10%, rgba(245,200,120,${0.42*intensity}) 0%, rgba(232,170,90,${0.22*intensity}) 18%, rgba(180,120,50,${0.10*intensity}) 38%, transparent 62%)`,
+        background:`radial-gradient(ellipse 85% 55% at ${pierce} -8%, rgba(${p.core},${0.28*intensity}) 0%, rgba(${p.core},${0.14*intensity}) 22%, rgba(${p.edge},${0.06*intensity}) 45%, transparent 70%)`,
         pointerEvents:"none",
       }}/>
 
-      {/* The pierce — concentrated hot core just above frame */}
-      <div style={{
-        position:"absolute", top:"-8%", left:pierce,
-        width:"60vmin", height:"60vmin", borderRadius:"50%",
-        background:`radial-gradient(circle, rgba(255,220,150,${0.65*intensity}) 0%, rgba(245,200,120,${0.40*intensity}) 18%, rgba(220,160,80,${0.18*intensity}) 38%, transparent 62%)`,
-        filter:"blur(28px)",
-        transform:"translateX(-50%)",
-        animation:"rhei-ember 18s ease-in-out infinite",
-        mixBlendMode:"screen", pointerEvents:"none",
-      }}/>
-
-      {/* Streaming diagonal shafts — 5 angles, varied width */}
-      <div style={{
-        position:"absolute", inset:0, pointerEvents:"none", mixBlendMode:"screen",
-        background:`
-          linear-gradient(165deg, transparent 30%, rgba(255,220,150,${0.18*intensity}) 44%, rgba(245,200,120,${0.10*intensity}) 50%, transparent 64%),
-          linear-gradient(178deg, transparent 28%, rgba(255,210,130,${0.14*intensity}) 42%, transparent 60%),
-          linear-gradient(195deg, transparent 32%, rgba(245,200,120,${0.16*intensity}) 46%, rgba(220,160,80,${0.08*intensity}) 54%, transparent 68%),
-          linear-gradient(212deg, transparent 30%, rgba(232,170,90,${0.12*intensity}) 44%, transparent 60%),
-          linear-gradient(155deg, transparent 36%, rgba(255,220,150,${0.10*intensity}) 48%, transparent 60%)
-        `,
-        filter:"blur(2px)",
-      }}/>
-
-      {/* Soft outer shafts — peripheral, lowest opacity */}
-      <div style={{
-        position:"absolute", inset:0, pointerEvents:"none", mixBlendMode:"screen",
-        background:`
-          linear-gradient(140deg, transparent 25%, rgba(245,200,120,${0.07*intensity}) 50%, transparent 75%),
-          linear-gradient(225deg, transparent 25%, rgba(220,160,80,${0.06*intensity}) 50%, transparent 75%)
-        `,
-        filter:"blur(8px)",
-      }}/>
-
+      {/* Optional floor spill — for screens that need a base anchor */}
       {floor && (
         <div style={{
-          position:"absolute", bottom:0, left:0, right:0, height:"42%",
-          background:`linear-gradient(180deg, transparent 0%, rgba(180,120,50,${0.06*intensity}) 60%, rgba(120,80,30,${0.10*intensity}) 100%)`,
-          pointerEvents:"none", mixBlendMode:"screen",
+          position:"absolute", bottom:0, left:0, right:0, height:"32%",
+          background:`linear-gradient(180deg, transparent 0%, rgba(${p.edge},${0.04*intensity}) 60%, rgba(${p.edge},${0.07*intensity}) 100%)`,
+          pointerEvents:"none",
         }}/>
       )}
 
-      {motes && (
-        <div style={{position:"absolute", inset:0, pointerEvents:"none", overflow:"hidden"}}>
-          {Array.from({length: 9}).map((_, i) => (
-            <span key={i} style={{
-              position:"absolute",
-              left: `${15 + (i * 9.5) % 70}%`,
-              top: `${(i * 11.3 + 12) % 70}%`,
-              width: 2 + (i%3), height: 2 + (i%3),
-              borderRadius:"50%",
-              background: i%2 ? `rgba(255,220,150,${0.55*intensity})` : `rgba(245,200,120,${0.42*intensity})`,
-              filter:"blur(1.2px)",
-              animation: `rhei-drift-${i%3} ${28 + (i%4)*4}s ease-in-out infinite`,
-              animationDelay: `${i * 0.6}s`,
-            }}/>
-          ))}
-        </div>
-      )}
+      {/* Restrained side vignette — like a photograph's edge falloff */}
+      <div style={{
+        position:"absolute", inset:0, pointerEvents:"none",
+        background:"radial-gradient(ellipse 95% 110% at 50% 50%, transparent 55%, rgba(0,0,0,0.32) 90%, rgba(0,0,0,0.55) 100%)",
+      }}/>
 
-      {vignette && (
-        <div style={{
-          position:"absolute", inset:0, pointerEvents:"none",
-          background:"radial-gradient(ellipse 70% 100% at 50% 50%, transparent 30%, rgba(8,5,2,0.40) 75%, rgba(8,5,2,0.85) 100%)",
-        }}/>
-      )}
-
+      {/* Minimal grain — film, not glitter */}
       <div className="rhei-grain"/>
     </>
   );
 }
 
 /**
- * Starburst — minimal RHEI mark, asterisk-glyph in gold over a dark plinth.
- * The signature icon at the top of every primary screen.
+ * Backwards compatibility — old DramaticGodRays calls become a quieter ambient.
  */
-export function Starburst({ size = 28, color = "#F5C878" }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M16 2 L17.2 13.4 L28 14.8 L17.2 16.6 L16 30 L14.8 16.6 L4 14.8 L14.8 13.4 Z" fill={color} opacity="0.95"/>
-      <path d="M16 6 L16.6 13.8 L24 14.8 L16.6 15.8 L16 26 L15.4 15.8 L8 14.8 L15.4 13.8 Z" fill="#FFE4B0" opacity="0.7"/>
-    </svg>
-  );
+export function DramaticGodRays(props) {
+  return <EditorialAmbient tone="warm" intensity={0.55} pierce="60%" floor={true} />;
 }
 
 /**
- * StarburstPlinth — the framed badge that holds the Starburst at the hero.
- * Centered light-card with a soft inner+outer glow.
+ * RheiMark — the new typographic mark.
+ * Wordmark set in tight Fraunces, with a hairline above. Apple/Aesop confidence,
+ * not a starburst sticker. Use this everywhere the old Starburst sat.
  */
-export function StarburstPlinth({ size = 46, glyph = 26 }) {
+export function RheiMark({ size = 28, color = "#F2EBDC", showLine = true }) {
   return (
-    <div style={{
-      display:"inline-flex", alignItems:"center", justifyContent:"center",
-      width:size, height:size, borderRadius:10,
-      background:"rgba(8,5,2,0.55)",
-      border:"1px solid rgba(245,200,120,0.18)",
-      boxShadow:"0 0 40px rgba(245,200,120,0.30), inset 0 0 20px rgba(245,200,120,0.10)",
-    }}>
-      <Starburst size={glyph} />
+    <div style={{ display:"inline-flex", flexDirection:"column", alignItems:"center", gap:8 }}>
+      {showLine && <div style={{ width:24, height:1, background:color, opacity:0.5 }}/>}
+      <span style={{
+        fontFamily:"'Fraunces', Georgia, 'Times New Roman', serif",
+        fontSize:size,
+        fontWeight:300,
+        color,
+        letterSpacing:"0.36em",
+        textIndent:"0.36em",
+        textTransform:"uppercase",
+        lineHeight:1,
+        fontVariationSettings:"'opsz' 72",
+      }}>RHEI</span>
     </div>
   );
 }
 
 /**
- * CornerBrackets — four hairline L-marks that frame a hero like an observatory
- * crosshair or a luxury watch dial. Tech-luxe accent.
+ * Legacy alias for StarburstPlinth — now just renders the RheiMark.
+ * Keeps the old screen code working until we sweep through.
  */
-export function CornerBrackets({ inset = 12, size = 14, color = "rgba(245,200,120,0.45)", thickness = 1 }) {
+export function StarburstPlinth({ size, glyph }) {
+  return <RheiMark size={20} />;
+}
+export function Starburst({ size = 28 }) {
+  return <RheiMark size={size * 0.7} showLine={false} />;
+}
+
+/**
+ * CornerBrackets — kept, but with restraint. Default opacity lower, thinner.
+ * Used sparingly on heroes — not on every card.
+ */
+export function CornerBrackets({ inset = 12, size = 14, color = "rgba(242,235,220,0.30)", thickness = 1 }) {
   const arm = { position:"absolute", background:color };
   return (
     <>
-      {/* TL */}
       <div style={{...arm, top:inset, left:inset, width:size, height:thickness}}/>
       <div style={{...arm, top:inset, left:inset, width:thickness, height:size}}/>
-      {/* TR */}
       <div style={{...arm, top:inset, right:inset, width:size, height:thickness}}/>
       <div style={{...arm, top:inset, right:inset, width:thickness, height:size}}/>
-      {/* BL */}
       <div style={{...arm, bottom:inset, left:inset, width:size, height:thickness}}/>
       <div style={{...arm, bottom:inset, left:inset, width:thickness, height:size}}/>
-      {/* BR */}
       <div style={{...arm, bottom:inset, right:inset, width:size, height:thickness}}/>
       <div style={{...arm, bottom:inset, right:inset, width:thickness, height:size}}/>
     </>
@@ -159,22 +123,21 @@ export function CornerBrackets({ inset = 12, size = 14, color = "rgba(245,200,12
 }
 
 /**
- * PrecisionStamp — small mono-feel readout, e.g. "RHEI · 01" or "0.30 / 1.00".
- * Used as a tech-luxe corner detail.
+ * PrecisionStamp — tightened. Neutral cream color by default. Less gold.
  */
-export function PrecisionStamp({ label, value, color = "rgba(248,242,229,0.55)" }) {
+export function PrecisionStamp({ label, value, color = "rgba(242,235,220,0.55)" }) {
   return (
     <span style={{
       fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
-      fontSize: 9, fontWeight: 500, letterSpacing: "0.32em",
+      fontSize: 9, fontWeight: 500, letterSpacing: "0.36em",
       textTransform: "uppercase", color,
       fontVariantNumeric: "tabular-nums",
       display: "inline-flex", alignItems: "center", gap: 8,
     }}>
-      <span style={{opacity:0.7}}>{label}</span>
+      <span style={{opacity:0.75}}>{label}</span>
       {value !== undefined && (
         <>
-          <span style={{width:8, height:1, background:color, opacity:0.4}}/>
+          <span style={{width:8, height:1, background:color, opacity:0.35}}/>
           <span>{value}</span>
         </>
       )}
@@ -183,9 +146,9 @@ export function PrecisionStamp({ label, value, color = "rgba(248,242,229,0.55)" 
 }
 
 /**
- * Hairline — a 1px gold-tinted divider with a subtle gradient fade at the ends.
+ * Hairline — neutral cream by default. Gold is no longer the default tint.
  */
-export function Hairline({ width = "100%", color = "rgba(245,200,120,0.22)", margin = "0" }) {
+export function Hairline({ width = "100%", color = "rgba(242,235,220,0.14)", margin = "0" }) {
   return (
     <div style={{
       width, height: 1, margin,
@@ -195,22 +158,116 @@ export function Hairline({ width = "100%", color = "rgba(245,200,120,0.22)", mar
 }
 
 /**
- * ScanLine — extremely subtle horizontal scan effect over the hero.
- * Looks like an analog film line, not a digital glitch.
+ * EditorialPhoto — a full-bleed editorial photograph slot.
+ * Falls back to a refined CSS composition when no image is provided,
+ * so the layout looks intentional even before real photography is loaded.
+ *
+ * Props:
+ *   src       — image path. If absent, renders a styled fallback composition.
+ *   aspect    — CSS aspect-ratio string. Default "4 / 5" (editorial portrait).
+ *   tone      — fallback composition style: "skin" | "stone" | "water" | "linen"
+ *   overlay   — bool. If true, applies a dark gradient overlay for text legibility.
+ *   children  — overlay content (title block, etc.)
+ */
+export function EditorialPhoto({
+  src,
+  aspect = "4 / 5",
+  tone = "skin",
+  overlay = true,
+  children,
+  style = {},
+}) {
+  // Fallback compositions — refined CSS-only "photographs" until real images exist
+  const fallbacks = {
+    skin: `
+      radial-gradient(ellipse 60% 40% at 60% 35%, rgba(232,196,150,0.55) 0%, rgba(180,128,82,0.30) 35%, rgba(45,28,18,0.85) 75%, #0E0807 100%),
+      radial-gradient(ellipse 100% 80% at 30% 80%, rgba(120,78,48,0.35) 0%, transparent 55%)
+    `,
+    stone: `
+      linear-gradient(155deg, #14100C 0%, #221A14 35%, #2D2218 60%, #1A130E 100%),
+      radial-gradient(ellipse 70% 50% at 70% 25%, rgba(220,200,170,0.18) 0%, transparent 60%)
+    `,
+    water: `
+      linear-gradient(170deg, #0A0F12 0%, #131C20 40%, #1E2A2D 70%, #0E1316 100%),
+      radial-gradient(ellipse 80% 30% at 50% 20%, rgba(200,210,200,0.20) 0%, transparent 55%)
+    `,
+    linen: `
+      linear-gradient(160deg, #1A130C 0%, #261B12 40%, #2E2218 60%, #181107 100%),
+      radial-gradient(ellipse 60% 35% at 35% 25%, rgba(232,210,178,0.22) 0%, transparent 55%)
+    `,
+  };
+
+  const fallbackBg = fallbacks[tone] || fallbacks.skin;
+  // Stack the photo over the fallback composition. If the photo URL 404s,
+  // the gradient fallback still renders, so the layout never looks broken.
+  const overlayGrad = overlay
+    ? "linear-gradient(180deg, rgba(8,5,3,0.0) 0%, rgba(8,5,3,0.05) 35%, rgba(8,5,3,0.55) 75%, rgba(8,5,3,0.92) 100%)"
+    : null;
+  const bg = src
+    ? [overlayGrad, `url('${src}')`, fallbackBg].filter(Boolean).join(", ")
+    : `${overlay ? "linear-gradient(180deg, rgba(8,5,3,0.0) 0%, rgba(8,5,3,0.05) 35%, rgba(8,5,3,0.45) 75%, rgba(8,5,3,0.85) 100%), " : ""}${fallbackBg}`;
+
+  return (
+    <div style={{
+      position:"relative",
+      aspectRatio: aspect,
+      width:"100%",
+      background: bg,
+      backgroundSize:"cover",
+      backgroundPosition:"center",
+      backgroundRepeat:"no-repeat",
+      overflow:"hidden",
+      ...style,
+    }}>
+      {/* Subtle film grain on photographs */}
+      <div style={{ position:"absolute", inset:0, opacity:0.5, pointerEvents:"none" }} className="rhei-grain"/>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * PhotoStrip — a thin horizontal strip of photography (or fallback texture)
+ * used as a visual rest between sections, like a magazine column rule.
+ */
+export function PhotoStrip({ src, tone = "skin", height = 120 }) {
+  return (
+    <EditorialPhoto
+      src={src}
+      tone={tone}
+      aspect="auto"
+      overlay={false}
+      style={{ height, aspectRatio: "auto" }}
+    />
+  );
+}
+
+/**
+ * ScanLine — kept for technical accents.
  */
 export function ScanLine({ opacity = 0.04 }) {
   return (
     <div style={{
       position:"absolute", inset:0, pointerEvents:"none",
-      backgroundImage: `repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(248,242,229,${opacity}) 3px, rgba(248,242,229,${opacity}) 4px)`,
+      backgroundImage: `repeating-linear-gradient(0deg, transparent 0px, transparent 3px, rgba(242,235,220,${opacity}) 3px, rgba(242,235,220,${opacity}) 4px)`,
       mixBlendMode:"overlay",
     }}/>
   );
 }
 
-// Shared design constants used across screens
-export const RHEI_DARK_BASE = "linear-gradient(180deg, #0A0604 0%, #100804 38%, #0A0604 100%)";
-export const RHEI_VELLUM = "#F8F2E5";
-export const RHEI_ACCENT_WARM = "#F5C878";
+// ── Shared neutral palette tokens — Aesop/Apple/Open grammar ──
+// Near-monochrome. Saturated gold is now a small accent, not a temperature.
+export const RHEI_BASE = "#0C0907";              // deepest ink — base canvas
+export const RHEI_PAPER = "#F2EBDC";              // warm paper-white — primary text on dark
+export const RHEI_SAND = "#D4C8B0";               // muted sand — secondary text
+export const RHEI_STONE = "#8E8170";              // stone — tertiary text
+export const RHEI_BONE = "#1A1410";               // bone-on-dark — card bg
+export const RHEI_ACCENT = "#C9A472";             // restrained accent — used sparingly
+export const RHEI_HAIRLINE = "rgba(242,235,220,0.14)";
+export const RHEI_DARK_BASE = "linear-gradient(180deg, #0C0907 0%, #100B08 50%, #0C0907 100%)";
+
+// Legacy exports (some old code references these)
+export const RHEI_VELLUM = RHEI_PAPER;
+export const RHEI_ACCENT_WARM = RHEI_ACCENT;
 export const RHEI_F = "'Fraunces', Georgia, 'Times New Roman', serif";
 export const RHEI_SF = "'Inter', system-ui, -apple-system, sans-serif";

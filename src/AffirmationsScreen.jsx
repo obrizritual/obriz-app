@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, Play, Pause, Plus, Trash2, Save, BookOpen, Sparkles, Volume2, VolumeX, Music2, Mic, MicOff, Square, CircleDot, X, ArrowRight } from "lucide-react";
-import { DramaticGodRays, StarburstPlinth, CornerBrackets, PrecisionStamp, Hairline } from "./Atmosphere";
+import { DramaticGodRays, StarburstPlinth, CornerBrackets, PrecisionStamp, Hairline, EditorialPhoto, RheiMark } from "./Atmosphere";
 
 /* ═══════════════════════════════════════════
    RHEI — Affirmations
@@ -24,7 +24,7 @@ export const AFFIRMATION_CATEGORIES = [
     id: "self-worth",
     label: "Self-worth",
     sublabel: "For the quiet days when you forget",
-    accent: "#C49A4B",
+    accent: "#C9A472",
     affirmations: [
       "My presence is enough. I do not need to perform.",
       "What I am, before I do anything, is already worthy.",
@@ -40,7 +40,7 @@ export const AFFIRMATION_CATEGORIES = [
     id: "calm",
     label: "Calm",
     sublabel: "For when the body is running ahead of you",
-    accent: "#8A9BAF",
+    accent: "#8E9BA0",
     affirmations: [
       "My body knows the way back to ease. I do not need to push.",
       "There is nothing I have to solve in this exact minute.",
@@ -56,7 +56,7 @@ export const AFFIRMATION_CATEGORIES = [
     id: "abundance",
     label: "Abundance",
     sublabel: "For expanding what feels possible",
-    accent: "#A08BAA",
+    accent: "#A6957A",
     affirmations: [
       "There is more than enough. I do not need to grip.",
       "Good things are arranging themselves in my favour.",
@@ -72,7 +72,7 @@ export const AFFIRMATION_CATEGORIES = [
     id: "body-acceptance",
     label: "Body acceptance",
     sublabel: "For coming home to yourself",
-    accent: "#C4786A",
+    accent: "#B68870",
     affirmations: [
       "My body is not a project. It is the place I live.",
       "I am allowed to be at home in this skin, today, as it is.",
@@ -88,7 +88,7 @@ export const AFFIRMATION_CATEGORIES = [
     id: "creative-power",
     label: "Creative power",
     sublabel: "For the work only you can make",
-    accent: "#5A8A5A",
+    accent: "#889080",
     affirmations: [
       "I have something to make that no one else can make.",
       "I do not have to be ready. I only have to begin.",
@@ -591,40 +591,43 @@ export default function AffirmationsScreen({ onBack }) {
             <PrecisionStamp label="RHEI" value="VOICE 0.1"/>
           </div>
 
-          {/* HERO with observatory frame */}
-          <div className="rhei-rise rhei-rise-1" style={{
-            position:"relative",
-            textAlign:"center",
-            padding:"min(8vh, 60px) 24px 36px",
-            marginBottom:48,
-          }}>
-            <CornerBrackets inset={0} size={16} color="rgba(245,200,120,0.40)" />
-
-            <div style={{ marginBottom:30 }}>
-              <StarburstPlinth />
+          {/* HERO — editorial photograph + tight type */}
+          <div className="rhei-rise rhei-rise-1" style={{ marginBottom:40, marginTop:8 }}>
+            <div style={{ position:"relative", marginBottom:28, borderRadius:2, overflow:"hidden" }}>
+              <EditorialPhoto src="/images/affirmations-hero.jpg" tone="linen" aspect="5 / 4" overlay={true}>
+                <div style={{
+                  position:"absolute", top:18, left:18, right:18,
+                  display:"flex", justifyContent:"space-between", alignItems:"center",
+                }}>
+                  <PrecisionStamp label="RHEI" value="AFFIRMATIONS" color="rgba(242,235,220,0.85)"/>
+                  <PrecisionStamp label="05" color="rgba(242,235,220,0.65)"/>
+                </div>
+                <div style={{ position:"absolute", bottom:24, left:22, right:22 }}>
+                  <h1 style={{
+                    fontFamily:F, fontSize:"clamp(32px, 8.5vw, 46px)",
+                    fontWeight:300, color:"#F2EBDC",
+                    letterSpacing:"-0.025em", lineHeight:0.98,
+                    margin:0,
+                    fontVariationSettings:"'opsz' 144",
+                  }}>
+                    Affirmations
+                  </h1>
+                </div>
+              </EditorialPhoto>
             </div>
-
-            <p style={{ fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(245,200,120,0.75)", margin:"0 0 16px" }}>
-              The Voice Room
-            </p>
-            <h1 style={{
-              fontFamily:F, fontSize:"clamp(32px, 8vw, 42px)",
-              fontWeight:300, color:"#F8F2E5",
-              letterSpacing:"-0.02em", lineHeight:1.05,
-              margin:"0 0 14px",
-              fontVariationSettings:"'opsz' 96",
-              textShadow:"0 2px 20px rgba(0,0,0,0.4)",
+            <p style={{
+              fontFamily:F, fontSize:16, fontWeight:300,
+              color:"rgba(242,235,220,0.72)", lineHeight:1.45,
+              margin:0, letterSpacing:"-0.005em",
+              maxWidth:380,
             }}>
-              What you tell yourself,<br/>becomes you.
-            </h1>
-            <p style={{ fontFamily:F, fontStyle:"italic", fontSize:14, color:"rgba(248,242,229,0.62)", lineHeight:1.55, margin:"0 auto", maxWidth:300 }}>
-              Pick a room. Read them. Hear them. Let them land.
+              Five collections. Read them, hear them, or record them in your own voice. What you tell yourself becomes you.
             </p>
           </div>
 
           {/* Section eyebrow with index */}
           <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", margin:"0 0 6px" }}>
-            <PrecisionStamp label="Rooms" color="rgba(245,200,120,0.65)"/>
+            <PrecisionStamp label="Collections" color="rgba(242,235,220,0.65)"/>
             <span style={{ fontFamily:SF, fontSize:9, letterSpacing:"0.28em", textTransform:"uppercase", color:"rgba(248,242,229,0.40)", fontVariantNumeric:"tabular-nums" }}>
               05 / FIVE
             </span>
@@ -691,9 +694,9 @@ export default function AffirmationsScreen({ onBack }) {
                       {cat.label}
                     </h3>
                     <p style={{
-                      fontFamily:F, fontStyle:"italic",
-                      fontSize:12.5, color:"rgba(248,242,229,0.58)",
-                      margin:0, lineHeight:1.5,
+                      fontFamily:F, fontWeight:300,
+                      fontSize:13.5, color:"rgba(242,235,220,0.65)",
+                      margin:0, lineHeight:1.45, letterSpacing:"-0.005em",
                     }}>
                       {cat.sublabel}
                     </p>
@@ -749,7 +752,7 @@ export default function AffirmationsScreen({ onBack }) {
                 <h3 style={{ fontFamily:F, fontSize:20, fontWeight:300, color:"#F8F2E5", letterSpacing:"-0.015em", lineHeight:1.15, margin:"0 0 3px", fontVariationSettings:"'opsz' 48" }}>
                   Write your own.
                 </h3>
-                <p style={{ fontFamily:F, fontStyle:"italic", fontSize:12.5, color:"rgba(248,242,229,0.60)", margin:0, lineHeight:1.5 }}>
+                <p style={{ fontFamily:F, fontWeight:300, fontSize:13, color:"rgba(242,235,220,0.65)", margin:0, lineHeight:1.45, letterSpacing:"-0.005em" }}>
                   {customList.length > 0 ? `${customList.length} saved — record yourself` : "Up to 20. In your own voice."}
                 </p>
               </div>
@@ -807,7 +810,7 @@ export default function AffirmationsScreen({ onBack }) {
             <h1 style={{ fontFamily:F, fontSize:"clamp(28px, 7vw, 36px)", fontWeight:300, color:"#F8F2E5", letterSpacing:"-0.02em", lineHeight:1.05, margin:"0 0 12px", fontVariationSettings:"'opsz' 96", textShadow:"0 2px 20px rgba(0,0,0,0.4)" }}>
               Write what you need to hear.
             </h1>
-            <p style={{ fontFamily:F, fontStyle:"italic", fontSize:13, color:"rgba(248,242,229,0.62)", lineHeight:1.55, margin:"0 auto", maxWidth:300 }}>
+            <p style={{ fontFamily:F, fontSize:13, color:"rgba(248,242,229,0.62)", lineHeight:1.55, margin:"0 auto", maxWidth:300 }}>
               Short. Present tense. Yours.
             </p>
           </div>
@@ -843,7 +846,7 @@ export default function AffirmationsScreen({ onBack }) {
         {customList.length > 0 && (
           <div style={{ background: `${B.gold}08`, border: `1px solid ${B.gold}20`, borderRadius: 12, padding: "12px 14px", margin: "0 0 16px" }}>
             <p style={{ fontSize: 10, letterSpacing: 2, color: B.gold, textTransform: "uppercase", fontFamily: SF, margin: "0 0 6px" }}>Why your own voice</p>
-            <p style={{ fontSize: 12, color: B.creamMuted, margin: 0, fontFamily: F, lineHeight: 1.6, fontStyle: "italic" }}>
+            <p style={{ fontSize: 12, color: B.creamMuted, margin: 0, fontFamily: F, lineHeight: 1.6 }}>
               Words you wrote, spoken in your own voice, tie your identity to the belief in a way no recording from someone else can. Tap the mic on any affirmation to record yourself.
             </p>
           </div>
@@ -851,7 +854,7 @@ export default function AffirmationsScreen({ onBack }) {
 
         {/* List */}
         {customList.length === 0 ? (
-          <p style={{ fontSize: 13, color: B.muted, fontStyle: "italic", fontFamily: F, lineHeight: 1.6, textAlign: "center", marginTop: 40 }}>
+          <p style={{ fontSize: 13, color: B.muted, fontFamily: F, lineHeight: 1.6, textAlign: "center", marginTop: 40 }}>
             Nothing here yet. Try writing one — short, present-tense, in your own voice.
           </p>
         ) : (

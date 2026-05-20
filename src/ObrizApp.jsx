@@ -17,7 +17,7 @@ function RitualIllustration({ ritualId, zone, size }) {
 }
 import AffirmationsScreen from "./AffirmationsScreen";
 import FaceMirrorMode from "./FaceMirrorMode";
-import { CornerBrackets, PrecisionStamp, Hairline, StarburstPlinth as SharedStarburstPlinth } from "./Atmosphere";
+import { CornerBrackets, PrecisionStamp, Hairline, StarburstPlinth as SharedStarburstPlinth, RheiMark, EditorialPhoto, EditorialAmbient } from "./Atmosphere";
 
 /* ═══════════════════════════════════════════
    RHEI — Your face is where your nervous system shows.
@@ -101,11 +101,11 @@ const GLOBAL_CSS = `
 
 // ── Nervous System Resets ──
 const sessions = [
-  { id:1, title:"Soft Awakening", subtitle:"Before the day begins", duration:179, icon:Sun,     accent:"#D9A98C", description:"Sets your nervous system baseline before anything else can. Three minutes of breathing — extended exhale, somatic grounding, vagal activation. Best done before your phone.",                                                technique:"Extended exhale · Somatic grounding · Vagal humming",            bestFor:"First minutes after waking",                              timeOfDay:"morning", audioFile:"/audio/morning-reset.mp3",       occasion:"morning"  },
-  { id:2, title:"Inner Warmth",    subtitle:"Composure before something asks for it",       duration:200, icon:Shield,  accent:"#D4AD6A", description:"Activates vagal tone and grounds the nervous system before high-stakes moments. The difference between responding and reacting.",                                                                                  technique:"Physiological sigh · Somatic grounding · Cognitive anchor",     bestFor:"Five minutes before any demanding interaction",          timeOfDay:"any",     audioFile:"/audio/pre-meeting-reset.mp3",   occasion:"event"    },
-  { id:3, title:"Evening Melt",    subtitle:"From performance to presence",                  duration:234, icon:Sunset,  accent:"#C99656", description:"Releases the activation that lingers after a workday. Designed for the shift between professional and personal life — so you don't bring it home.",                                                              technique:"Progressive release · Body scan · Identity shift",              bestFor:"The commute home, or before walking through the door",   timeOfDay:"evening", audioFile:"/audio/transition-reset.mp3",    occasion:"evening"  },
-  { id:4, title:"Emotional Release",subtitle:"Put down what you're still holding",           duration:194, icon:Wind,    accent:"#C4786A", description:"After a difficult conversation, the body stays physiologically activated long after the moment ends. This is how you actually leave it.",                                                                          technique:"Bilateral stimulation · Physiological sigh · Self-compassion",  bestFor:"After difficult conversations or anything emotionally costly", timeOfDay:"any", audioFile:"/audio/post-conflict-reset.mp3", occasion:"recovery" },
-  { id:5, title:"Return to Self",  subtitle:"Wherever you are",                              duration:172, icon:RefreshCw,accent:"#B88940", description:"The foundational reset. No specific trigger required — use it whenever you've drifted or tensed. Three minutes, anywhere.",                                                                                       technique:"Diaphragmatic breathing · Body awareness · Vagal activation",   bestFor:"Any moment you need to come back to center",             timeOfDay:"any",     audioFile:"/audio/general-reset.mp3",       occasion:"any"      },
+  { id:1, title:"Soft Awakening", subtitle:"Before the day begins", duration:179, icon:Sun,     accent:"#C4A487", description:"Sets your nervous system baseline before anything else can. Three minutes of breathing — extended exhale, somatic grounding, vagal activation. Best done before your phone.",                                                technique:"Extended exhale · Somatic grounding · Vagal humming",            bestFor:"First minutes after waking",                              timeOfDay:"morning", audioFile:"/audio/morning-reset.mp3",       occasion:"morning"  },
+  { id:2, title:"Inner Warmth",    subtitle:"Composure before something asks for it",       duration:200, icon:Shield,  accent:"#BFA078", description:"Activates vagal tone and grounds the nervous system before high-stakes moments. The difference between responding and reacting.",                                                                                  technique:"Physiological sigh · Somatic grounding · Cognitive anchor",     bestFor:"Five minutes before any demanding interaction",          timeOfDay:"any",     audioFile:"/audio/pre-meeting-reset.mp3",   occasion:"event"    },
+  { id:3, title:"Evening Melt",    subtitle:"From performance to presence",                  duration:234, icon:Sunset,  accent:"#B49170", description:"Releases the activation that lingers after a workday. Designed for the shift between professional and personal life — so you don't bring it home.",                                                              technique:"Progressive release · Body scan · Identity shift",              bestFor:"The commute home, or before walking through the door",   timeOfDay:"evening", audioFile:"/audio/transition-reset.mp3",    occasion:"evening"  },
+  { id:4, title:"Emotional Release",subtitle:"Put down what you're still holding",           duration:194, icon:Wind,    accent:"#B08775", description:"After a difficult conversation, the body stays physiologically activated long after the moment ends. This is how you actually leave it.",                                                                          technique:"Bilateral stimulation · Physiological sigh · Self-compassion",  bestFor:"After difficult conversations or anything emotionally costly", timeOfDay:"any", audioFile:"/audio/post-conflict-reset.mp3", occasion:"recovery" },
+  { id:5, title:"Return to Self",  subtitle:"Wherever you are",                              duration:172, icon:RefreshCw,accent:"#A8916C", description:"The foundational reset. No specific trigger required — use it whenever you've drifted or tensed. Three minutes, anywhere.",                                                                                       technique:"Diaphragmatic breathing · Body awareness · Vagal activation",   bestFor:"Any moment you need to come back to center",             timeOfDay:"any",     audioFile:"/audio/general-reset.mp3",       occasion:"any"      },
 ];
 
 // ── Face states — drives ritual + meditation recommendations ──
@@ -139,15 +139,15 @@ const microInterventions = [
 // Drives the "Curated" carousel on the Home screen and (next session) the
 // Rituals library editorial browser.
 const collections = [
-  { id:"morning-sculpt",       title:"Morning Sculpt",         subtitle:"The face you bring into the day",                  ritualIds:["gua-sha","face-lift"],          accent:"#D4AD6A" },
-  { id:"hotel-reset",          title:"Hotel Reset",            subtitle:"Long flight, foreign bathroom, full presence in an hour", ritualIds:["lymphatic","eye-revival"], accent:"#8A9BAF" },
-  { id:"before-dinner",        title:"Before Dinner",          subtitle:"The half hour between the day and the table",      ritualIds:["pre-event","gua-sha"],          accent:"#C49A4B" },
-  { id:"post-flight",          title:"Post-Flight Drainage",   subtitle:"When the body forgot what time zone it's in",      ritualIds:["lymphatic","belly-flow"],       accent:"#7A8B99" },
-  { id:"evening-softening",    title:"Evening Softening",      subtitle:"Putting the day down before bed",                  ritualIds:["buccal","belly-flow"],          accent:"#A08BAA" },
-  { id:"pre-event-glow",       title:"Pre-Event Glow",         subtitle:"For the room you're about to walk into",           ritualIds:["pre-event","face-lift"],        accent:"#D4AD6A" },
-  { id:"jaw-release",          title:"Jaw Release",            subtitle:"For the day that asked too much",                  ritualIds:["buccal"],                       accent:"#A07D3A" },
-  { id:"sunday-restoration",   title:"Sunday Restoration",     subtitle:"A longer practice for when there's time",          ritualIds:["belly-flow","lymphatic","gua-sha"], accent:"#7A8674" },
-  { id:"emotional-decompress", title:"Emotional Decompression",subtitle:"For after the hard conversation",                  ritualIds:["buccal","eye-revival"],         accent:"#C4786A" },
+  { id:"morning-sculpt",       title:"Morning Sculpt",         subtitle:"The face you bring into the day",                  ritualIds:["gua-sha","face-lift"],          accent:"#BFA078" },
+  { id:"hotel-reset",          title:"Hotel Reset",            subtitle:"Long flight, foreign bathroom, full presence in an hour", ritualIds:["lymphatic","eye-revival"], accent:"#8E9BA0" },
+  { id:"before-dinner",        title:"Before Dinner",          subtitle:"The half hour between the day and the table",      ritualIds:["pre-event","gua-sha"],          accent:"#BFA078" },
+  { id:"post-flight",          title:"Post-Flight Drainage",   subtitle:"When the body forgot what time zone it's in",      ritualIds:["lymphatic","belly-flow"],       accent:"#82908B" },
+  { id:"evening-softening",    title:"Evening Softening",      subtitle:"Putting the day down before bed",                  ritualIds:["buccal","belly-flow"],          accent:"#998BA0" },
+  { id:"pre-event-glow",       title:"Pre-Event Glow",         subtitle:"For the room you're about to walk into",           ritualIds:["pre-event","face-lift"],        accent:"#BFA078" },
+  { id:"jaw-release",          title:"Jaw Release",            subtitle:"For the day that asked too much",                  ritualIds:["buccal"],                       accent:"#9C8868" },
+  { id:"sunday-restoration",   title:"Sunday Restoration",     subtitle:"A longer practice for when there's time",          ritualIds:["belly-flow","lymphatic","gua-sha"], accent:"#7E8479" },
+  { id:"emotional-decompress", title:"Emotional Decompression",subtitle:"For after the hard conversation",                  ritualIds:["buccal","eye-revival"],         accent:"#B08775" },
 ];
 
 // ── Adaptive ritual generator — re-orders steps by face state ──
@@ -210,7 +210,7 @@ const meditationStates = [
 const rituals = [
   {
     id: "gua-sha", title: "Sculpt & Define", subtitle: "Gua Sha — stone work for the jawline, cheekbones, and neck",
-    duration: "6 min", isPremium: false, svgFile: "/svgs/gua-sha-zones.svg", accent: "#D4AD6A",
+    duration: "6 min", isPremium: false, svgFile: "/svgs/gua-sha-zones.svg", accent: "#BFA078",
     description: "True gua sha protocol with a stone tool held at a fifteen-degree angle. Every stroke is firm, outward, and repeated three to five times — the classical sequence used in Chinese facial practice and adapted by modern practitioners. Visible sculpting after a single session.",
     tools: "Gua sha stone (rose quartz, jade, or bian) · facial oil · about 6 minutes",
     occasion: "morning", audioFollowUp: 1,
@@ -227,7 +227,7 @@ const rituals = [
   },
   {
     id: "lymphatic", title: "Depuff & Restore Glow", subtitle: "Manual Lymphatic Drainage — fingers only, feather pressure",
-    duration: "6 min", isPremium: false, svgFile: "/svgs/lymphatic-paths.svg", accent: "#8A9BAF",
+    duration: "6 min", isPremium: false, svgFile: "/svgs/lymphatic-paths.svg", accent: "#8E9BA0",
     description: "True manual lymphatic drainage in the Vodder tradition. Pressure is featherlight — about five grams — because lymph vessels sit just under the skin and collapse if pressed harder. The work is pumps and lifts, never sliding. Always start and end at the collarbone terminus, where everything ultimately drains.",
     tools: "Clean fingertips and flat palms · no tools, no oil",
     occasion: "morning", audioFollowUp: 5,
@@ -244,7 +244,7 @@ const rituals = [
   },
   {
     id: "face-lift", title: "Lift & Firm", subtitle: "Face Yoga — isometric holds against finger resistance",
-    duration: "7 min", isPremium: false, svgFile: "/svgs/face-lifting-points.svg", accent: "#E8C088",
+    duration: "7 min", isPremium: false, svgFile: "/svgs/face-lifting-points.svg", accent: "#C9A472",
     description: "This is not massage — this is muscle work. Isometric contractions against fingertip resistance, in the tradition of facial yoga (Carole Maggio, Danielle Collins). The face has over forty muscles and most of them have forgotten they're there. Holds are five to ten seconds. Repetitions matter. Visible tone with consistency.",
     tools: "Clean fingertips · facial oil",
     occasion: "evening", audioFollowUp: 3,
@@ -261,7 +261,7 @@ const rituals = [
   },
   {
     id: "buccal", title: "Release & Decompress", subtitle: "Buccal Massage — hands inside the mouth, the deepest release",
-    duration: "5 min", isPremium: false, svgFile: "/svgs/face-base.svg", accent: "#C4786A",
+    duration: "5 min", isPremium: false, svgFile: "/svgs/face-base.svg", accent: "#B08775",
     description: "Buccal massage in the Nichola Joss tradition — the technique used in private facials at Claridge's and Le Bristol. The thumb enters the mouth and works the masseter, buccinator, and pterygoid muscles directly, from inside. Most face tension lives in these muscles and cannot be reached any other way. Intimate, surprising, and unmistakably effective. Wash your hands.",
     tools: "Washed hands or single-use glove · facial oil · about 5 minutes",
     occasion: "recovery", audioFollowUp: 4,
@@ -277,7 +277,7 @@ const rituals = [
   },
   {
     id: "pre-event", title: "Show Up Glowing", subtitle: "Pre-Event Ritual — cold, percussion, and speed",
-    duration: "4 min", isPremium: true, svgFile: "/svgs/face-base.svg", accent: "#F5D89A",
+    duration: "4 min", isPremium: true, svgFile: "/svgs/face-base.svg", accent: "#D4C094",
     description: "The technique facialists use before a shoot or red carpet. Cold tools for instant vasoconstriction, rapid percussion tapping to bring blood to the surface, fast lymphatic flushing, and a cold seal at the end. The opposite tempo of the other rituals — urgency is the technique. Four minutes, visible result.",
     tools: "Chilled gua sha stone or cold spoons (from the freezer) · facial oil · about 4 minutes",
     occasion: "event", audioFollowUp: 2,
@@ -292,7 +292,7 @@ const rituals = [
   },
   {
     id: "eye-revival", title: "Brighten & Open", subtitle: "Eye Revival — ring fingers and the orbital bone, nothing else",
-    duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg", accent: "#A08BAA",
+    duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg", accent: "#998BA0",
     description: "Targeted orbital drainage. The under-eye skin is the thinnest on the body — about 0.5 millimeters — and the ring finger is the only finger that can move it without overpressuring it. Every step is built around specific landmarks on the orbital bone: the tear trough, the brow trio, the temple anchor. Cold tools amplify it. Never pull skin.",
     tools: "Ring fingers only · optional chilled spoon or eye stone · serum",
     occasion: "morning", audioFollowUp: 5,
@@ -308,7 +308,7 @@ const rituals = [
   },
   {
     id: "belly-flow", title: "Soften the Belly", subtitle: "Abdominal Lymphatic Drainage — debloat and calm the gut",
-    duration: "6 min", isPremium: false, svgFile: "/svgs/face-base.svg", accent: "#B88940",
+    duration: "6 min", isPremium: false, svgFile: "/svgs/face-base.svg", accent: "#A8916C",
     description: "A real lymphatic drainage sequence for the abdomen — the kind massage therapists charge $200/hour for. Releases trapped fluid, eases bloating, and signals the gut that the bracing can stop. Follows the actual colonic and inguinal lymph pathways. Best done on an empty or near-empty stomach, lying down.",
     tools: "Clean flat hands · body oil optional · skip if pregnant or recovering from abdominal surgery",
     occasion: "evening", audioFollowUp: 5,
@@ -453,7 +453,7 @@ function GuideGround({ onComplete }) {
         <Ring progress={pct} size={120} sw={2.5} color={sense.color}/><span style={{fontSize:38,color:B.cream,fontWeight:300,zIndex:2}}>{sense.count}</span>
       </div>
       <p style={{fontSize:18,color:B.cream,fontWeight:400,fontFamily:F,marginBottom:8,lineHeight:1.4,maxWidth:280}}>{sense.instruction}</p>
-      <p style={{fontSize:12,color:B.muted,fontStyle:"italic",fontFamily:F,lineHeight:1.5,maxWidth:260,marginBottom:8}}>{sense.prompt}</p>
+      <p style={{fontSize:12,color:B.muted,fontFamily:F,lineHeight:1.5,maxWidth:260,marginBottom:8}}>{sense.prompt}</p>
       <div style={{width:200,height:3,borderRadius:2,background:`${B.gold}15`,marginTop:24}}><div style={{width:`${pct}%`,height:"100%",borderRadius:2,background:sense.color,transition:"width 0.8s ease"}}/></div>
       <p style={{fontSize:10,color:B.muted,fontFamily:SF,marginTop:8}}>{timeLeft}s</p>
     </div>
@@ -484,7 +484,7 @@ function GuideJaw({ onComplete }) {
         <div style={{textAlign:"center",zIndex:2}}><span style={{fontSize:32,color:B.cream,fontWeight:300,display:"block"}}>{timeLeft}</span><span style={{fontSize:9,color:B.muted,letterSpacing:1.5,textTransform:"uppercase",fontFamily:SF}}>hold</span></div>
       </div>
       <p style={{fontSize:19,color:B.cream,fontWeight:400,fontFamily:F,marginBottom:8}}>{js.title}</p>
-      <p style={{fontSize:12,color:B.muted,fontStyle:"italic",fontFamily:F,lineHeight:1.5,maxWidth:270}}>{js.instruction}</p>
+      <p style={{fontSize:12,color:B.muted,fontFamily:F,lineHeight:1.5,maxWidth:270}}>{js.instruction}</p>
       <div style={{display:"flex",gap:6,marginTop:32}}>{jawSteps.map((_,i)=>(<div key={i} style={{width:i<=step?24:16,height:3,borderRadius:2,background:i<step?B.gold:i===step?`${B.gold}60`:`${B.gold}15`,transition:"all 0.4s"}}/>))}</div>
     </div>
   );
@@ -513,7 +513,7 @@ function GuideTap({ onComplete }) {
         </div>
       </div>
       <p style={{fontSize:19,color:B.cream,fontWeight:400,fontFamily:F,marginBottom:4}}>Tap {isL?"left":"right"} shoulder</p>
-      <p style={{fontSize:12,color:B.muted,fontStyle:"italic",fontFamily:F}}>Slow, gentle, rhythmic</p>
+      <p style={{fontSize:12,color:B.muted,fontFamily:F}}>Slow, gentle, rhythmic</p>
       <p style={{fontSize:28,color:B.cream,fontWeight:300,marginTop:20,fontFamily:SF}}>{timeLeft}s</p>
     </div>
   );
@@ -526,7 +526,7 @@ function GuideComplete({ message, onClose }) {
         <Check size={30} color={B.gold}/>
       </div>
       <h2 style={{fontSize:22,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>You showed up.</h2>
-      <p style={{fontSize:13,color:B.muted,fontStyle:"italic",margin:"0 0 8px",fontFamily:F}}>Your face, your nervous system — both listened.</p>
+      <p style={{fontSize:13,color:B.muted,margin:"0 0 8px",fontFamily:F}}>Your face, your nervous system — both listened.</p>
       <p style={{fontSize:12,color:B.gold,fontFamily:SF,margin:"0 0 32px"}}>{message}</p>
       <button onClick={onClose} style={{background:B.goldGrad,border:"none",borderRadius:28,padding:"13px 36px",cursor:"pointer",color:B.warmBlack,fontSize:13,fontFamily:SF,letterSpacing:1,fontWeight:500}}>Continue</button>
     </div>
@@ -666,7 +666,7 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
           <div style={{textAlign:"center",marginBottom:28}}>
             <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,marginBottom:8}}>Ritual Guide</p>
             <h1 style={{fontSize:24,fontWeight:400,color:B.cream,margin:"0 0 6px",fontFamily:F}}>{ritual.title}</h1>
-            <p style={{fontSize:13,color:B.muted,fontStyle:"italic",margin:"0 0 16px"}}>{ritual.subtitle}</p>
+            <p style={{fontSize:13,color:B.muted,margin:"0 0 16px"}}>{ritual.subtitle}</p>
           </div>
           <div style={{width:"100%",height:220,borderRadius:20,background:B.card,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:24,overflow:"hidden"}}>
             <RitualIllustration
@@ -709,7 +709,7 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
             <Sparkles size={32} color={B.gold}/>
           </div>
           <h2 style={{fontSize:24,color:B.cream,fontWeight:400,margin:"0 0 8px",fontFamily:F}}>You showed up.</h2>
-          <p style={{fontSize:15,color:B.creamMuted,fontStyle:"italic",margin:"0 0 6px",fontFamily:F}}>Your face is softer, more open, and more lifted.</p>
+          <p style={{fontSize:15,color:B.creamMuted,margin:"0 0 6px",fontFamily:F}}>Your face is softer, more open, and more lifted.</p>
           <p style={{fontSize:12,color:B.muted,fontFamily:SF,margin:"0 0 28px"}}>{ritual.title} · {ritual.duration}</p>
           <button onClick={onClose} style={{background:B.goldGrad,border:"none",borderRadius:28,padding:"14px 40px",cursor:"pointer",color:B.warmBlack,fontSize:14,fontFamily:SF,letterSpacing:1,fontWeight:500}}>Continue</button>
         </div>
@@ -1055,7 +1055,7 @@ function Onboarding({ onComplete, authUser }) {
               fontVariationSettings:"'opsz' 144, 'SOFT' 30",
             }}>Rhei.</h1>
             <p style={{
-              fontFamily:F, fontStyle:"italic", fontSize:16, fontWeight:400,
+              fontFamily:F, fontSize:16, fontWeight:400,
               color:"rgba(248,242,229,0.85)",
               letterSpacing:"0.02em", lineHeight:1.5,
               margin:"22px auto 0", maxWidth:280,
@@ -1164,7 +1164,7 @@ function Onboarding({ onComplete, authUser }) {
             </h2>
 
             <p className="rhei-rise rhei-rise-3" style={{
-              fontFamily:F, fontStyle:"italic", fontSize:15, fontWeight:400,
+              fontFamily:F, fontSize:15, fontWeight:400,
               color:"rgba(248,242,229,0.7)",
               lineHeight:1.55,
               margin:"0 auto 44px", maxWidth:300,
@@ -1198,7 +1198,7 @@ function Onboarding({ onComplete, authUser }) {
             </div>
 
             {authError && (
-              <p style={{fontSize:13, color:B.rouge, fontFamily:F, fontStyle:"italic", margin:"16px auto 0", maxWidth:300, lineHeight:1.5}}>{authError}</p>
+              <p style={{fontSize:13, color:B.rouge, fontFamily:F, margin:"16px auto 0", maxWidth:300, lineHeight:1.5}}>{authError}</p>
             )}
 
             <div className="rhei-rise rhei-rise-5" style={{marginTop:18, display:"flex", flexDirection:"column", alignItems:"center", gap:14}}>
@@ -1271,7 +1271,7 @@ function Onboarding({ onComplete, authUser }) {
             }}>Check your inbox.</h2>
 
             <p className="rhei-rise rhei-rise-3" style={{
-              fontFamily:F, fontStyle:"italic", fontSize:15, fontWeight:400,
+              fontFamily:F, fontSize:15, fontWeight:400,
               color:"rgba(248,242,229,0.7)",
               lineHeight:1.6,
               margin:"0 auto 14px", maxWidth:340,
@@ -1279,7 +1279,7 @@ function Onboarding({ onComplete, authUser }) {
               The link is on its way to <span style={{color:B.vellum, fontStyle:"normal"}}>{email}</span>.
             </p>
             <p className="rhei-rise rhei-rise-3" style={{
-              fontFamily:F, fontStyle:"italic", fontSize:13, fontWeight:400,
+              fontFamily:F, fontSize:13, fontWeight:400,
               color:"rgba(248,242,229,0.5)",
               lineHeight:1.6,
               margin:"0 auto 44px", maxWidth:320,
@@ -1379,7 +1379,7 @@ function Onboarding({ onComplete, authUser }) {
           <div style={{maxWidth:480, width:"100%"}}>
             {/* Numeral — large, Fraunces, low-opacity, atmospheric */}
             <p key={`n-${step}`} className="rhei-rise rhei-rise-1" style={{
-              fontFamily:F, fontStyle:"italic",
+              fontFamily:F, 
               fontSize:14, fontWeight:400,
               color:"rgba(196,154,75,0.7)",
               letterSpacing:"0.08em",
@@ -1397,7 +1397,7 @@ function Onboarding({ onComplete, authUser }) {
 
             {/* Body — the breath after */}
             <p key={`b-${step}`} className="rhei-rise rhei-rise-3" style={{
-              fontFamily:F, fontStyle:"italic", fontSize:16, fontWeight:400,
+              fontFamily:F, fontSize:16, fontWeight:400,
               color:"rgba(248,242,229,0.62)",
               lineHeight:1.55,
               margin:"0 auto 64px", maxWidth:380,
@@ -1468,7 +1468,7 @@ function Onboarding({ onComplete, authUser }) {
           }}>What should I call you?</h2>
 
           <p className="rhei-rise rhei-rise-3" style={{
-            fontFamily:F, fontStyle:"italic", fontSize:15, fontWeight:400,
+            fontFamily:F, fontSize:15, fontWeight:400,
             color:"rgba(248,242,229,0.65)",
             lineHeight:1.55,
             margin:"0 auto 44px", maxWidth:300,
@@ -1871,9 +1871,9 @@ export default function ObrizApp() {
 
         {/* ── Cinematic hero — greeting + daily message ── */}
         <div className="rhei-rise rhei-rise-2" style={{marginBottom:52}}>
-          <p style={{fontFamily:F,fontSize:15,fontStyle:"italic",color:"rgba(248,242,229,0.55)",margin:"0 0 16px",letterSpacing:"-0.005em"}}>{greeting}</p>
+          <p style={{fontFamily:F,fontSize:15,color:"rgba(248,242,229,0.55)",margin:"0 0 16px",letterSpacing:"-0.005em"}}>{greeting}</p>
           <h1 style={{fontFamily:F,fontSize:"clamp(34px, 8.5vw, 44px)",fontWeight:300,color:B.vellum,letterSpacing:"-0.02em",lineHeight:1.05,margin:"0 0 14px",maxWidth:380,fontVariationSettings:"'opsz' 60"}}>{dailyMessage.h}</h1>
-          <p style={{fontFamily:F,fontStyle:"italic",fontSize:15,fontWeight:400,color:"rgba(248,242,229,0.6)",lineHeight:1.55,margin:0,maxWidth:340}}>{dailyMessage.s}</p>
+          <p style={{fontFamily:F,fontSize:15,fontWeight:400,color:"rgba(248,242,229,0.6)",lineHeight:1.55,margin:0,maxWidth:340}}>{dailyMessage.s}</p>
         </div>
 
         {/* ── PWA install whisper (low priority, easy to dismiss) ── */}
@@ -1882,7 +1882,7 @@ export default function ObrizApp() {
             <button onClick={dismissInstall} style={{position:"absolute",top:10,right:10,background:"none",border:"none",cursor:"pointer",padding:4}}><X size={11} color="rgba(248,242,229,0.4)"/></button>
             <button onClick={installApp} style={{flex:1,background:"none",border:"none",cursor:"pointer",textAlign:"left",padding:0,paddingRight:18}}>
               <p style={{fontFamily:F,fontSize:13,color:B.paper,margin:"0 0 2px"}}>Keep RHEI close.</p>
-              <p style={{fontFamily:F,fontStyle:"italic",fontSize:11,color:"rgba(248,242,229,0.55)",margin:0}}>Add to home screen.</p>
+              <p style={{fontFamily:F,fontSize:11,color:"rgba(248,242,229,0.55)",margin:0}}>Add to home screen.</p>
             </button>
             <ArrowRight size={13} color={B.polished}/>
           </div>
@@ -1893,7 +1893,7 @@ export default function ObrizApp() {
           <div className="rhei-rise rhei-rise-3" style={{marginBottom:36}}>
             <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:"0 0 14px"}}>For where you are</p>
             <div style={{background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(196,154,75,0.18)",borderRadius:20,padding:"22px 22px 18px"}}>
-              <p style={{fontFamily:F,fontSize:18,fontStyle:"italic",color:B.vellum,lineHeight:1.4,margin:"0 0 16px",fontWeight:300}}>{personalizedMsg}</p>
+              <p style={{fontFamily:F,fontSize:18,color:B.vellum,lineHeight:1.4,margin:"0 0 16px",fontWeight:300}}>{personalizedMsg}</p>
               <button
                 className="rhei-press"
                 onClick={()=>{setCheckinDone(false);setCheckinState(null);}}
@@ -1911,7 +1911,7 @@ export default function ObrizApp() {
               style={{width:"100%",background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(248,242,229,0.10)",borderRadius:20,padding:"22px 22px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",justifyContent:"space-between",gap:14}}>
               <div>
                 <p style={{fontFamily:F,fontSize:17,color:B.vellum,margin:"0 0 4px",fontWeight:400,lineHeight:1.3}}>Tell me how you arrived.</p>
-                <p style={{fontFamily:F,fontStyle:"italic",fontSize:12,color:"rgba(248,242,229,0.55)",margin:0,lineHeight:1.4}}>Eight ways to begin. Pick the closest.</p>
+                <p style={{fontFamily:F,fontSize:12,color:"rgba(248,242,229,0.55)",margin:0,lineHeight:1.4}}>Eight ways to begin. Pick the closest.</p>
               </div>
               <ArrowRight size={16} color={B.polished} strokeWidth={1.5}/>
             </button>
@@ -1945,7 +1945,7 @@ export default function ObrizApp() {
             <div style={{position:"relative",zIndex:2,maxWidth:"68%"}}>
               <p style={{fontFamily:SF,fontSize:9,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.8)",margin:"0 0 12px"}}>{arc.ritual.duration}</p>
               <h2 style={{fontFamily:F,fontSize:"clamp(26px, 7vw, 32px)",fontWeight:300,color:B.vellum,letterSpacing:"-0.018em",lineHeight:1.08,margin:"0 0 8px",fontVariationSettings:"'opsz' 60"}}>{arc.ritual.title}</h2>
-              <p style={{fontFamily:F,fontStyle:"italic",fontSize:13,color:"rgba(248,242,229,0.6)",margin:"0 0 22px",lineHeight:1.5}}>{arc.ritual.subtitle}</p>
+              <p style={{fontFamily:F,fontSize:13,color:"rgba(248,242,229,0.6)",margin:"0 0 22px",lineHeight:1.5}}>{arc.ritual.subtitle}</p>
               <div style={{display:"inline-flex",alignItems:"center",gap:10,background:B.paper,borderRadius:100,padding:"11px 22px",boxShadow:"0 8px 24px -8px rgba(248,242,229,0.25), 0 4px 12px rgba(15,9,5,0.4)"}}>
                 <span style={{fontFamily:SF,fontSize:13,color:B.espresso,fontWeight:500,letterSpacing:"0.04em"}}>{ritualLocked ? "Enter the collection" : "Begin"}</span>
                 <ArrowRight size={13} color={B.espresso} strokeWidth={2}/>
@@ -1958,7 +1958,7 @@ export default function ObrizApp() {
         <div className="rhei-rise rhei-rise-4" style={{marginBottom:44}}>
           <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:18,paddingRight:0}}>
             <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:0}}>Curated</p>
-            <p style={{fontFamily:F,fontStyle:"italic",fontSize:11,color:"rgba(248,242,229,0.45)",margin:0}}>Swipe through</p>
+            <p style={{fontFamily:F,fontSize:11,color:"rgba(248,242,229,0.45)",margin:0}}>Swipe through</p>
           </div>
           <div style={{display:"flex",gap:12,overflowX:"auto",scrollSnapType:"x mandatory",scrollPaddingLeft:0,margin:"0 -24px",padding:"0 24px 8px",WebkitOverflowScrolling:"touch",scrollbarWidth:"none"}}>
             <style>{`.rhei-collection-strip::-webkit-scrollbar{display:none;}`}</style>
@@ -1976,7 +1976,7 @@ export default function ObrizApp() {
                   <div style={{position:"relative",zIndex:1}}>
                     <p style={{fontFamily:SF,fontSize:9,fontWeight:500,letterSpacing:"0.22em",textTransform:"uppercase",color:c.accent,margin:"0 0 8px",opacity:0.9}}>{c.ritualIds.length} ritual{c.ritualIds.length>1?"s":""}</p>
                     <h3 style={{fontFamily:F,fontSize:18,fontWeight:400,color:B.vellum,letterSpacing:"-0.005em",lineHeight:1.15,margin:"0 0 6px"}}>{c.title}</h3>
-                    <p style={{fontFamily:F,fontStyle:"italic",fontSize:11.5,color:"rgba(248,242,229,0.55)",lineHeight:1.45,margin:0}}>{c.subtitle}</p>
+                    <p style={{fontFamily:F,fontSize:11.5,color:"rgba(248,242,229,0.55)",lineHeight:1.45,margin:0}}>{c.subtitle}</p>
                   </div>
                   <div style={{position:"relative",zIndex:1,display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:14}}>
                     <span style={{fontFamily:SF,fontSize:10,color:"rgba(248,242,229,0.75)",letterSpacing:"0.04em"}}>Begin</span>
@@ -2005,7 +2005,7 @@ export default function ObrizApp() {
             </div>
             <div style={{flex:1,minWidth:0}}>
               <h3 style={{fontFamily:F,fontSize:17,color:B.vellum,margin:"0 0 3px",fontWeight:400,lineHeight:1.25,letterSpacing:"-0.005em"}}>{arc.audio.title}</h3>
-              <p style={{fontFamily:F,fontStyle:"italic",fontSize:12,color:"rgba(248,242,229,0.55)",margin:0,lineHeight:1.4}}>{arc.audio.subtitle}</p>
+              <p style={{fontFamily:F,fontSize:12,color:"rgba(248,242,229,0.55)",margin:0,lineHeight:1.4}}>{arc.audio.subtitle}</p>
             </div>
             <span style={{fontFamily:SF,fontSize:11,color:"rgba(248,242,229,0.45)",letterSpacing:"0.04em",flexShrink:0}}>{Math.ceil(arc.audio.duration/60)} min</span>
           </button>
@@ -2015,7 +2015,7 @@ export default function ObrizApp() {
         <div className="rhei-rise rhei-rise-5" style={{marginBottom:44}}>
           <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:18}}>
             <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:0}}>Quiet Relief</p>
-            <p style={{fontFamily:F,fontStyle:"italic",fontSize:11,color:"rgba(248,242,229,0.45)",margin:0}}>Under two minutes</p>
+            <p style={{fontFamily:F,fontSize:11,color:"rgba(248,242,229,0.45)",margin:0}}>Under two minutes</p>
           </div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
             {microInterventions.map(mi=>(
@@ -2026,7 +2026,7 @@ export default function ObrizApp() {
                 style={{background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(248,242,229,0.08)",borderRadius:16,padding:"16px 14px",cursor:"pointer",textAlign:"left",minHeight:118,display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
                 <div>
                   <p style={{fontFamily:F,fontSize:15,color:B.vellum,margin:"0 0 4px",fontWeight:400,lineHeight:1.25,letterSpacing:"-0.005em"}}>{mi.title}</p>
-                  <p style={{fontFamily:F,fontStyle:"italic",fontSize:11,color:"rgba(248,242,229,0.5)",margin:"0 0 8px",lineHeight:1.4}}>{mi.secondary}</p>
+                  <p style={{fontFamily:F,fontSize:11,color:"rgba(248,242,229,0.5)",margin:"0 0 8px",lineHeight:1.4}}>{mi.secondary}</p>
                 </div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:8}}>
                   <span style={{fontFamily:SF,fontSize:9,color:"rgba(196,154,75,0.85)",letterSpacing:"0.18em",textTransform:"uppercase",fontWeight:500}}>{mi.badge}</span>
@@ -2044,12 +2044,12 @@ export default function ObrizApp() {
             <div style={{display:"flex",gap:0,alignItems:"baseline"}}>
               <div style={{flex:1,paddingRight:16}}>
                 <p style={{fontFamily:F,fontSize:32,fontWeight:300,color:B.vellum,margin:"0",letterSpacing:"-0.02em",lineHeight:1,fontVariationSettings:"'opsz' 60"}}>{Math.max(streak, meditationStreak)}</p>
-                <p style={{fontFamily:F,fontStyle:"italic",fontSize:11,color:"rgba(248,242,229,0.5)",margin:"6px 0 0",lineHeight:1.4}}>days returning</p>
+                <p style={{fontFamily:F,fontSize:11,color:"rgba(248,242,229,0.5)",margin:"6px 0 0",lineHeight:1.4}}>days returning</p>
               </div>
               <div style={{width:1,alignSelf:"stretch",background:"rgba(248,242,229,0.08)"}}/>
               <div style={{flex:1,paddingLeft:16}}>
                 <p style={{fontFamily:F,fontSize:32,fontWeight:300,color:B.vellum,margin:"0",letterSpacing:"-0.02em",lineHeight:1,fontVariationSettings:"'opsz' 60"}}>{totalSessions}</p>
-                <p style={{fontFamily:F,fontStyle:"italic",fontSize:11,color:"rgba(248,242,229,0.5)",margin:"6px 0 0",lineHeight:1.4}}>moments kept</p>
+                <p style={{fontFamily:F,fontSize:11,color:"rgba(248,242,229,0.5)",margin:"6px 0 0",lineHeight:1.4}}>moments kept</p>
               </div>
               <button onClick={()=>setScreen("journey")} className="rhei-press" style={{background:"none",border:"none",cursor:"pointer",color:"rgba(248,242,229,0.55)",fontFamily:SF,fontSize:10,fontWeight:400,letterSpacing:"0.18em",textTransform:"uppercase",padding:0,alignSelf:"center"}}>
                 Full journey →
@@ -2069,7 +2069,7 @@ export default function ObrizApp() {
               <div style={{position:"relative",zIndex:1}}>
                 <p style={{fontFamily:SF,fontSize:9,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:B.polished,margin:"0 0 12px"}}>Membership</p>
                 <h3 style={{fontFamily:F,fontSize:22,fontWeight:300,color:B.vellum,letterSpacing:"-0.015em",lineHeight:1.15,margin:"0 0 8px",maxWidth:300,fontVariationSettings:"'opsz' 60"}}>Enter the full collection.</h3>
-                <p style={{fontFamily:F,fontStyle:"italic",fontSize:13,color:"rgba(248,242,229,0.6)",margin:"0 0 18px",lineHeight:1.5,maxWidth:340}}>Every ritual, every meditation. The whole practice, open to you.</p>
+                <p style={{fontFamily:F,fontSize:13,color:"rgba(248,242,229,0.6)",margin:"0 0 18px",lineHeight:1.5,maxWidth:340}}>Every ritual, every meditation. The whole practice, open to you.</p>
                 <div style={{display:"inline-flex",alignItems:"center",gap:8}}>
                   <span style={{fontFamily:SF,fontSize:11,color:B.polished,letterSpacing:"0.18em",textTransform:"uppercase",fontWeight:500}}>See what's inside</span>
                   <ArrowRight size={12} color={B.polished} strokeWidth={1.5}/>
@@ -2106,7 +2106,7 @@ export default function ObrizApp() {
         <div style={{textAlign:"center",marginTop:36,marginBottom:36}}>
           <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,marginBottom:8}}>Audio reset</p>
           <h1 style={{fontSize:26,fontWeight:400,color:B.cream,margin:"0 0 4px",fontFamily:F}}>{cur.title}</h1>
-          <p style={{fontSize:13,color:B.muted,fontStyle:"italic",fontFamily:F}}>{cur.subtitle}</p>
+          <p style={{fontSize:13,color:B.muted,fontFamily:F}}>{cur.subtitle}</p>
         </div>
         <div style={{position:"relative",width:220,height:220,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:44}}>
           <Orb active={isPlaying} size={220}/><Ring progress={progress} size={220}/>
@@ -2141,7 +2141,7 @@ export default function ObrizApp() {
             <div style={{textAlign:"center",padding:32,maxWidth:340}}>
               <div style={{width:80,height:80,borderRadius:"50%",background:`rgba(196,154,75,0.08)`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 24px",border:`1px solid rgba(196,154,75,0.2)`,boxShadow:B.goldGlow}}><Sparkles size={28} color={B.gold}/></div>
               <h2 style={{fontSize:26,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>You showed up.</h2>
-              <p style={{fontSize:14,color:B.muted,fontStyle:"italic",margin:"0 0 4px",fontFamily:F}}>{cur.title}</p>
+              <p style={{fontSize:14,color:B.muted,margin:"0 0 4px",fontFamily:F}}>{cur.title}</p>
               <p style={{fontSize:11,color:B.goldDim,fontFamily:SF,margin:"0 0 28px",letterSpacing:0.5}}>{Math.ceil(cur.duration/60)} minutes</p>
               <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:24}}>
                 {[{v:`${Math.ceil(cur.duration/60)}m`,l:"Duration"},{v:completedToday.length,l:"Today"},{v:streak,l:"Streak"}].map((s,i)=>(
@@ -2177,38 +2177,38 @@ export default function ObrizApp() {
 
       <div style={{position:"relative", zIndex:1, maxWidth:480, margin:"0 auto", padding:"0 24px"}}>
 
-        {/* ── HERO: Luminar-style starburst + serif title ── */}
-        <div className="rhei-rise rhei-rise-1" style={{
-          textAlign:"center",
-          paddingTop:"min(12vh, 90px)",
-          marginBottom:48,
-        }}>
-          <div style={{
-            display:"inline-flex", alignItems:"center", justifyContent:"center",
-            width:46, height:46, borderRadius:10,
-            background:"rgba(8,5,2,0.55)",
-            border:"1px solid rgba(245,200,120,0.18)",
-            boxShadow:"0 0 40px rgba(245,200,120,0.30), inset 0 0 20px rgba(245,200,120,0.10)",
-            marginBottom:32,
-          }}>
-            <Starburst size={26} />
+        {/* ── HERO: editorial photo + tight typography ── */}
+        <div className="rhei-rise rhei-rise-1" style={{ marginBottom:44, marginTop:8 }}>
+          {/* Editorial photograph as anchor — close-up skin/hands */}
+          <div style={{ position:"relative", marginBottom:28, borderRadius:2, overflow:"hidden" }}>
+            <EditorialPhoto src="/images/rituals-hero.jpg" tone="skin" aspect="5 / 4" overlay={true}>
+              <div style={{
+                position:"absolute", top:18, left:18, right:18,
+                display:"flex", justifyContent:"space-between", alignItems:"center",
+              }}>
+                <PrecisionStamp label="RHEI" value="RITUALS" color="rgba(242,235,220,0.85)"/>
+                <PrecisionStamp label="07" color="rgba(242,235,220,0.65)"/>
+              </div>
+              <div style={{ position:"absolute", bottom:24, left:22, right:22 }}>
+                <h1 style={{
+                  fontFamily:F, fontSize:"clamp(34px, 9vw, 48px)",
+                  fontWeight:300, color:"#F2EBDC",
+                  letterSpacing:"-0.025em", lineHeight:0.98,
+                  margin:0,
+                  fontVariationSettings:"'opsz' 144",
+                }}>
+                  Rituals
+                </h1>
+              </div>
+            </EditorialPhoto>
           </div>
-
-          <p style={{fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(245,200,120,0.75)", margin:"0 0 16px"}}>
-            The Hands Room
-          </p>
-          <h1 style={{
-            fontFamily:F, fontSize:"clamp(34px, 8.5vw, 44px)",
-            fontWeight:300, color:B.vellum,
-            letterSpacing:"-0.02em", lineHeight:1.05,
-            margin:"0 0 14px",
-            fontVariationSettings:"'opsz' 96",
-            textShadow:"0 2px 20px rgba(0,0,0,0.4)",
+          <p style={{
+            fontFamily:F, fontSize:16, fontWeight:300,
+            color:"rgba(242,235,220,0.72)", lineHeight:1.45,
+            margin:0, letterSpacing:"-0.005em",
+            maxWidth:380,
           }}>
-            Hands on the surface.
-          </h1>
-          <p style={{fontFamily:F, fontStyle:"italic", fontSize:14, color:"rgba(248,242,229,0.62)", lineHeight:1.55, margin:"0 auto", maxWidth:300}}>
-            Seven rituals. Each with its own tool, its own pressure, its own room.
+            Seven practices for the face and the nervous system. Each with its own tool, its own pressure, its own outcome.
           </p>
         </div>
 
@@ -2237,7 +2237,7 @@ export default function ObrizApp() {
             <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(245,200,120,0.80)", margin:"0 0 12px"}}>
               Mirror Mode — New
             </p>
-            <p style={{fontFamily:F, fontStyle:"italic", fontSize:14, color:"rgba(248,242,229,0.65)", lineHeight:1.5, margin:"0 0 24px", maxWidth:320, marginLeft:"auto", marginRight:"auto"}}>
+            <p style={{fontFamily:F, fontSize:14, color:"rgba(248,242,229,0.65)", lineHeight:1.5, margin:"0 0 24px", maxWidth:320, marginLeft:"auto", marginRight:"auto"}}>
               Your face, guided live. The camera finds the tension and walks you through it.
             </p>
             <div style={{
@@ -2263,7 +2263,7 @@ export default function ObrizApp() {
         {recommended && (
           <div className="rhei-rise rhei-rise-3" style={{marginBottom:24, textAlign:"center"}}>
             <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color:"rgba(245,200,120,0.70)", margin:"0 0 6px"}}>For where you are</p>
-            <p style={{fontFamily:F, fontStyle:"italic", fontSize:13, color:"rgba(248,242,229,0.60)", margin:0, lineHeight:1.5}}>
+            <p style={{fontFamily:F, fontSize:13, color:"rgba(248,242,229,0.60)", margin:0, lineHeight:1.5}}>
               We'd guide you to <span style={{color:B.vellum, fontStyle:"normal"}}>{recommended.title}</span>.
             </p>
           </div>
@@ -2349,7 +2349,7 @@ export default function ObrizApp() {
                     )}
                   </div>
                   <p style={{
-                    fontFamily:F, fontStyle:"italic",
+                    fontFamily:F, 
                     fontSize:12.5, color:"rgba(248,242,229,0.58)",
                     margin:"0 0 8px", lineHeight:1.5,
                   }}>
@@ -2419,7 +2419,7 @@ export default function ObrizApp() {
                 Every ritual, open to you.
               </h3>
               <p style={{
-                fontFamily:F, fontStyle:"italic",
+                fontFamily:F, 
                 fontSize:13, color:"rgba(248,242,229,0.60)",
                 lineHeight:1.55, margin:"0 auto 26px",
                 maxWidth:280,
@@ -2467,47 +2467,50 @@ export default function ObrizApp() {
 
       <div style={{position:"relative", zIndex:1, maxWidth:480, margin:"0 auto", padding:"0 24px"}}>
 
-        {/* ── HERO: Luminar-style centered starburst + serif title ── */}
-        <div className="rhei-rise rhei-rise-1" style={{
-          textAlign:"center",
-          paddingTop:"min(14vh, 100px)",
-          marginBottom:48,
-        }}>
-          {/* Streak floats in top-right corner, tiny */}
-          {meditationStreak>0 && (
-            <div style={{position:"absolute", top:0, right:24, display:"flex", alignItems:"baseline", gap:6}}>
-              <span style={{fontFamily:F, fontSize:22, fontWeight:300, color:B.vellum, fontVariationSettings:"'opsz' 48"}}>{meditationStreak}</span>
-              <span style={{fontFamily:SF, fontSize:8, letterSpacing:"0.3em", color:"rgba(248,242,229,0.45)", textTransform:"uppercase"}}>day streak</span>
-            </div>
-          )}
-
-          {/* The starburst — minimal, centered, like Luminar */}
-          <div style={{
-            display:"inline-flex", alignItems:"center", justifyContent:"center",
-            width:46, height:46, borderRadius:10,
-            background:"rgba(8,5,2,0.55)",
-            border:"1px solid rgba(245,200,120,0.18)",
-            boxShadow:"0 0 40px rgba(245,200,120,0.30), inset 0 0 20px rgba(245,200,120,0.10)",
-            marginBottom:32,
-          }}>
-            <Starburst size={26} />
+        {/* Top streak chip */}
+        {meditationStreak>0 && (
+          <div style={{position:"absolute", top:4, right:24, display:"flex", alignItems:"baseline", gap:6, zIndex:2}}>
+            <span style={{fontFamily:F, fontSize:20, fontWeight:300, color:"#F2EBDC", fontVariationSettings:"'opsz' 48"}}>{meditationStreak}</span>
+            <span style={{fontFamily:SF, fontSize:8, letterSpacing:"0.32em", color:"rgba(242,235,220,0.55)", textTransform:"uppercase"}}>day streak</span>
           </div>
+        )}
 
-          <p style={{fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(245,200,120,0.75)", margin:"0 0 16px"}}>
-            The Audio Room
-          </p>
-          <h1 style={{
-            fontFamily:F, fontSize:"clamp(34px, 8.5vw, 44px)",
-            fontWeight:300, color:B.vellum,
-            letterSpacing:"-0.02em", lineHeight:1.05,
-            margin:"0 0 14px",
-            fontVariationSettings:"'opsz' 96",
-            textShadow:"0 2px 20px rgba(0,0,0,0.4)",
+        {/* ── HERO: editorial photograph + tight type ── */}
+        <div className="rhei-rise rhei-rise-1" style={{
+          marginBottom:44,
+          marginTop:8,
+        }}>{/* end-marker — content below */}
+
+          {/* Editorial photograph — water/skin tone (calm) */}
+          <div style={{ position:"relative", marginBottom:28, borderRadius:2, overflow:"hidden", textAlign:"left" }}>
+            <EditorialPhoto src="/images/meditations-hero.jpg" tone="water" aspect="5 / 4" overlay={true}>
+              <div style={{
+                position:"absolute", top:18, left:18, right:18,
+                display:"flex", justifyContent:"space-between", alignItems:"center",
+              }}>
+                <PrecisionStamp label="RHEI" value="MEDITATIONS" color="rgba(242,235,220,0.85)"/>
+                <PrecisionStamp label="05" color="rgba(242,235,220,0.65)"/>
+              </div>
+              <div style={{ position:"absolute", bottom:24, left:22, right:22 }}>
+                <h1 style={{
+                  fontFamily:F, fontSize:"clamp(34px, 9vw, 48px)",
+                  fontWeight:300, color:"#F2EBDC",
+                  letterSpacing:"-0.025em", lineHeight:0.98,
+                  margin:0,
+                  fontVariationSettings:"'opsz' 144",
+                }}>
+                  Meditations
+                </h1>
+              </div>
+            </EditorialPhoto>
+          </div>
+          <p style={{
+            fontFamily:F, fontSize:16, fontWeight:300,
+            color:"rgba(242,235,220,0.72)", lineHeight:1.45,
+            margin:0, letterSpacing:"-0.005em",
+            maxWidth:380, textAlign:"left",
           }}>
-            Step into the light.
-          </h1>
-          <p style={{fontFamily:F, fontStyle:"italic", fontSize:14, color:"rgba(248,242,229,0.62)", lineHeight:1.55, margin:"0 auto", maxWidth:300}}>
-            Five audio rooms. Each one a different temperature of warmth.
+            Five audio practices for the nervous system. Each one a different mode of return.
           </p>
         </div>
 
@@ -2543,7 +2546,7 @@ export default function ObrizApp() {
             })}
           </div>
           {medCheckinDone && recommendedSession && (
-            <p style={{fontFamily:F, fontStyle:"italic", fontSize:12, color:"rgba(245,200,120,0.78)", textAlign:"center", margin:"16px 0 0"}}>
+            <p style={{fontFamily:F, fontSize:12, color:"rgba(245,200,120,0.78)", textAlign:"center", margin:"16px 0 0"}}>
               We'd guide you to <span style={{color:B.vellum, fontStyle:"normal"}}>{recommendedSession.title}</span>.
             </p>
           )}
@@ -2624,7 +2627,7 @@ export default function ObrizApp() {
                     )}
                   </div>
                   <p style={{
-                    fontFamily:F, fontStyle:"italic",
+                    fontFamily:F, 
                     fontSize:13, color:"rgba(248,242,229,0.58)",
                     margin:"0 0 10px", lineHeight:1.5,
                   }}>
@@ -2701,7 +2704,7 @@ export default function ObrizApp() {
                 Four more rooms. One key.
               </h3>
               <p style={{
-                fontFamily:F, fontStyle:"italic",
+                fontFamily:F, 
                 fontSize:13, color:"rgba(248,242,229,0.60)",
                 lineHeight:1.55, margin:"0 auto 26px",
                 maxWidth:280,
@@ -2749,29 +2752,34 @@ export default function ObrizApp() {
 
         {/* Top stamp row */}
         <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:24}}>
-          <PrecisionStamp label="RHEI" value="MEMBERSHIP" color="rgba(245,200,120,0.75)"/>
-          <PrecisionStamp label="01 / 01" color="rgba(248,242,229,0.40)"/>
+          <PrecisionStamp label="RHEI" value="MEMBERSHIP" color="rgba(242,235,220,0.85)"/>
+          <PrecisionStamp label="01 / 01" color="rgba(242,235,220,0.45)"/>
         </div>
 
-        {/* HERO */}
-        <div className="rhei-rise rhei-rise-1" style={{position:"relative", textAlign:"center", padding:"min(8vh, 60px) 24px 36px", marginBottom:36}}>
-          <CornerBrackets inset={0} size={16} color="rgba(245,200,120,0.40)" />
-          <div style={{marginBottom:30}}><SharedStarburstPlinth/></div>
-          <p style={{fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(245,200,120,0.75)", margin:"0 0 16px"}}>
-            The Full Practice
-          </p>
-          <h1 style={{
-            fontFamily:F, fontSize:"clamp(32px, 8vw, 42px)",
-            fontWeight:300, color:"#F8F2E5",
-            letterSpacing:"-0.02em", lineHeight:1.05,
-            margin:"0 0 14px",
-            fontVariationSettings:"'opsz' 96",
-            textShadow:"0 2px 20px rgba(0,0,0,0.4)",
+        {/* HERO — editorial photo + tight type */}
+        <div className="rhei-rise rhei-rise-1" style={{ marginBottom:36, marginTop:8 }}>
+          <div style={{ position:"relative", marginBottom:24, borderRadius:2, overflow:"hidden" }}>
+            <EditorialPhoto src="/images/membership-hero.jpg" tone="stone" aspect="3 / 2" overlay={true}>
+              <div style={{ position:"absolute", bottom:22, left:22, right:22 }}>
+                <h1 style={{
+                  fontFamily:F, fontSize:"clamp(34px, 9vw, 48px)",
+                  fontWeight:300, color:"#F2EBDC",
+                  letterSpacing:"-0.025em", lineHeight:0.98,
+                  margin:0,
+                  fontVariationSettings:"'opsz' 144",
+                }}>
+                  Membership
+                </h1>
+              </div>
+            </EditorialPhoto>
+          </div>
+          <p style={{
+            fontFamily:F, fontSize:16, fontWeight:300,
+            color:"rgba(242,235,220,0.72)", lineHeight:1.45,
+            margin:0, letterSpacing:"-0.005em",
+            maxWidth:380,
           }}>
-            Every room.<br/>One key.
-          </h1>
-          <p style={{fontFamily:F, fontStyle:"italic", fontSize:14, color:"rgba(248,242,229,0.62)", lineHeight:1.55, margin:"0 auto", maxWidth:320}}>
-            Every ritual. Every audio reset. The complete arc.
+            Every ritual. Every audio reset. The complete practice, open to you.
           </p>
         </div>
 
@@ -2827,7 +2835,7 @@ export default function ObrizApp() {
         </div>
 
         {checkoutLoading && (
-          <p style={{textAlign:"center", fontFamily:F, fontStyle:"italic", fontSize:12, color:"rgba(248,242,229,0.55)", margin:"0 0 20px"}}>
+          <p style={{textAlign:"center", fontFamily:F, fontSize:12, color:"rgba(248,242,229,0.55)", margin:"0 0 20px"}}>
             Opening checkout…
           </p>
         )}
@@ -2882,15 +2890,15 @@ export default function ObrizApp() {
             borderRadius:18, padding:"18px 20px",
           }}>
             <PrecisionStamp label="Already a member" color="rgba(245,200,120,0.65)"/>
-            <p style={{fontFamily:F, fontStyle:"italic", fontSize:12.5, color:"rgba(248,242,229,0.60)", margin:"8px 0 14px", lineHeight:1.5}}>
+            <p style={{fontFamily:F, fontSize:12.5, color:"rgba(248,242,229,0.60)", margin:"8px 0 14px", lineHeight:1.5}}>
               Sign in with the email used at checkout to restore access.
             </p>
             <div style={{display:"flex", gap:8}}>
               <input type="email" placeholder="your@email.com" value={authEmail} onChange={e=>setAuthEmail(e.target.value)} onKeyDown={e=>e.key==='Enter'&&signInWithEmail()} style={{flex:1, background:"rgba(248,242,229,0.04)", border:"1px solid rgba(248,242,229,0.10)", borderRadius:10, padding:"9px 14px", color:"#F8F2E5", fontSize:12, fontFamily:SF, outline:"none"}}/>
               <button onClick={signInWithEmail} style={{background:"rgba(245,200,120,0.15)", border:"1px solid rgba(245,200,120,0.30)", borderRadius:10, padding:"9px 16px", cursor:"pointer", color:"#F5C878", fontSize:11, fontFamily:SF, letterSpacing:"0.06em", fontWeight:500, whiteSpace:"nowrap"}}>Sign in</button>
             </div>
-            {authSent && <p style={{fontFamily:F, fontStyle:"italic", fontSize:11, color:"rgba(180,220,190,0.85)", margin:"10px 0 0"}}>Check your email for a sign-in link.</p>}
-            {authError && <p style={{fontFamily:F, fontStyle:"italic", fontSize:11, color:"rgba(228,138,118,0.85)", margin:"10px 0 0"}}>{authError}</p>}
+            {authSent && <p style={{fontFamily:F, fontSize:11, color:"rgba(180,220,190,0.85)", margin:"10px 0 0"}}>Check your email for a sign-in link.</p>}
+            {authError && <p style={{fontFamily:F, fontSize:11, color:"rgba(228,138,118,0.85)", margin:"10px 0 0"}}>{authError}</p>}
           </div>
         ) : (
           <div className="rhei-rise rhei-rise-4" style={{textAlign:"center"}}>
@@ -2930,56 +2938,51 @@ export default function ObrizApp() {
 
         <div style={{position:"relative", zIndex:1}}>
 
-        {/* HERO — cinematic photo with observatory frame */}
+        {/* HERO — editorial cinematic photo, full bleed */}
         <div className="rhei-rise rhei-rise-1" style={{
           position:"relative",
-          height:340,
-          marginBottom:32,
+          height:380,
+          marginBottom:36,
           backgroundColor:"#0A0604",
-          backgroundImage:`linear-gradient(180deg, rgba(10,6,4,0.20) 0%, rgba(10,6,4,0.05) 30%, rgba(10,6,4,0.55) 70%, rgba(10,6,4,1) 100%), url('/images/journey-hero.jpg')`,
+          backgroundImage:`linear-gradient(180deg, rgba(10,6,4,0.15) 0%, rgba(10,6,4,0.0) 25%, rgba(10,6,4,0.45) 65%, rgba(12,9,7,1) 100%), url('/images/journey-hero.jpg')`,
           backgroundSize:"cover",
           backgroundPosition:"center",
           backgroundRepeat:"no-repeat",
           display:"flex",
           flexDirection:"column",
           justifyContent:"flex-end",
-          padding:"calc(env(safe-area-inset-top, 0px) + 28px) 24px 28px",
+          padding:"calc(env(safe-area-inset-top, 0px) + 22px) 24px 28px",
           overflow:"hidden",
         }}>
+          <div className="rhei-grain" style={{opacity:0.6}}/>
           {/* Top corner readouts */}
-          <div style={{position:"absolute", top:"calc(env(safe-area-inset-top, 0px) + 22px)", left:24, right:24, display:"flex", justifyContent:"space-between", alignItems:"center"}}>
-            <PrecisionStamp label="RHEI" value="JOURNEY" color="rgba(248,242,229,0.75)"/>
-            <PrecisionStamp label={new Date().toLocaleDateString("en-US",{day:"2-digit",month:"short"}).toUpperCase()} color="rgba(248,242,229,0.65)"/>
+          <div style={{position:"absolute", top:"calc(env(safe-area-inset-top, 0px) + 22px)", left:24, right:24, display:"flex", justifyContent:"space-between", alignItems:"center", zIndex:2}}>
+            <PrecisionStamp label="RHEI" value="JOURNEY" color="rgba(242,235,220,0.85)"/>
+            <PrecisionStamp label={new Date().toLocaleDateString("en-US",{day:"2-digit",month:"short",year:"numeric"}).toUpperCase()} color="rgba(242,235,220,0.65)"/>
           </div>
-
-          {/* Centered starburst overlay */}
-          <div style={{position:"absolute", top:"38%", left:"50%", transform:"translate(-50%, -50%)"}}>
-            <SharedStarburstPlinth size={42} glyph={22}/>
-          </div>
-
-          <CornerBrackets inset={16} size={18} color="rgba(248,242,229,0.45)"/>
 
           {/* Title block at bottom of hero */}
           <div style={{position:"relative", zIndex:1}}>
-            <PrecisionStamp label="Your Practice" color="rgba(245,200,120,0.80)"/>
+            <PrecisionStamp label="Your Practice" color="rgba(242,235,220,0.75)"/>
             <h1 style={{
-              fontFamily:F, fontSize:"clamp(32px, 8vw, 40px)",
-              fontWeight:300, color:"#F8F2E5",
-              letterSpacing:"-0.02em", lineHeight:1.05,
-              margin:"10px 0 8px",
-              fontVariationSettings:"'opsz' 96",
+              fontFamily:F, fontSize:"clamp(36px, 9.5vw, 50px)",
+              fontWeight:300, color:"#F2EBDC",
+              letterSpacing:"-0.025em", lineHeight:0.98,
+              margin:"14px 0 12px",
+              fontVariationSettings:"'opsz' 144",
               textShadow:"0 2px 16px rgba(0,0,0,0.55)",
             }}>
               {userName || "The Record"}
             </h1>
             <p style={{
-              fontFamily:F, fontStyle:"italic",
-              fontSize:13.5, color:"rgba(248,242,229,0.72)",
-              margin:0, lineHeight:1.5,
+              fontFamily:F, fontSize:15, fontWeight:300,
+              color:"rgba(242,235,220,0.78)",
+              margin:0, lineHeight:1.4,
+              letterSpacing:"-0.005em",
               textShadow:"0 1px 8px rgba(0,0,0,0.5)",
-              maxWidth:380,
+              maxWidth:360,
             }}>
-              Your face is the record of what you've shown up for.
+              The face is the record of what you've shown up for.
             </p>
           </div>
         </div>
@@ -3029,7 +3032,7 @@ export default function ObrizApp() {
 
             <p style={{
               position:"relative", zIndex:1,
-              fontFamily:F, fontStyle:"italic",
+              fontFamily:F, 
               fontSize:13, color:"rgba(248,242,229,0.70)",
               textAlign:"center", lineHeight:1.55, margin:"0 0 18px",
               maxWidth:320, marginLeft:"auto", marginRight:"auto",
@@ -3070,21 +3073,21 @@ export default function ObrizApp() {
               <PrecisionStamp label={`Session ${String(totalSessions).padStart(3,"0")}`} color="rgba(248,242,229,0.45)"/>
             </div>
             {totalSessions===0 ? (
-              <p style={{fontFamily:F, fontStyle:"italic", fontSize:14, color:"rgba(248,242,229,0.65)", lineHeight:1.55, margin:0}}>
+              <p style={{fontFamily:F, fontSize:14, color:"rgba(248,242,229,0.65)", lineHeight:1.55, margin:0}}>
                 Complete your first ritual to begin tracking. The change is visible within a week.
               </p>
             ) : (
               <div style={{display:"flex", flexDirection:"column", gap:18}}>
                 {[
                   { label:"Tension", text: totalSessions>=5 ? "Your jaw is releasing. Less holding between sessions." : totalSessions>=2 ? "Starting to soften." : "Your face is beginning to open.", accent:"#5A8A5A", active:totalSessions>=2 },
-                  { label:"Puffiness", text: totalSessions>=4 ? "Drainage is improving. Mornings look clearer." : "Building your drainage habit.", accent:"#8A9BAF", active:totalSessions>=4 },
+                  { label:"Puffiness", text: totalSessions>=4 ? "Drainage is improving. Mornings look clearer." : "Building your drainage habit.", accent:"#8E9BA0", active:totalSessions>=4 },
                   { label:"Overall", text: totalSessions>=7 ? "More balanced. More consistent." : totalSessions>=3 ? "A pattern is forming. Keep going." : "The ritual is working. You'll see it this week.", accent:"#F5C878", active:totalSessions>=3 },
                 ].map((item,i)=>(
                   <div key={i} style={{display:"flex", gap:14, alignItems:"flex-start"}}>
                     <div style={{flexShrink:0, marginTop:5, width:8, height:8, borderRadius:"50%", background: item.active ? item.accent : "rgba(248,242,229,0.20)", boxShadow: item.active ? `0 0 12px ${item.accent}80` : "none"}}/>
                     <div style={{flex:1}}>
                       <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color: item.active ? item.accent : "rgba(248,242,229,0.40)", margin:"0 0 5px"}}>{item.label}</p>
-                      <p style={{fontFamily:F, fontStyle:"italic", fontSize:14, color: item.active ? "rgba(248,242,229,0.85)" : "rgba(248,242,229,0.55)", margin:0, lineHeight:1.5}}>{item.text}</p>
+                      <p style={{fontFamily:F, fontSize:14, color: item.active ? "rgba(248,242,229,0.85)" : "rgba(248,242,229,0.55)", margin:0, lineHeight:1.5}}>{item.text}</p>
                     </div>
                   </div>
                 ))}
@@ -3143,7 +3146,7 @@ export default function ObrizApp() {
               <PrecisionStamp label="Archive" color="rgba(245,200,120,0.70)"/>
               <PrecisionStamp label="Coming Soon" color="rgba(248,242,229,0.40)"/>
             </div>
-            <p style={{fontFamily:F, fontStyle:"italic", fontSize:13.5, color:"rgba(248,242,229,0.62)", margin:"0 0 18px", lineHeight:1.55}}>
+            <p style={{fontFamily:F, fontSize:13.5, color:"rgba(248,242,229,0.62)", margin:"0 0 18px", lineHeight:1.55}}>
               The real measure is your face over time. A weekly self-portrait, kept private.
             </p>
             <div style={{display:"flex", gap:10}}>
@@ -3221,8 +3224,8 @@ export default function ObrizApp() {
                   <input type="email" placeholder="your@email.com" value={authEmail} onChange={e=>setAuthEmail(e.target.value)} onKeyDown={e=>e.key==='Enter'&&signInWithEmail()} style={{flex:1, background:"rgba(248,242,229,0.04)", border:"1px solid rgba(248,242,229,0.10)", borderRadius:10, padding:"9px 14px", color:"#F8F2E5", fontSize:12, fontFamily:SF, outline:"none"}}/>
                   <button onClick={signInWithEmail} style={{background:"rgba(245,200,120,0.15)", border:"1px solid rgba(245,200,120,0.30)", borderRadius:10, padding:"9px 16px", cursor:"pointer", color:"#F5C878", fontSize:11, fontFamily:SF, letterSpacing:"0.06em", fontWeight:500, whiteSpace:"nowrap"}}>Sign in</button>
                 </div>
-                {authSent && <p style={{fontFamily:F, fontStyle:"italic", fontSize:11, color:"rgba(180,220,190,0.85)", margin:"10px 0 0"}}>Check your email for a sign-in link.</p>}
-                {authError && <p style={{fontFamily:F, fontStyle:"italic", fontSize:11, color:"rgba(228,138,118,0.85)", margin:"10px 0 0"}}>{authError}</p>}
+                {authSent && <p style={{fontFamily:F, fontSize:11, color:"rgba(180,220,190,0.85)", margin:"10px 0 0"}}>Check your email for a sign-in link.</p>}
+                {authError && <p style={{fontFamily:F, fontSize:11, color:"rgba(228,138,118,0.85)", margin:"10px 0 0"}}>{authError}</p>}
               </div>
             )}
           </div>
@@ -3259,7 +3262,7 @@ export default function ObrizApp() {
           <h2 style={{fontFamily:F,fontSize:"clamp(30px, 8vw, 38px)",fontWeight:300,color:B.vellum,letterSpacing:"-0.018em",lineHeight:1.1,margin:"0 0 14px",maxWidth:360,fontVariationSettings:"'opsz' 60"}}>
             {userName ? `Where are you tonight, ${userName.split(/\s+/)[0]}?` : "Where are you tonight?"}
           </h2>
-          <p style={{fontFamily:F,fontStyle:"italic",fontSize:14,color:"rgba(248,242,229,0.6)",lineHeight:1.55,margin:"0",maxWidth:340}}>
+          <p style={{fontFamily:F,fontSize:14,color:"rgba(248,242,229,0.6)",lineHeight:1.55,margin:"0",maxWidth:340}}>
             Pick the closest. Your answer shapes the ritual.
           </p>
         </div>
@@ -3289,7 +3292,7 @@ export default function ObrizApp() {
                 }}>
                 {/* Numeral marker — Roman, low-opacity Fraunces italic */}
                 <p style={{
-                  fontFamily:F, fontStyle:"italic", fontSize:13, fontWeight:400,
+                  fontFamily:F, fontSize:13, fontWeight:400,
                   color: selected ? B.polished : "rgba(248,242,229,0.35)",
                   letterSpacing:"0.04em",
                   margin:0, width:24, flexShrink:0,
@@ -3306,7 +3309,7 @@ export default function ObrizApp() {
                     transition:"color 0.4s var(--rhei-ease)",
                   }}>{state.label}</p>
                   <p style={{
-                    fontFamily:F, fontStyle:"italic", fontSize:12.5, fontWeight:400,
+                    fontFamily:F, fontSize:12.5, fontWeight:400,
                     color:"rgba(248,242,229,0.5)",
                     lineHeight:1.4,
                     margin:0,
