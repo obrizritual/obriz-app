@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ChevronLeft, Play, Pause, Plus, Trash2, Save, BookOpen, Sparkles, Volume2, VolumeX, Music2, Mic, MicOff, Square, CircleDot, X } from "lucide-react";
+import { ChevronLeft, Play, Pause, Plus, Trash2, Save, BookOpen, Sparkles, Volume2, VolumeX, Music2, Mic, MicOff, Square, CircleDot, X, ArrowRight } from "lucide-react";
+import { DramaticGodRays, StarburstPlinth, CornerBrackets, PrecisionStamp, Hairline } from "./Atmosphere";
 
 /* ═══════════════════════════════════════════
    RHEI — Affirmations
@@ -565,62 +566,217 @@ export default function AffirmationsScreen({ onBack }) {
     };
   }, []);
 
-  // ── Home view (category grid + custom entry) ──
+  // ── Home view — Luminar tech-luxe edition ──
   if (view === "home") {
     return (
-      <div className="rhei-page" style={{ padding: "56px 22px 120px", minHeight: "100vh", background: B.bg }}>
+      <div className="rhei-page" style={{
+        position:"relative",
+        minHeight:"100vh",
+        background:"linear-gradient(180deg, #0A0604 0%, #100804 38%, #0A0604 100%)",
+        overflow:"hidden",
+        padding:"calc(env(safe-area-inset-top, 0px) + 28px) 0 140px",
+      }}>
         <style>{ORB_CSS}</style>
-        {onBack && (
-          <button onClick={onBack} style={{ background: "none", border: "none", color: B.muted, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, marginBottom: 24, padding: 0 }}>
-            <ChevronLeft size={16} /> <span style={{ fontSize: 11, letterSpacing: 1.5, fontFamily: SF, textTransform: "uppercase" }}>Back</span>
-          </button>
-        )}
-        <div style={{ marginBottom: 32 }}>
-          <p style={{ fontSize: 9, letterSpacing: 3, color: B.muted, textTransform: "uppercase", fontFamily: SF, marginBottom: 6 }}>Affirmations</p>
-          <h1 style={{ fontSize: 22, fontWeight: 400, color: B.cream, margin: 0, fontFamily: F }}>What you tell yourself, becomes you.</h1>
-          <p style={{ fontSize: 13, color: B.muted, marginTop: 6, fontStyle: "italic", fontFamily: F, lineHeight: 1.5 }}>
-            Pick a category, or write your own. Read them. Hear them. Let them land.
-          </p>
-        </div>
+        <DramaticGodRays intensity={1} pierce="50%" />
 
-        {/* Categories */}
-        <div style={{ marginBottom: 22 }}>
-          <p style={{ fontSize: 9, letterSpacing: 3, color: B.muted, textTransform: "uppercase", fontFamily: SF, margin: "0 0 12px" }}>Categories</p>
-          {AFFIRMATION_CATEGORIES.map(cat => (
-            <button key={cat.id} onClick={() => startCategory(cat)}
-              style={{ width: "100%", background: B.card, border: `1px solid ${B.border}`, borderRadius: 16, padding: "18px 18px", cursor: "pointer", textAlign: "left", marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-              <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 15, color: B.cream, margin: 0, fontFamily: F, fontWeight: 400 }}>{cat.label}</p>
-                <p style={{ fontSize: 11, color: B.muted, margin: "2px 0 0", fontFamily: SF, fontStyle: "italic" }}>{cat.sublabel}</p>
-              </div>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: `${cat.accent}14`, border: `1px solid ${cat.accent}30`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                <Sparkles size={15} color={cat.accent} />
-              </div>
-            </button>
-          ))}
-        </div>
+        <div style={{ position:"relative", zIndex:1, maxWidth:480, margin:"0 auto", padding:"0 24px" }}>
 
-        {/* Build your own */}
-        <div style={{ marginTop: 28 }}>
-          <p style={{ fontSize: 9, letterSpacing: 3, color: B.muted, textTransform: "uppercase", fontFamily: SF, margin: "0 0 12px" }}>Your own</p>
-          <button onClick={() => setView("custom")}
-            style={{ width: "100%", background: B.card, border: `1px solid ${B.borderActive}`, borderRadius: 16, padding: "18px 18px", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-            <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 15, color: B.cream, margin: 0, fontFamily: F, fontWeight: 400 }}>Write your own</p>
-              <p style={{ fontSize: 11, color: B.muted, margin: "2px 0 0", fontFamily: SF, fontStyle: "italic" }}>
-                {customList.length > 0 ? `${customList.length} saved` : "Up to 20, saved on this device"}
-              </p>
+          {/* Top bar — back + version stamp (tech-luxe corner detail) */}
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:32 }}>
+            {onBack ? (
+              <button onClick={onBack} style={{ background:"rgba(248,242,229,0.04)", border:"1px solid rgba(248,242,229,0.10)", color:"rgba(248,242,229,0.70)", cursor:"pointer", display:"flex", alignItems:"center", gap:5, padding:"7px 12px 7px 8px", borderRadius:100, backdropFilter:"blur(8px)" }}>
+                <ChevronLeft size={14} /> <span style={{ fontSize:10, letterSpacing:"0.22em", fontFamily:SF, textTransform:"uppercase", fontWeight:500 }}>Back</span>
+              </button>
+            ) : <span/>}
+            <PrecisionStamp label="RHEI" value="VOICE 0.1"/>
+          </div>
+
+          {/* HERO with observatory frame */}
+          <div className="rhei-rise rhei-rise-1" style={{
+            position:"relative",
+            textAlign:"center",
+            padding:"min(8vh, 60px) 24px 36px",
+            marginBottom:48,
+          }}>
+            <CornerBrackets inset={0} size={16} color="rgba(245,200,120,0.40)" />
+
+            <div style={{ marginBottom:30 }}>
+              <StarburstPlinth />
             </div>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: `${B.gold}14`, border: `1px solid ${B.borderActive}`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <BookOpen size={15} color={B.gold} />
+
+            <p style={{ fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(245,200,120,0.75)", margin:"0 0 16px" }}>
+              The Voice Room
+            </p>
+            <h1 style={{
+              fontFamily:F, fontSize:"clamp(32px, 8vw, 42px)",
+              fontWeight:300, color:"#F8F2E5",
+              letterSpacing:"-0.02em", lineHeight:1.05,
+              margin:"0 0 14px",
+              fontVariationSettings:"'opsz' 96",
+              textShadow:"0 2px 20px rgba(0,0,0,0.4)",
+            }}>
+              What you tell yourself,<br/>becomes you.
+            </h1>
+            <p style={{ fontFamily:F, fontStyle:"italic", fontSize:14, color:"rgba(248,242,229,0.62)", lineHeight:1.55, margin:"0 auto", maxWidth:300 }}>
+              Pick a room. Read them. Hear them. Let them land.
+            </p>
+          </div>
+
+          {/* Section eyebrow with index */}
+          <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", margin:"0 0 6px" }}>
+            <PrecisionStamp label="Rooms" color="rgba(245,200,120,0.65)"/>
+            <span style={{ fontFamily:SF, fontSize:9, letterSpacing:"0.28em", textTransform:"uppercase", color:"rgba(248,242,229,0.40)", fontVariantNumeric:"tabular-nums" }}>
+              05 / FIVE
+            </span>
+          </div>
+          <Hairline color="rgba(245,200,120,0.22)" margin="0 0 14px"/>
+
+          {/* Editorial vertical category list */}
+          <div className="rhei-rise rhei-rise-2" style={{ display:"flex", flexDirection:"column" }}>
+            {AFFIRMATION_CATEGORIES.map((cat, idx) => {
+              const num = String(idx + 1).padStart(2, "0");
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => startCategory(cat)}
+                  className="rhei-press"
+                  style={{
+                    width:"100%",
+                    background:"transparent",
+                    border:"none",
+                    borderBottom: idx === AFFIRMATION_CATEGORIES.length-1 ? "none" : "1px solid rgba(248,242,229,0.06)",
+                    padding:"24px 4px",
+                    cursor:"pointer",
+                    textAlign:"left",
+                    position:"relative",
+                    display:"flex",
+                    alignItems:"center",
+                    gap:16,
+                  }}>
+                  {/* Tabular index */}
+                  <span style={{
+                    flexShrink:0, width:32,
+                    fontFamily:SF, fontSize:10, fontWeight:500,
+                    letterSpacing:"0.22em", color:"rgba(248,242,229,0.40)",
+                    fontVariantNumeric:"tabular-nums",
+                  }}>{num}</span>
+
+                  {/* Glowing orb in category color */}
+                  <div style={{
+                    flexShrink:0,
+                    width:48, height:48, borderRadius:"50%",
+                    position:"relative",
+                    background:`radial-gradient(circle, ${cat.accent}55 0%, ${cat.accent}18 45%, transparent 72%)`,
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                  }}>
+                    <div style={{
+                      width:12, height:12, borderRadius:"50%",
+                      background: `radial-gradient(circle, ${cat.accent} 0%, ${cat.accent}80 100%)`,
+                      boxShadow: `0 0 12px ${cat.accent}, inset 0 0 5px rgba(255,255,255,0.4)`,
+                    }}/>
+                  </div>
+
+                  {/* Content */}
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <h3 style={{
+                      fontFamily:F,
+                      fontSize:"clamp(20px, 5vw, 24px)",
+                      fontWeight:300,
+                      color:"#F8F2E5",
+                      letterSpacing:"-0.015em",
+                      lineHeight:1.1,
+                      margin:"0 0 4px",
+                      fontVariationSettings:"'opsz' 48",
+                    }}>
+                      {cat.label}
+                    </h3>
+                    <p style={{
+                      fontFamily:F, fontStyle:"italic",
+                      fontSize:12.5, color:"rgba(248,242,229,0.58)",
+                      margin:0, lineHeight:1.5,
+                    }}>
+                      {cat.sublabel}
+                    </p>
+                    <div style={{ display:"flex", alignItems:"center", gap:8, marginTop:8 }}>
+                      <span style={{ fontFamily:SF, fontSize:9, letterSpacing:"0.28em", textTransform:"uppercase", color:"rgba(248,242,229,0.40)", fontVariantNumeric:"tabular-nums" }}>
+                        {cat.affirmations.length} affirmations
+                      </span>
+                    </div>
+                  </div>
+
+                  <ArrowRight size={15} color="rgba(248,242,229,0.45)" strokeWidth={1.5} style={{ flexShrink:0 }}/>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Custom — your own voice section */}
+          <div className="rhei-rise rhei-rise-3" style={{ marginTop:48 }}>
+            <div style={{ display:"flex", alignItems:"baseline", justifyContent:"space-between", margin:"0 0 6px" }}>
+              <PrecisionStamp label="Your Voice" color="rgba(245,200,120,0.65)"/>
+              <span style={{ fontFamily:SF, fontSize:9, letterSpacing:"0.28em", textTransform:"uppercase", color:"rgba(248,242,229,0.40)", fontVariantNumeric:"tabular-nums" }}>
+                {String(customList.length).padStart(2, "0")} / 20
+              </span>
             </div>
-          </button>
-          {customList.length > 0 && (
-            <button onClick={startCustom}
-              style={{ width: "100%", marginTop: 8, background: B.goldGrad, border: "none", borderRadius: 22, padding: "11px 26px", cursor: "pointer", color: B.warmBlack, fontSize: 12, fontFamily: SF, letterSpacing: 1.5, fontWeight: 600, textTransform: "uppercase" }}>
-              Play your own
+            <Hairline color="rgba(245,200,120,0.22)" margin="0 0 20px"/>
+
+            <button
+              onClick={() => setView("custom")}
+              className="rhei-press"
+              style={{
+                width:"100%",
+                background:"rgba(248,242,229,0.04)",
+                backdropFilter:"blur(10px)",
+                WebkitBackdropFilter:"blur(10px)",
+                border:"1px solid rgba(245,200,120,0.20)",
+                borderRadius:18,
+                padding:"22px 22px",
+                cursor:"pointer",
+                textAlign:"left",
+                display:"flex", alignItems:"center", gap:14,
+                position:"relative", overflow:"hidden",
+              }}>
+              <div style={{ position:"absolute", top:-30, right:-30, width:160, height:160, borderRadius:"50%", background:"radial-gradient(circle, rgba(245,200,120,0.18) 0%, transparent 65%)", filter:"blur(20px)", pointerEvents:"none" }}/>
+              <div style={{
+                width:42, height:42, borderRadius:"50%",
+                background:"radial-gradient(circle, rgba(245,200,120,0.45) 0%, rgba(245,200,120,0.10) 45%, transparent 72%)",
+                display:"flex", alignItems:"center", justifyContent:"center",
+                flexShrink:0,
+              }}>
+                <BookOpen size={15} color="#F5C878" strokeWidth={1.5}/>
+              </div>
+              <div style={{ flex:1, position:"relative", zIndex:1 }}>
+                <h3 style={{ fontFamily:F, fontSize:20, fontWeight:300, color:"#F8F2E5", letterSpacing:"-0.015em", lineHeight:1.15, margin:"0 0 3px", fontVariationSettings:"'opsz' 48" }}>
+                  Write your own.
+                </h3>
+                <p style={{ fontFamily:F, fontStyle:"italic", fontSize:12.5, color:"rgba(248,242,229,0.60)", margin:0, lineHeight:1.5 }}>
+                  {customList.length > 0 ? `${customList.length} saved — record yourself` : "Up to 20. In your own voice."}
+                </p>
+              </div>
+              <ArrowRight size={15} color="rgba(248,242,229,0.45)" strokeWidth={1.5} style={{ flexShrink:0, position:"relative", zIndex:1 }}/>
             </button>
-          )}
+
+            {customList.length > 0 && (
+              <button
+                onClick={startCustom}
+                className="rhei-press"
+                style={{
+                  width:"100%", marginTop:14,
+                  background:"rgba(248,242,229,0.95)",
+                  border:"none",
+                  color:"#1A0F06",
+                  fontFamily:SF, fontSize:13, fontWeight:600,
+                  letterSpacing:"0.06em",
+                  padding:"13px 30px",
+                  borderRadius:100,
+                  cursor:"pointer",
+                  display:"inline-flex", alignItems:"center", justifyContent:"center", gap:8,
+                  boxShadow:"0 16px 40px -14px rgba(248,242,229,0.40), 0 4px 14px rgba(15,9,5,0.4)",
+                }}>
+                <Play size={12} fill="#1A0F06" /> <span>Play your voice</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -629,14 +785,32 @@ export default function AffirmationsScreen({ onBack }) {
   // ── Custom editor view ──
   if (view === "custom") {
     return (
-      <div className="rhei-page" style={{ padding: "56px 22px 120px", minHeight: "100vh", background: B.bg }}>
-        <button onClick={() => setView("home")} style={{ background: "none", border: "none", color: B.muted, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, marginBottom: 24, padding: 0 }}>
-          <ChevronLeft size={16} /> <span style={{ fontSize: 11, letterSpacing: 1.5, fontFamily: SF, textTransform: "uppercase" }}>Back</span>
-        </button>
-        <div style={{ marginBottom: 24 }}>
-          <p style={{ fontSize: 9, letterSpacing: 3, color: B.muted, textTransform: "uppercase", fontFamily: SF, marginBottom: 6 }}>Your affirmations</p>
-          <h1 style={{ fontSize: 22, fontWeight: 400, color: B.cream, margin: 0, fontFamily: F }}>Write what you need to hear.</h1>
-        </div>
+      <div className="rhei-page" style={{
+        position:"relative",
+        minHeight:"100vh",
+        background:"linear-gradient(180deg, #0A0604 0%, #100804 38%, #0A0604 100%)",
+        overflow:"hidden",
+        padding:"calc(env(safe-area-inset-top, 0px) + 28px) 0 140px",
+      }}>
+        <style>{ORB_CSS}</style>
+        <DramaticGodRays intensity={0.7} pierce="50%" motes={false} />
+        <div style={{ position:"relative", zIndex:1, maxWidth:480, margin:"0 auto", padding:"0 24px" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:28 }}>
+            <button onClick={() => setView("home")} style={{ background:"rgba(248,242,229,0.04)", border:"1px solid rgba(248,242,229,0.10)", color:"rgba(248,242,229,0.75)", cursor:"pointer", display:"flex", alignItems:"center", gap:5, padding:"7px 12px 7px 8px", borderRadius:100, backdropFilter:"blur(8px)" }}>
+              <ChevronLeft size={14} /> <span style={{ fontSize:10, letterSpacing:"0.22em", fontFamily:SF, textTransform:"uppercase", fontWeight:500 }}>Back</span>
+            </button>
+            <PrecisionStamp label="Your Voice" value={`${String(customList.length).padStart(2,"0")} / 20`} color="rgba(245,200,120,0.65)"/>
+          </div>
+          <div style={{ marginBottom:32, textAlign:"center" }}>
+            <div style={{ marginBottom:20 }}><StarburstPlinth size={42} glyph={22}/></div>
+            <p style={{ fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(245,200,120,0.75)", margin:"0 0 14px" }}>Atelier</p>
+            <h1 style={{ fontFamily:F, fontSize:"clamp(28px, 7vw, 36px)", fontWeight:300, color:"#F8F2E5", letterSpacing:"-0.02em", lineHeight:1.05, margin:"0 0 12px", fontVariationSettings:"'opsz' 96", textShadow:"0 2px 20px rgba(0,0,0,0.4)" }}>
+              Write what you need to hear.
+            </h1>
+            <p style={{ fontFamily:F, fontStyle:"italic", fontSize:13, color:"rgba(248,242,229,0.62)", lineHeight:1.55, margin:"0 auto", maxWidth:300 }}>
+              Short. Present tense. Yours.
+            </p>
+          </div>
 
         {/* Editor */}
         <div style={{ background: B.card, border: `1px solid ${B.border}`, borderRadius: 16, padding: 16, marginBottom: 20 }}>
@@ -739,82 +913,134 @@ export default function AffirmationsScreen({ onBack }) {
           </div>
         )}
         <style>{`@keyframes rhei-rec-pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.9); } }`}</style>
+        </div>
       </div>
     );
   }
 
-  // ── Player view ──
+  // ── Player view — Luminar tech-luxe with breathing orb ──
   if (view === "player") {
     const currentItem = activeList[playerIdx];
     const current = (typeof currentItem === "string") ? currentItem : (currentItem?.text || "");
     const accent = activeCategory?.accent || B.gold;
+    const progress = activeList.length > 0 ? ((playerIdx + 1) / activeList.length) : 0;
     return (
-      <div className="rhei-page" style={{ minHeight: "100vh", background: B.bgDeep, display: "flex", flexDirection: "column", padding: "56px 22px 56px", position:"relative", overflow:"hidden" }}>
+      <div className="rhei-page" style={{
+        minHeight:"100vh",
+        background:"linear-gradient(180deg, #0A0604 0%, #100804 38%, #0A0604 100%)",
+        display:"flex", flexDirection:"column",
+        padding:"calc(env(safe-area-inset-top, 0px) + 22px) 22px 36px",
+        position:"relative", overflow:"hidden",
+      }}>
         <style>{ORB_CSS}</style>
-        {/* Calming animated background — two soft glow orbs that slowly drift and breathe,
-            instead of the static black. Sits behind everything else with low opacity. */}
+        <DramaticGodRays intensity={0.85} pierce="50%" vignette={false} />
+
+        {/* Color-tinted bloom carrying the category's accent */}
         <div style={{
           position:"absolute", top:"50%", left:"50%",
-          width:"160vmin", height:"160vmin", borderRadius:"50%",
-          background:`radial-gradient(circle at 50% 50%, ${accent}40 0%, ${accent}18 30%, transparent 65%)`,
+          width:"140vmin", height:"140vmin", borderRadius:"50%",
+          background:`radial-gradient(circle, ${accent}38 0%, ${accent}16 30%, transparent 65%)`,
           animation:"rhei-breath 22s ease-in-out infinite",
-          pointerEvents:"none", zIndex:0, filter:"blur(40px)",
+          filter:"blur(48px)", mixBlendMode:"screen",
+          pointerEvents:"none", zIndex:0,
         }}/>
-        <div style={{
-          position:"absolute", top:"30%", left:"40%",
-          width:"120vmin", height:"120vmin", borderRadius:"50%",
-          background:`radial-gradient(circle at 50% 50%, ${B.gold}30 0%, ${B.goldMuted}14 35%, transparent 70%)`,
-          animation:"rhei-breath-2 28s ease-in-out infinite",
-          pointerEvents:"none", zIndex:0, filter:"blur(60px)",
-        }}/>
-        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", width:"100%", zIndex:1 }}>
-          <button onClick={() => { setPlaying(false); setView("home"); }} style={{ background: "none", border: "none", color: B.creamMuted, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, padding: 0 }}>
-            <ChevronLeft size={16} /> <span style={{ fontSize: 11, letterSpacing: 1.5, fontFamily: SF, textTransform: "uppercase" }}>Done</span>
+
+        {/* Top control bar — observatory style */}
+        <div style={{ position:"relative", zIndex:2, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <button onClick={() => { setPlaying(false); setView("home"); }} style={{ background:"rgba(248,242,229,0.04)", backdropFilter:"blur(8px)", border:"1px solid rgba(248,242,229,0.10)", color:"rgba(248,242,229,0.75)", cursor:"pointer", display:"flex", alignItems:"center", gap:5, padding:"7px 12px 7px 8px", borderRadius:100 }}>
+            <ChevronLeft size={14} /> <span style={{ fontSize:10, letterSpacing:"0.22em", fontFamily:SF, textTransform:"uppercase", fontWeight:500 }}>Done</span>
           </button>
-          <div style={{ display:"flex", gap:10 }}>
+          <PrecisionStamp label={activeCategory?.label || "Custom"} color="rgba(245,200,120,0.65)"/>
+          <div style={{ display:"flex", gap:8 }}>
             <button
               onClick={() => setMusicEnabled(m => !m)}
               aria-label={musicEnabled ? "Mute background music" : "Play background music"}
-              title={musicEnabled ? "Music on" : "Music off"}
-              style={{ background:"rgba(26,15,6,0.55)", backdropFilter:"blur(8px)", border:`1px solid ${musicEnabled ? B.gold + "40" : B.border}`, borderRadius:"50%", width:34, height:34, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color: musicEnabled ? B.gold : B.muted, padding:0 }}>
-              <Music2 size={14} />
+              style={{ background:"rgba(248,242,229,0.04)", backdropFilter:"blur(8px)", border:`1px solid ${musicEnabled ? "rgba(245,200,120,0.40)" : "rgba(248,242,229,0.10)"}`, borderRadius:"50%", width:34, height:34, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color: musicEnabled ? "#F5C878" : "rgba(248,242,229,0.50)", padding:0 }}>
+              <Music2 size={13} />
             </button>
             <button
               onClick={() => setVoiceEnabled(v => !v)}
               aria-label={voiceEnabled ? "Mute Lulu's voice" : "Unmute Lulu's voice"}
-              title={voiceEnabled ? "Voice on" : "Voice off"}
-              style={{ background:"rgba(26,15,6,0.55)", backdropFilter:"blur(8px)", border:`1px solid ${voiceEnabled ? B.gold + "40" : B.border}`, borderRadius:"50%", width:34, height:34, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color: voiceEnabled ? B.gold : B.muted, padding:0 }}>
-              {voiceEnabled ? <Volume2 size={14}/> : <VolumeX size={14}/>}
+              style={{ background:"rgba(248,242,229,0.04)", backdropFilter:"blur(8px)", border:`1px solid ${voiceEnabled ? "rgba(245,200,120,0.40)" : "rgba(248,242,229,0.10)"}`, borderRadius:"50%", width:34, height:34, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", color: voiceEnabled ? "#F5C878" : "rgba(248,242,229,0.50)", padding:0 }}>
+              {voiceEnabled ? <Volume2 size={13}/> : <VolumeX size={13}/>}
             </button>
           </div>
         </div>
 
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", position:"relative", zIndex:1 }}>
-          <div style={{ position: "relative", width: 200, height: 200, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 38 }}>
+        {/* Stage */}
+        <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", position:"relative", zIndex:1, padding:"0 8px" }}>
+          {/* Orb stage with corner brackets */}
+          <div style={{ position:"relative", width:240, height:240, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:42 }}>
+            <CornerBrackets inset={-6} size={18} color="rgba(245,200,120,0.40)"/>
             <Orb active={playing} size={200} accent={accent} />
+            {/* Inner core dot */}
+            <div style={{
+              position:"absolute", top:"50%", left:"50%",
+              transform:"translate(-50%, -50%)",
+              width:6, height:6, borderRadius:"50%",
+              background:accent,
+              boxShadow:`0 0 16px ${accent}, 0 0 32px ${accent}80`,
+              opacity: playing ? 0.9 : 0.5,
+              transition:"opacity 0.4s",
+            }}/>
           </div>
-          <p style={{ fontSize: 11, letterSpacing: 3, color: B.creamMuted, textTransform: "uppercase", fontFamily: SF, margin: "0 0 20px", textShadow:"0 1px 8px rgba(0,0,0,0.5)" }}>{activeCategory?.label}</p>
-          <p key={playerIdx} style={{ fontSize: 26, lineHeight: 1.4, color: B.cream, fontFamily: F, fontWeight: 400, margin: 0, maxWidth: 360, animation: "rhei-fade 0.8s ease both", textShadow:"0 2px 14px rgba(0,0,0,0.45)" }}>
+
+          <p key={playerIdx} style={{
+            fontFamily:F, fontSize:"clamp(22px, 6vw, 28px)",
+            fontWeight:300, color:"#F8F2E5",
+            lineHeight:1.32, letterSpacing:"-0.015em",
+            margin:0, maxWidth:380,
+            animation:"rhei-fade 0.8s ease both",
+            textShadow:"0 2px 14px rgba(0,0,0,0.45)",
+            fontVariationSettings:"'opsz' 72",
+          }}>
             {current}
-          </p>
-          <p style={{ fontSize: 11, color: B.creamMuted, fontFamily: SF, marginTop: 32, letterSpacing: 1, textShadow:"0 1px 6px rgba(0,0,0,0.4)" }}>
-            {playerIdx + 1} of {activeList.length}
           </p>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 24, marginTop: 24, position:"relative", zIndex:1 }}>
-          <button onClick={() => setPlayerIdx(i => (i - 1 + activeList.length) % activeList.length)}
-            style={{ background: "none", border: `1px solid ${B.border}`, borderRadius: "50%", width: 44, height: 44, cursor: "pointer", color: B.cream, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <ChevronLeft size={20} />
-          </button>
-          <button onClick={() => setPlaying(p => !p)}
-            style={{ background: B.goldGrad, border: "none", borderRadius: "50%", width: 64, height: 64, cursor: "pointer", color: B.warmBlack, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {playing ? <Pause size={24} /> : <Play size={24} style={{ marginLeft: 3 }} />}
-          </button>
-          <button onClick={() => setPlayerIdx(i => (i + 1) % activeList.length)}
-            style={{ background: "none", border: `1px solid ${B.border}`, borderRadius: "50%", width: 44, height: 44, cursor: "pointer", color: B.cream, display: "flex", alignItems: "center", justifyContent: "center", transform: "rotate(180deg)" }}>
-            <ChevronLeft size={20} />
-          </button>
+        {/* Bottom rail — tech-luxe progress + transport */}
+        <div style={{ position:"relative", zIndex:1, marginTop:24 }}>
+          {/* Progress hairline */}
+          <div style={{ display:"flex", alignItems:"center", gap:14, margin:"0 0 22px" }}>
+            <span style={{ fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.22em", color:"rgba(248,242,229,0.55)", fontVariantNumeric:"tabular-nums", flexShrink:0 }}>
+              {String(playerIdx + 1).padStart(2, "0")}
+            </span>
+            <div style={{ flex:1, height:1, background:"rgba(248,242,229,0.10)", position:"relative", overflow:"hidden" }}>
+              <div style={{
+                position:"absolute", left:0, top:0, height:"100%",
+                width:`${progress * 100}%`,
+                background:`linear-gradient(90deg, ${accent}, #F5C878)`,
+                boxShadow:`0 0 10px ${accent}80`,
+                transition:"width 0.6s ease",
+              }}/>
+            </div>
+            <span style={{ fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.22em", color:"rgba(248,242,229,0.40)", fontVariantNumeric:"tabular-nums", flexShrink:0 }}>
+              {String(activeList.length).padStart(2, "0")}
+            </span>
+          </div>
+
+          {/* Transport */}
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:28 }}>
+            <button onClick={() => setPlayerIdx(i => (i - 1 + activeList.length) % activeList.length)}
+              style={{ background:"rgba(248,242,229,0.04)", backdropFilter:"blur(8px)", border:"1px solid rgba(248,242,229,0.12)", borderRadius:"50%", width:46, height:46, cursor:"pointer", color:"rgba(248,242,229,0.90)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <ChevronLeft size={20} />
+            </button>
+            <button onClick={() => setPlaying(p => !p)}
+              style={{
+                background:"rgba(248,242,229,0.95)",
+                border:"none", borderRadius:"50%",
+                width:72, height:72, cursor:"pointer",
+                color:"#1A0F06",
+                display:"flex", alignItems:"center", justifyContent:"center",
+                boxShadow:`0 16px 40px -10px rgba(248,242,229,0.45), 0 0 50px ${accent}30`,
+              }}>
+              {playing ? <Pause size={26} /> : <Play size={26} style={{ marginLeft:3 }} />}
+            </button>
+            <button onClick={() => setPlayerIdx(i => (i + 1) % activeList.length)}
+              style={{ background:"rgba(248,242,229,0.04)", backdropFilter:"blur(8px)", border:"1px solid rgba(248,242,229,0.12)", borderRadius:"50%", width:46, height:46, cursor:"pointer", color:"rgba(248,242,229,0.90)", display:"flex", alignItems:"center", justifyContent:"center", transform:"rotate(180deg)" }}>
+              <ChevronLeft size={20} />
+            </button>
+          </div>
         </div>
 
         <style>{`@keyframes rhei-fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }`}</style>

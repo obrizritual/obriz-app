@@ -17,6 +17,7 @@ function RitualIllustration({ ritualId, zone, size }) {
 }
 import AffirmationsScreen from "./AffirmationsScreen";
 import FaceMirrorMode from "./FaceMirrorMode";
+import { CornerBrackets, PrecisionStamp, Hairline, StarburstPlinth as SharedStarburstPlinth } from "./Atmosphere";
 
 /* ═══════════════════════════════════════════
    RHEI — Your face is where your nervous system shows.
@@ -1856,9 +1857,9 @@ export default function ObrizApp() {
       {/* Content sits above atmosphere */}
       <div style={{position:"relative", zIndex:1, maxWidth:430, margin:"0 auto"}}>
 
-        {/* ── Top eyebrow row: tiny brand + premium chip ── */}
+        {/* ── Top eyebrow row: precision stamp + premium chip ── */}
         <div className="rhei-rise rhei-rise-1" style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:48}}>
-          <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(248,242,229,0.55)",margin:0}}>RHEI · {tc === "night" ? "Tonight" : tc === "morning" ? "Today" : tc === "evening" ? "This evening" : "Now"}</p>
+          <PrecisionStamp label="RHEI" value={tc === "night" ? "TONIGHT" : tc === "morning" ? "TODAY" : tc === "evening" ? "EVENING" : "NOW"} color="rgba(248,242,229,0.65)"/>
           <button
             className="rhei-press"
             onClick={()=>setScreen("premium")}
@@ -2733,236 +2734,500 @@ export default function ObrizApp() {
     </div>
   );};
 
-  // ══════════ PREMIUM (replaces shop) ══════════
+  // ══════════ PREMIUM — Membership Room ══════════
   const renderPremium=()=>(
-    <div style={{padding:"56px 22px 120px"}}>
-      <div style={{textAlign:"center",marginBottom:36}}>
-        <Crown size={28} color={B.gold} style={{marginBottom:12}}/>
-        <h1 style={{fontSize:24,fontWeight:400,color:B.cream,margin:"0 0 6px",fontFamily:F}}>The full practice.</h1>
-        <p style={{fontSize:13,color:B.muted,fontStyle:"italic",fontFamily:F}}>Every ritual. Every reset. The complete arc.</p>
-      </div>
+    <div style={{
+      position:"relative",
+      minHeight:"100vh",
+      background:"linear-gradient(180deg, #0A0604 0%, #100804 38%, #0A0604 100%)",
+      overflow:"hidden",
+      padding:"calc(env(safe-area-inset-top, 0px) + 28px) 0 140px",
+    }}>
+      <DramaticGodRays intensity={1.05} pierce="50%" />
 
-      {/* What you get */}
-      <div style={{background:B.card,borderRadius:18,padding:"22px 20px",marginBottom:16,border:`1px solid ${B.border}`}}>
-        <p style={{fontSize:10,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 16px"}}>Everything included</p>
-        {[
-          {text:"Morning Reset — audio (free forever)", free:true},
-          {text:"Pre-Meeting Reset — audio", free:false},
-          {text:"End of Day Reset — audio", free:false},
-          {text:"After Conflict Reset — audio", free:false},
-          {text:"Quick Reset — audio", free:false},
-          {text:"Physiological Sigh, Jaw Release, Grounding, Tap", free:true},
-          {text:"Gua Sha Sculpt", free:true},
-          {text:"Lymphatic Drainage", free:true},
-          {text:"Face Lifting", free:true},
-          {text:"Jaw Release", free:true},
-          {text:"Pre-Event Glow", free:false},
-          {text:"Eye Revival", free:false},
-          {text:"Daily NS Score tracking", free:true},
-          {text:"All future ritual guides & sessions", free:false},
-          {text:"Priority access to new features", free:false},
-        ].map((f,i)=>(
-          <div key={i} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-            <div style={{width:18,height:18,borderRadius:"50%",background:f.free?`#5A8A5A20`:`${B.gold}15`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-              {f.free?<Check size={9} color={"#5A8A5A"}/>:<Crown size={9} color={B.gold}/>}
-            </div>
-            <span style={{fontSize:12,color:f.free?B.creamMuted:B.cream,fontFamily:SF}}>{f.text}{f.free?" ✓":""}</span>
+      <div style={{position:"relative", zIndex:1, maxWidth:480, margin:"0 auto", padding:"0 24px"}}>
+
+        {/* Top stamp row */}
+        <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:24}}>
+          <PrecisionStamp label="RHEI" value="MEMBERSHIP" color="rgba(245,200,120,0.75)"/>
+          <PrecisionStamp label="01 / 01" color="rgba(248,242,229,0.40)"/>
+        </div>
+
+        {/* HERO */}
+        <div className="rhei-rise rhei-rise-1" style={{position:"relative", textAlign:"center", padding:"min(8vh, 60px) 24px 36px", marginBottom:36}}>
+          <CornerBrackets inset={0} size={16} color="rgba(245,200,120,0.40)" />
+          <div style={{marginBottom:30}}><SharedStarburstPlinth/></div>
+          <p style={{fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(245,200,120,0.75)", margin:"0 0 16px"}}>
+            The Full Practice
+          </p>
+          <h1 style={{
+            fontFamily:F, fontSize:"clamp(32px, 8vw, 42px)",
+            fontWeight:300, color:"#F8F2E5",
+            letterSpacing:"-0.02em", lineHeight:1.05,
+            margin:"0 0 14px",
+            fontVariationSettings:"'opsz' 96",
+            textShadow:"0 2px 20px rgba(0,0,0,0.4)",
+          }}>
+            Every room.<br/>One key.
+          </h1>
+          <p style={{fontFamily:F, fontStyle:"italic", fontSize:14, color:"rgba(248,242,229,0.62)", lineHeight:1.55, margin:"0 auto", maxWidth:320}}>
+            Every ritual. Every audio reset. The complete arc.
+          </p>
+        </div>
+
+        {/* PRICING — twin glass plinths */}
+        <div className="rhei-rise rhei-rise-2" style={{display:"flex", gap:12, marginBottom:28}}>
+          <button
+            onClick={()=>handleCheckout('monthly')}
+            disabled={checkoutLoading}
+            className="rhei-press"
+            style={{
+              flex:1,
+              background:"rgba(248,242,229,0.04)",
+              backdropFilter:"blur(14px)",
+              border:"1px solid rgba(248,242,229,0.10)",
+              borderRadius:20, padding:"22px 16px 18px",
+              cursor: checkoutLoading?"wait":"pointer",
+              opacity: checkoutLoading?0.6:1,
+              textAlign:"center",
+              position:"relative",
+            }}>
+            <PrecisionStamp label="Monthly" color="rgba(248,242,229,0.50)"/>
+            <p style={{fontFamily:F, fontSize:36, fontWeight:300, color:"#F8F2E5", margin:"12px 0 0", lineHeight:1, fontVariationSettings:"'opsz' 72", letterSpacing:"-0.02em", fontVariantNumeric:"tabular-nums"}}>
+              $9<span style={{fontSize:18, color:"rgba(248,242,229,0.55)"}}>.99</span>
+            </p>
+            <p style={{fontFamily:SF, fontSize:9, color:"rgba(248,242,229,0.45)", margin:"4px 0 14px", letterSpacing:"0.22em", textTransform:"uppercase"}}>per month</p>
+            <div style={{borderTop:"1px solid rgba(248,242,229,0.10)", paddingTop:10, fontFamily:SF, fontSize:11, color:"rgba(245,200,120,0.85)", letterSpacing:"0.06em"}}>Subscribe</div>
+          </button>
+
+          <button
+            onClick={()=>handleCheckout('yearly')}
+            disabled={checkoutLoading}
+            className="rhei-press"
+            style={{
+              flex:1,
+              background:"rgba(245,200,120,0.10)",
+              backdropFilter:"blur(14px)",
+              border:"1px solid rgba(245,200,120,0.40)",
+              borderRadius:20, padding:"22px 16px 18px",
+              cursor: checkoutLoading?"wait":"pointer",
+              opacity: checkoutLoading?0.6:1,
+              textAlign:"center",
+              position:"relative",
+              boxShadow:"0 16px 40px -14px rgba(245,200,120,0.30), inset 0 0 24px rgba(245,200,120,0.06)",
+            }}>
+            <div style={{position:"absolute", top:-9, left:"50%", transform:"translateX(-50%)", background:"rgba(248,242,229,0.95)", color:"#1A0F06", padding:"3px 12px", borderRadius:100, fontSize:8, fontWeight:600, letterSpacing:"0.22em", fontFamily:SF, textTransform:"uppercase"}}>Save 59%</div>
+            <PrecisionStamp label="Yearly" color="rgba(245,200,120,0.85)"/>
+            <p style={{fontFamily:F, fontSize:36, fontWeight:300, color:"#F8F2E5", margin:"12px 0 0", lineHeight:1, fontVariationSettings:"'opsz' 72", letterSpacing:"-0.02em", fontVariantNumeric:"tabular-nums"}}>
+              $49
+            </p>
+            <p style={{fontFamily:SF, fontSize:9, color:"rgba(248,242,229,0.55)", margin:"4px 0 14px", letterSpacing:"0.22em", textTransform:"uppercase"}}>per year</p>
+            <div style={{borderTop:"1px solid rgba(245,200,120,0.30)", paddingTop:10, fontFamily:SF, fontSize:11, color:"#F5C878", letterSpacing:"0.06em", fontWeight:600}}>Best Value</div>
+          </button>
+        </div>
+
+        {checkoutLoading && (
+          <p style={{textAlign:"center", fontFamily:F, fontStyle:"italic", fontSize:12, color:"rgba(248,242,229,0.55)", margin:"0 0 20px"}}>
+            Opening checkout…
+          </p>
+        )}
+
+        {/* MANIFEST — what's included, editorial list */}
+        <div className="rhei-rise rhei-rise-3" style={{
+          background:"rgba(248,242,229,0.03)",
+          backdropFilter:"blur(12px)",
+          border:"1px solid rgba(248,242,229,0.08)",
+          borderRadius:22, padding:"24px 22px", marginBottom:18,
+        }}>
+          <div style={{display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:18}}>
+            <PrecisionStamp label="Manifest" color="rgba(245,200,120,0.75)"/>
+            <PrecisionStamp label="15 Items" color="rgba(248,242,229,0.45)"/>
           </div>
-        ))}
-      </div>
-
-      {/* Pricing */}
-      {checkoutLoading && <div style={{textAlign:"center",padding:16,marginBottom:12}}><p style={{fontSize:12,color:B.muted,fontFamily:SF}}>Opening checkout...</p></div>}
-      <div style={{display:"flex",gap:12,marginBottom:20}}>
-        <button onClick={()=>handleCheckout('monthly')} disabled={checkoutLoading} style={{flex:1,background:B.card,borderRadius:16,padding:"20px 16px",textAlign:"center",border:`1px solid ${B.border}`,cursor:checkoutLoading?"wait":"pointer",opacity:checkoutLoading?0.6:1}}>
-          <p style={{fontSize:26,color:B.cream,margin:"0 0 2px",fontFamily:SF,fontWeight:300}}>$9<span style={{fontSize:14,color:B.muted}}>.99</span></p>
-          <p style={{fontSize:10,color:B.muted,margin:"0 0 8px",fontFamily:SF,textTransform:"uppercase",letterSpacing:1}}>per month</p>
-          <div style={{background:`${B.gold}15`,borderRadius:12,padding:"8px",color:B.gold,fontSize:11,fontFamily:SF}}>Subscribe</div>
-        </button>
-        <button onClick={()=>handleCheckout('yearly')} disabled={checkoutLoading} style={{flex:1,background:B.card,borderRadius:16,padding:"20px 16px",textAlign:"center",border:`1px solid ${B.borderActive}`,cursor:checkoutLoading?"wait":"pointer",position:"relative",opacity:checkoutLoading?0.6:1}}>
-          <div style={{position:"absolute",top:-8,left:"50%",transform:"translateX(-50%)",background:B.goldGrad,padding:"3px 10px",borderRadius:10,fontSize:8,color:B.warmBlack,fontWeight:600,letterSpacing:1,fontFamily:SF,textTransform:"uppercase"}}>Save 59%</div>
-          <p style={{fontSize:26,color:B.cream,margin:"0 0 2px",fontFamily:SF,fontWeight:300}}>$49</p>
-          <p style={{fontSize:10,color:B.muted,margin:"0 0 8px",fontFamily:SF,textTransform:"uppercase",letterSpacing:1}}>per year</p>
-          <div style={{background:B.goldGrad,borderRadius:12,padding:"8px",color:B.warmBlack,fontSize:11,fontFamily:SF,fontWeight:600}}>Best Value</div>
-        </button>
-      </div>
-
-      {/* Restore / Already premium */}
-      <div style={{textAlign:"center",marginTop:8}}>
-        {supabase && !authUser ? (
-          <div style={{background:B.card,borderRadius:14,padding:"16px 18px",border:`1px solid ${B.border}`,textAlign:"center",marginTop:8}}>
-            <p style={{fontSize:11,color:B.muted,fontFamily:SF,margin:"0 0 10px"}}>Already purchased? Sign in to restore access.</p>
-            <div style={{display:"flex",gap:8,maxWidth:340,margin:"0 auto"}}>
-              <input type="email" placeholder="your@email.com" value={authEmail} onChange={e=>setAuthEmail(e.target.value)} onKeyDown={e=>e.key==='Enter'&&signInWithEmail()} style={{flex:1,background:B.bgDeep,border:`1px solid ${B.border}`,borderRadius:8,padding:"8px 12px",color:B.cream,fontSize:12,fontFamily:SF,outline:"none"}}/>
-              <button onClick={signInWithEmail} style={{background:`${B.gold}15`,border:`1px solid ${B.border}`,borderRadius:8,padding:"8px 14px",cursor:"pointer",color:B.gold,fontSize:11,fontFamily:SF,whiteSpace:"nowrap"}}>Sign in</button>
+          {[
+            {text:"Morning Reset", note:"audio · free forever", free:true},
+            {text:"Pre-Meeting Reset", note:"audio", free:false},
+            {text:"End of Day Reset", note:"audio", free:false},
+            {text:"After Conflict Reset", note:"audio", free:false},
+            {text:"Quick Reset", note:"audio", free:false},
+            {text:"Physiological Sigh · Jaw · Grounding · Tap", note:"techniques", free:true},
+            {text:"Gua Sha Sculpt", note:"ritual", free:true},
+            {text:"Lymphatic Drainage", note:"ritual", free:true},
+            {text:"Face Lifting", note:"ritual", free:true},
+            {text:"Buccal Release", note:"ritual", free:true},
+            {text:"Pre-Event Glow", note:"ritual", free:false},
+            {text:"Eye Revival", note:"ritual", free:false},
+            {text:"NS Score · Daily Tracking", note:"insights", free:true},
+            {text:"All future rituals & resets", note:"on release", free:false},
+            {text:"Priority access to new rooms", note:"first", free:false},
+          ].map((f,i)=>(
+            <div key={i} style={{display:"flex", alignItems:"center", gap:14, padding:"10px 0", borderTop: i===0 ? "none" : "1px solid rgba(248,242,229,0.05)"}}>
+              <span style={{flexShrink:0, width:22, fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.22em", color:"rgba(248,242,229,0.40)", fontVariantNumeric:"tabular-nums"}}>
+                {String(i+1).padStart(2,"0")}
+              </span>
+              <div style={{flexShrink:0, width:8, height:8, borderRadius:"50%", background: f.free ? "rgba(180,220,190,0.85)" : "#F5C878", boxShadow: f.free ? "0 0 8px rgba(180,220,190,0.5)" : "0 0 8px rgba(245,200,120,0.6)"}}/>
+              <div style={{flex:1, minWidth:0}}>
+                <p style={{fontFamily:F, fontSize:14, fontWeight:300, color:"#F8F2E5", margin:0, fontVariationSettings:"'opsz' 48", letterSpacing:"-0.01em"}}>{f.text}</p>
+                <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.22em", textTransform:"uppercase", color: f.free ? "rgba(180,220,190,0.70)" : "rgba(245,200,120,0.65)", margin:"2px 0 0"}}>{f.free ? "✓ FREE · " : "MEMBER · "}{f.note}</p>
+              </div>
             </div>
-            {authSent && <p style={{fontSize:11,color:"#5A8A5A",fontFamily:SF,margin:"8px 0 0"}}>Check your email for a sign-in link.</p>}
-            {authError && <p style={{fontSize:11,color:"#C4786A",fontFamily:SF,margin:"8px 0 0"}}>{authError}</p>}
+          ))}
+        </div>
+
+        {/* RESTORE / SIGN-IN */}
+        {supabase && !authUser ? (
+          <div className="rhei-rise rhei-rise-4" style={{
+            background:"rgba(248,242,229,0.02)",
+            backdropFilter:"blur(10px)",
+            border:"1px solid rgba(248,242,229,0.06)",
+            borderRadius:18, padding:"18px 20px",
+          }}>
+            <PrecisionStamp label="Already a member" color="rgba(245,200,120,0.65)"/>
+            <p style={{fontFamily:F, fontStyle:"italic", fontSize:12.5, color:"rgba(248,242,229,0.60)", margin:"8px 0 14px", lineHeight:1.5}}>
+              Sign in with the email used at checkout to restore access.
+            </p>
+            <div style={{display:"flex", gap:8}}>
+              <input type="email" placeholder="your@email.com" value={authEmail} onChange={e=>setAuthEmail(e.target.value)} onKeyDown={e=>e.key==='Enter'&&signInWithEmail()} style={{flex:1, background:"rgba(248,242,229,0.04)", border:"1px solid rgba(248,242,229,0.10)", borderRadius:10, padding:"9px 14px", color:"#F8F2E5", fontSize:12, fontFamily:SF, outline:"none"}}/>
+              <button onClick={signInWithEmail} style={{background:"rgba(245,200,120,0.15)", border:"1px solid rgba(245,200,120,0.30)", borderRadius:10, padding:"9px 16px", cursor:"pointer", color:"#F5C878", fontSize:11, fontFamily:SF, letterSpacing:"0.06em", fontWeight:500, whiteSpace:"nowrap"}}>Sign in</button>
+            </div>
+            {authSent && <p style={{fontFamily:F, fontStyle:"italic", fontSize:11, color:"rgba(180,220,190,0.85)", margin:"10px 0 0"}}>Check your email for a sign-in link.</p>}
+            {authError && <p style={{fontFamily:F, fontStyle:"italic", fontSize:11, color:"rgba(228,138,118,0.85)", margin:"10px 0 0"}}>{authError}</p>}
           </div>
         ) : (
-          <button onClick={()=>{
-            if(authUser?.email){
-              fetch('/api/check-subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:authUser.email})})
-                .then(r=>r.json()).then(data=>{if(data.isPremium){setIsPremium(true);save('isPremium',true);}else{alert('No active subscription found for this email.');}}).catch(()=>alert('Could not verify. Try again.'));
-            } else {setIsPremium(true);save('isPremium',true);}
-          }} style={{background:"none",border:"none",color:B.muted,fontSize:11,fontFamily:SF,cursor:"pointer",padding:8,textDecoration:"underline"}}>Already purchased? Restore access</button>
+          <div className="rhei-rise rhei-rise-4" style={{textAlign:"center"}}>
+            <button onClick={()=>{
+              if(authUser?.email){
+                fetch('/api/check-subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:authUser.email})})
+                  .then(r=>r.json()).then(data=>{if(data.isPremium){setIsPremium(true);save('isPremium',true);}else{alert('No active subscription found for this email.');}}).catch(()=>alert('Could not verify. Try again.'));
+              } else {setIsPremium(true);save('isPremium',true);}
+            }} style={{background:"none", border:"none", color:"rgba(248,242,229,0.55)", fontSize:11, fontFamily:SF, cursor:"pointer", padding:8, letterSpacing:"0.04em", textDecoration:"underline", textUnderlineOffset:3}}>Already purchased? Restore access</button>
+          </div>
         )}
       </div>
-
     </div>
   );
 
   // ══════════ JOURNEY ══════════
   const renderProgress=()=>{
-    const recentRituals=[...rituals].filter(r=>completedToday.length>0||totalSessions>0);
+    const currentStreak = meditationStreak || (completedToday.length>0 ? 1 : 0);
+    const bestStreak = Math.max(longestStreak, meditationStreak, completedToday.length>0 ? 1 : 0);
+    const streakLine =
+      currentStreak===0 && completedToday.length===0 ? "Start today. The smallest return counts." :
+      currentStreak===0 && completedToday.length>0 ? "You showed up today. That's day one." :
+      currentStreak>=1 && currentStreak<=3 ? "You're building the pattern. The first week is the hardest." :
+      currentStreak>=4 && currentStreak<=7 ? "This is becoming a practice. Keep returning." :
+      currentStreak>=8 && currentStreak<=20 ? "You've made it past where most people stop." :
+      "This is who you are now. Quietly consistent.";
+
     return(
-      <div style={{padding:"0 0 120px"}}>
-        {/* Hero header — silhouette in water at sunset, full-width banner */}
-        <div style={{
+      <div style={{
+        position:"relative",
+        minHeight:"100vh",
+        background:"linear-gradient(180deg, #0A0604 0%, #100804 38%, #0A0604 100%)",
+        overflow:"hidden",
+        padding:"0 0 140px",
+      }}>
+        <DramaticGodRays intensity={0.9} pierce="50%" />
+
+        <div style={{position:"relative", zIndex:1}}>
+
+        {/* HERO — cinematic photo with observatory frame */}
+        <div className="rhei-rise rhei-rise-1" style={{
           position:"relative",
-          height:280,
-          marginBottom:24,
-          backgroundColor:B.warmBlack,
-          backgroundImage:`linear-gradient(180deg, rgba(26,15,6,0.15) 0%, rgba(26,15,6,0.05) 35%, rgba(26,15,6,0.7) 80%, rgba(26,15,6,1) 100%), url('/images/journey-hero.jpg')`,
+          height:340,
+          marginBottom:32,
+          backgroundColor:"#0A0604",
+          backgroundImage:`linear-gradient(180deg, rgba(10,6,4,0.20) 0%, rgba(10,6,4,0.05) 30%, rgba(10,6,4,0.55) 70%, rgba(10,6,4,1) 100%), url('/images/journey-hero.jpg')`,
           backgroundSize:"cover",
           backgroundPosition:"center",
           backgroundRepeat:"no-repeat",
           display:"flex",
           flexDirection:"column",
           justifyContent:"flex-end",
-          padding:"0 22px 18px",
+          padding:"calc(env(safe-area-inset-top, 0px) + 28px) 24px 28px",
+          overflow:"hidden",
         }}>
-          <p style={{fontSize:9,letterSpacing:3,color:B.cream,textTransform:"uppercase",fontFamily:SF,marginBottom:6,textShadow:"0 1px 8px rgba(0,0,0,0.5)"}}>Journey</p>
-          <h1 style={{fontSize:28,fontWeight:400,color:B.cream,margin:0,fontFamily:F,textShadow:"0 2px 16px rgba(0,0,0,0.45)"}}>{userName||"Your practice"}</h1>
-          <p style={{fontSize:13,color:B.creamMuted,marginTop:4,fontStyle:"italic",fontFamily:F,textShadow:"0 1px 8px rgba(0,0,0,0.5)"}}>Your face is the record of what you've shown up for.</p>
+          {/* Top corner readouts */}
+          <div style={{position:"absolute", top:"calc(env(safe-area-inset-top, 0px) + 22px)", left:24, right:24, display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+            <PrecisionStamp label="RHEI" value="JOURNEY" color="rgba(248,242,229,0.75)"/>
+            <PrecisionStamp label={new Date().toLocaleDateString("en-US",{day:"2-digit",month:"short"}).toUpperCase()} color="rgba(248,242,229,0.65)"/>
+          </div>
+
+          {/* Centered starburst overlay */}
+          <div style={{position:"absolute", top:"38%", left:"50%", transform:"translate(-50%, -50%)"}}>
+            <SharedStarburstPlinth size={42} glyph={22}/>
+          </div>
+
+          <CornerBrackets inset={16} size={18} color="rgba(248,242,229,0.45)"/>
+
+          {/* Title block at bottom of hero */}
+          <div style={{position:"relative", zIndex:1}}>
+            <PrecisionStamp label="Your Practice" color="rgba(245,200,120,0.80)"/>
+            <h1 style={{
+              fontFamily:F, fontSize:"clamp(32px, 8vw, 40px)",
+              fontWeight:300, color:"#F8F2E5",
+              letterSpacing:"-0.02em", lineHeight:1.05,
+              margin:"10px 0 8px",
+              fontVariationSettings:"'opsz' 96",
+              textShadow:"0 2px 16px rgba(0,0,0,0.55)",
+            }}>
+              {userName || "The Record"}
+            </h1>
+            <p style={{
+              fontFamily:F, fontStyle:"italic",
+              fontSize:13.5, color:"rgba(248,242,229,0.72)",
+              margin:0, lineHeight:1.5,
+              textShadow:"0 1px 8px rgba(0,0,0,0.5)",
+              maxWidth:380,
+            }}>
+              Your face is the record of what you've shown up for.
+            </p>
+          </div>
         </div>
 
-        <div style={{padding:"0 22px"}}>
+        <div style={{maxWidth:480, margin:"0 auto", padding:"0 24px"}}>
 
-        {/* Streak — the daily return */}
-        <div style={{background:B.card,borderRadius:18,padding:"22px 20px",marginBottom:14,border:`1px solid ${B.borderActive}`,position:"relative",overflow:"hidden"}}>
-          <div style={{position:"absolute",top:-30,right:-30,opacity:0.06}}><Flame size={140} color={B.gold}/></div>
-          <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 14px",position:"relative"}}>Your streak</p>
-          <div style={{display:"flex",alignItems:"flex-end",gap:14,marginBottom:10,position:"relative"}}>
-            <div style={{display:"flex",alignItems:"baseline",gap:6}}>
-              <Flame size={26} color={B.gold} strokeWidth={1.5}/>
-              <p style={{fontSize:42,color:B.cream,margin:0,fontFamily:SF,fontWeight:300,lineHeight:1}}>{meditationStreak||(completedToday.length>0?1:0)}</p>
-              <p style={{fontSize:12,color:B.muted,margin:0,fontFamily:SF,letterSpacing:1}}>day{meditationStreak===1?"":"s"}</p>
+          {/* THE STREAK — feature panel with the giant numeral */}
+          <div className="rhei-rise rhei-rise-2" style={{
+            position:"relative",
+            background:"rgba(248,242,229,0.04)",
+            backdropFilter:"blur(14px) saturate(1.1)",
+            WebkitBackdropFilter:"blur(14px) saturate(1.1)",
+            border:"1px solid rgba(245,200,120,0.22)",
+            borderRadius:22,
+            padding:"28px 24px 24px",
+            marginBottom:18,
+            overflow:"hidden",
+          }}>
+            {/* Halo behind the numeral */}
+            <div style={{position:"absolute", top:"50%", left:"50%", width:340, height:340, borderRadius:"50%", background:"radial-gradient(circle, rgba(245,200,120,0.20) 0%, rgba(245,200,120,0.05) 40%, transparent 70%)", filter:"blur(30px)", transform:"translate(-50%, -50%)", pointerEvents:"none"}}/>
+            <CornerBrackets inset={10} size={12} color="rgba(245,200,120,0.30)"/>
+
+            <div style={{position:"relative", zIndex:1, display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14}}>
+              <PrecisionStamp label="Streak" color="rgba(245,200,120,0.75)"/>
+              <PrecisionStamp label="Today" value={completedToday.length>0 ? "✦ Done" : "—"} color={completedToday.length>0 ? "#F5C878" : "rgba(248,242,229,0.45)"}/>
+            </div>
+
+            <div style={{position:"relative", zIndex:1, display:"flex", alignItems:"baseline", gap:10, justifyContent:"center", marginBottom:14}}>
+              <span style={{
+                fontFamily:F, fontSize:"clamp(80px, 22vw, 110px)",
+                fontWeight:300, color:"#F8F2E5",
+                lineHeight:0.9, letterSpacing:"-0.04em",
+                fontVariationSettings:"'opsz' 144",
+                textShadow:"0 4px 30px rgba(245,200,120,0.25)",
+                fontVariantNumeric:"tabular-nums",
+              }}>
+                {currentStreak}
+              </span>
+              <span style={{
+                fontFamily:SF, fontSize:11, fontWeight:500,
+                letterSpacing:"0.32em", textTransform:"uppercase",
+                color:"rgba(248,242,229,0.55)",
+              }}>
+                day{currentStreak===1?"":"s"}
+              </span>
+            </div>
+
+            <p style={{
+              position:"relative", zIndex:1,
+              fontFamily:F, fontStyle:"italic",
+              fontSize:13, color:"rgba(248,242,229,0.70)",
+              textAlign:"center", lineHeight:1.55, margin:"0 0 18px",
+              maxWidth:320, marginLeft:"auto", marginRight:"auto",
+            }}>
+              {streakLine}
+            </p>
+
+            <Hairline color="rgba(245,200,120,0.18)" margin="0 0 14px"/>
+
+            <div style={{position:"relative", zIndex:1, display:"flex", justifyContent:"space-between", gap:20}}>
+              <div>
+                <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color:"rgba(248,242,229,0.45)", margin:"0 0 4px"}}>Best Ever</p>
+                <p style={{fontFamily:F, fontSize:22, fontWeight:300, color:"#F8F2E5", margin:0, fontVariantNumeric:"tabular-nums", fontVariationSettings:"'opsz' 48"}}>
+                  {bestStreak} <span style={{fontFamily:SF, fontSize:10, color:"rgba(248,242,229,0.50)", letterSpacing:"0.22em"}}>DAY{bestStreak===1?"":"S"}</span>
+                </p>
+              </div>
+              <div style={{textAlign:"right"}}>
+                <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color:"rgba(248,242,229,0.45)", margin:"0 0 4px"}}>Total</p>
+                <p style={{fontFamily:F, fontSize:22, fontWeight:300, color:"#F8F2E5", margin:0, fontVariantNumeric:"tabular-nums", fontVariationSettings:"'opsz' 48"}}>
+                  {totalSessions} <span style={{fontFamily:SF, fontSize:10, color:"rgba(248,242,229,0.50)", letterSpacing:"0.22em"}}>RITUALS</span>
+                </p>
+              </div>
             </div>
           </div>
-          <p style={{fontSize:12,color:B.creamMuted,margin:"0 0 14px",fontFamily:F,fontStyle:"italic",lineHeight:1.5,position:"relative"}}>
-            {meditationStreak===0&&completedToday.length===0&&"Start today. The smallest return counts."}
-            {meditationStreak===0&&completedToday.length>0&&"You showed up today. That's day one."}
-            {meditationStreak>=1&&meditationStreak<=3&&"You're building the pattern. The first week is the hardest."}
-            {meditationStreak>=4&&meditationStreak<=7&&"This is becoming a practice. Keep returning."}
-            {meditationStreak>=8&&meditationStreak<=20&&"You've made it past where most people stop."}
-            {meditationStreak>20&&"This is who you are now. Quietly consistent."}
-          </p>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",borderTop:`1px solid ${B.border}`,paddingTop:12,position:"relative"}}>
-            <div>
-              <p style={{fontSize:9,color:B.muted,letterSpacing:1.5,textTransform:"uppercase",fontFamily:SF,margin:"0 0 2px"}}>Best ever</p>
-              <p style={{fontSize:18,color:B.cream,margin:0,fontFamily:SF,fontWeight:300}}>{Math.max(longestStreak,meditationStreak,completedToday.length>0?1:0)} day{Math.max(longestStreak,meditationStreak,completedToday.length>0?1:0)===1?"":"s"}</p>
+
+          {/* PROGRESSION — how the face is changing */}
+          <div className="rhei-rise rhei-rise-3" style={{
+            background:"rgba(248,242,229,0.03)",
+            backdropFilter:"blur(12px)",
+            WebkitBackdropFilter:"blur(12px)",
+            border:"1px solid rgba(248,242,229,0.08)",
+            borderRadius:22,
+            padding:"24px 22px",
+            marginBottom:18,
+          }}>
+            <div style={{display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:18}}>
+              <PrecisionStamp label="The Reading" color="rgba(245,200,120,0.70)"/>
+              <PrecisionStamp label={`Session ${String(totalSessions).padStart(3,"0")}`} color="rgba(248,242,229,0.45)"/>
             </div>
-            <div style={{textAlign:"right"}}>
-              <p style={{fontSize:9,color:B.muted,letterSpacing:1.5,textTransform:"uppercase",fontFamily:SF,margin:"0 0 2px"}}>Today</p>
-              <p style={{fontSize:18,color:completedToday.length>0?B.gold:B.muted,margin:0,fontFamily:SF,fontWeight:300}}>{completedToday.length>0?"✓ Done":"Not yet"}</p>
-            </div>
+            {totalSessions===0 ? (
+              <p style={{fontFamily:F, fontStyle:"italic", fontSize:14, color:"rgba(248,242,229,0.65)", lineHeight:1.55, margin:0}}>
+                Complete your first ritual to begin tracking. The change is visible within a week.
+              </p>
+            ) : (
+              <div style={{display:"flex", flexDirection:"column", gap:18}}>
+                {[
+                  { label:"Tension", text: totalSessions>=5 ? "Your jaw is releasing. Less holding between sessions." : totalSessions>=2 ? "Starting to soften." : "Your face is beginning to open.", accent:"#5A8A5A", active:totalSessions>=2 },
+                  { label:"Puffiness", text: totalSessions>=4 ? "Drainage is improving. Mornings look clearer." : "Building your drainage habit.", accent:"#8A9BAF", active:totalSessions>=4 },
+                  { label:"Overall", text: totalSessions>=7 ? "More balanced. More consistent." : totalSessions>=3 ? "A pattern is forming. Keep going." : "The ritual is working. You'll see it this week.", accent:"#F5C878", active:totalSessions>=3 },
+                ].map((item,i)=>(
+                  <div key={i} style={{display:"flex", gap:14, alignItems:"flex-start"}}>
+                    <div style={{flexShrink:0, marginTop:5, width:8, height:8, borderRadius:"50%", background: item.active ? item.accent : "rgba(248,242,229,0.20)", boxShadow: item.active ? `0 0 12px ${item.accent}80` : "none"}}/>
+                    <div style={{flex:1}}>
+                      <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color: item.active ? item.accent : "rgba(248,242,229,0.40)", margin:"0 0 5px"}}>{item.label}</p>
+                      <p style={{fontFamily:F, fontStyle:"italic", fontSize:14, color: item.active ? "rgba(248,242,229,0.85)" : "rgba(248,242,229,0.55)", margin:0, lineHeight:1.5}}>{item.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
 
-        {/* Progression — language not numbers */}
-        <div style={{background:B.card,borderRadius:18,padding:"22px 20px",marginBottom:14,border:`1px solid ${B.border}`}}>
-          <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 16px"}}>How your face is changing</p>
-          {totalSessions===0?(
-            <p style={{fontSize:13,color:B.muted,fontFamily:SF,fontStyle:"italic",lineHeight:1.6,margin:0}}>Complete your first ritual to begin tracking. The change is visible within a week of consistent practice.</p>
-          ):(
-            <div>
-              {[
-                { label:"Tension", text: totalSessions>=5 ? "Your jaw is releasing. Less holding between sessions." : totalSessions>=2 ? "Starting to soften." : "Your face is beginning to open.", color:"#5A8A5A" },
-                { label:"Puffiness", text: totalSessions>=4 ? "Drainage is improving. Mornings look clearer." : "Building your drainage habit.", color: totalSessions>=4?"#5A8A5A":B.muted },
-                { label:"Overall", text: totalSessions>=7 ? "You're becoming more balanced and more consistent." : totalSessions>=3 ? "A pattern is forming. Keep going." : "The ritual is working. You'll see it this week.", color: totalSessions>=7?"#5A8A5A":B.muted },
-              ].map((item,i)=>(
-                <div key={i} style={{marginBottom:i<2?14:0}}>
-                  <p style={{fontSize:10,color:B.muted,fontFamily:SF,margin:"0 0 3px",textTransform:"uppercase",letterSpacing:1}}>{item.label}</p>
-                  <p style={{fontSize:13,color:item.color,fontFamily:F,fontStyle:"italic",margin:0,lineHeight:1.5}}>{item.text}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Sessions summary */}
-        <div style={{background:B.card,borderRadius:18,padding:"20px",marginBottom:14,border:`1px solid ${B.border}`}}>
-          <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 14px"}}>Your practice</p>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+          {/* THE STATS GRID — 2x2 with tabular numerals */}
+          <div className="rhei-rise rhei-rise-3" style={{
+            display:"grid", gridTemplateColumns:"1fr 1fr",
+            gap:0, marginBottom:18,
+            border:"1px solid rgba(248,242,229,0.08)",
+            borderRadius:22, overflow:"hidden",
+            background:"rgba(248,242,229,0.02)",
+            backdropFilter:"blur(10px)",
+          }}>
             {[
-              {v:totalSessions,l:"Rituals completed",sub:totalSessions===0?"Start today":totalSessions===1?"Your first — well done":"Keep building"},
-              {v:`${totalMinutes}m`,l:"Time invested",sub:totalMinutes>0?"In your face and nervous system":"Time well spent"},
-              {v:meditationStreak>0?`${meditationStreak}`:completedToday.length>0?"1":"—",l:"Current streak",sub:longestStreak>meditationStreak?`Best: ${longestStreak}`:meditationStreak>1?"Consecutive sessions":"Complete one to start"},
-              {v:completedToday.length>0?"✓":"—",l:"Practiced today",sub:completedToday.length>0?"You showed up":"Your face is waiting"},
+              {v:totalSessions, l:"Rituals", sub:totalSessions===0?"Begin":totalSessions===1?"First":"Consistent"},
+              {v:`${totalMinutes}`, l:"Minutes", sub:"In your face"},
+              {v:currentStreak>0?currentStreak:"—", l:"Streak", sub:bestStreak>currentStreak?`Best ${bestStreak}`:"Active"},
+              {v:completedToday.length>0?"✦":"—", l:"Today", sub:completedToday.length>0?"Showed up":"Waiting"},
             ].map((s,i)=>(
-              <div key={i} style={{textAlign:"left"}}>
-                <p style={{fontSize:26,color:B.cream,margin:"0 0 2px",fontFamily:SF,fontWeight:300}}>{s.v}</p>
-                <p style={{fontSize:11,color:B.cream,margin:"0 0 1px",fontFamily:SF}}>{s.l}</p>
-                <p style={{fontSize:10,color:B.muted,margin:0,fontFamily:SF}}>{s.sub}</p>
+              <div key={i} style={{
+                padding:"22px 20px",
+                borderRight: i%2===0 ? "1px solid rgba(248,242,229,0.06)" : "none",
+                borderBottom: i<2 ? "1px solid rgba(248,242,229,0.06)" : "none",
+                position:"relative",
+              }}>
+                <p style={{
+                  fontFamily:F, fontSize:"clamp(30px, 7vw, 38px)",
+                  fontWeight:300, color:"#F8F2E5",
+                  margin:"0 0 4px", lineHeight:0.95,
+                  fontVariantNumeric:"tabular-nums",
+                  fontVariationSettings:"'opsz' 72",
+                  letterSpacing:"-0.02em",
+                }}>
+                  {s.v}
+                </p>
+                <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color:"rgba(245,200,120,0.70)", margin:"0 0 3px"}}>{s.l}</p>
+                <p style={{fontFamily:SF, fontSize:10, color:"rgba(248,242,229,0.50)", margin:0, letterSpacing:"0.04em"}}>{s.sub}</p>
               </div>
             ))}
           </div>
-        </div>
 
-        {/* Photo journal */}
-        <div style={{background:B.card,borderRadius:18,padding:"20px",marginBottom:14,border:`1px solid ${B.border}`}}>
-          <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 8px"}}>Before & after</p>
-          <p style={{fontSize:12,color:B.muted,fontFamily:SF,lineHeight:1.55,margin:"0 0 14px"}}>The real measure is your face over time. Take a photo after each ritual — the change is visible within a week.</p>
-          <div style={{display:"flex",gap:10}}>
-            <div style={{flex:1,background:`${B.gold}05`,borderRadius:12,padding:"20px 12px",textAlign:"center",border:`1px dashed ${B.border}`}}>
-              <p style={{fontSize:10,color:B.muted,fontFamily:SF,margin:0}}>Before</p>
+          {/* PHOTO JOURNAL — the gallery slot */}
+          <div className="rhei-rise rhei-rise-4" style={{
+            background:"rgba(248,242,229,0.03)",
+            backdropFilter:"blur(12px)",
+            WebkitBackdropFilter:"blur(12px)",
+            border:"1px solid rgba(248,242,229,0.08)",
+            borderRadius:22,
+            padding:"24px 22px",
+            marginBottom:18,
+          }}>
+            <div style={{display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:8}}>
+              <PrecisionStamp label="Archive" color="rgba(245,200,120,0.70)"/>
+              <PrecisionStamp label="Coming Soon" color="rgba(248,242,229,0.40)"/>
             </div>
-            <div style={{flex:1,background:`${B.gold}05`,borderRadius:12,padding:"20px 12px",textAlign:"center",border:`1px dashed ${B.border}`}}>
-              <p style={{fontSize:10,color:B.muted,fontFamily:SF,margin:0}}>After</p>
+            <p style={{fontFamily:F, fontStyle:"italic", fontSize:13.5, color:"rgba(248,242,229,0.62)", margin:"0 0 18px", lineHeight:1.55}}>
+              The real measure is your face over time. A weekly self-portrait, kept private.
+            </p>
+            <div style={{display:"flex", gap:10}}>
+              {["Before","After"].map((label, i) => (
+                <div key={i} style={{
+                  flex:1,
+                  position:"relative",
+                  background:"rgba(248,242,229,0.02)",
+                  border:"1px solid rgba(245,200,120,0.18)",
+                  borderRadius:14,
+                  padding:"30px 14px",
+                  textAlign:"center",
+                  overflow:"hidden",
+                }}>
+                  <CornerBrackets inset={6} size={8} color="rgba(245,200,120,0.40)"/>
+                  <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color:"rgba(248,242,229,0.55)", margin:0}}>{label}</p>
+                </div>
+              ))}
             </div>
           </div>
-          <p style={{fontSize:10,color:`${B.gold}60`,fontFamily:SF,margin:"10px 0 0",textAlign:"center"}}>Coming in next update</p>
-        </div>
 
-        {/* Profile & Account */}
-        <div style={{background:B.card,borderRadius:14,padding:"16px 18px",border:`1px solid ${B.border}`,marginTop:16}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:authUser?12:0}}>
-            <div style={{display:"flex",alignItems:"center",gap:12}}>
-              <div style={{width:36,height:36,borderRadius:"50%",background:`${B.gold}15`,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                <User size={16} color={B.gold}/>
+          {/* PROFILE / ACCOUNT */}
+          <div className="rhei-rise rhei-rise-4" style={{
+            background:"rgba(248,242,229,0.02)",
+            backdropFilter:"blur(10px)",
+            border:"1px solid rgba(248,242,229,0.06)",
+            borderRadius:18,
+            padding:"18px 20px",
+          }}>
+            <div style={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
+              <div style={{display:"flex", alignItems:"center", gap:14}}>
+                <div style={{
+                  width:42, height:42, borderRadius:"50%",
+                  background:"radial-gradient(circle, rgba(245,200,120,0.40) 0%, rgba(245,200,120,0.10) 50%, transparent 75%)",
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                }}>
+                  <User size={15} color="#F5C878" strokeWidth={1.5}/>
+                </div>
+                <div>
+                  <p style={{fontFamily:F, fontSize:15, fontWeight:300, color:"#F8F2E5", margin:0, fontVariationSettings:"'opsz' 48", letterSpacing:"-0.01em"}}>{userName||"Set your name"}</p>
+                  <p style={{fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.22em", textTransform:"uppercase", color: isPremium ? "#F5C878" : "rgba(248,242,229,0.45)", margin:"3px 0 0"}}>
+                    {isPremium ? "Member" : "Free"}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p style={{fontSize:13,color:B.cream,margin:0,fontFamily:SF}}>{userName||"Set your name"}</p>
-                <p style={{fontSize:10,color:B.muted,margin:"2px 0 0",fontFamily:SF}}>{isPremium?"Premium Member":"Free Plan"}</p>
-              </div>
-            </div>
-            <button onClick={()=>{const n=prompt("What should we call you?",userName);if(n!==null){setUserName(n);save('userName',n);}}} style={{background:"none",border:`1px solid ${B.border}`,borderRadius:8,padding:"6px 12px",cursor:"pointer",color:B.muted,fontSize:10,fontFamily:SF}}>Edit</button>
-          </div>
-          {supabase && authUser && (
-            <div style={{borderTop:`1px solid ${B.border}`,paddingTop:12,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-              <div style={{display:"flex",alignItems:"center",gap:8}}>
-                <Mail size={12} color={B.muted}/>
-                <span style={{fontSize:11,color:B.muted,fontFamily:SF}}>{authUser.email}</span>
-              </div>
-              <button onClick={signOut} style={{background:"none",border:`1px solid ${B.border}`,borderRadius:8,padding:"5px 10px",cursor:"pointer",color:B.muted,fontSize:10,fontFamily:SF,display:"flex",alignItems:"center",gap:4}}>
-                <LogOut size={10}/>Sign out
+              <button
+                onClick={()=>{const n=prompt("What should we call you?",userName);if(n!==null){setUserName(n);save('userName',n);}}}
+                style={{
+                  background:"rgba(248,242,229,0.06)",
+                  border:"1px solid rgba(248,242,229,0.12)",
+                  borderRadius:100,
+                  padding:"7px 14px", cursor:"pointer",
+                  color:"rgba(248,242,229,0.75)", fontSize:10,
+                  fontFamily:SF, letterSpacing:"0.22em",
+                  textTransform:"uppercase", fontWeight:500,
+                }}>
+                Edit
               </button>
             </div>
-          )}
-          {supabase && !authUser && (
-            <div style={{borderTop:`1px solid ${B.border}`,paddingTop:12,marginTop:12}}>
-              <p style={{fontSize:10,color:B.muted,fontFamily:SF,margin:"0 0 8px"}}>Sign in to sync your premium access across devices</p>
-              <div style={{display:"flex",gap:8}}>
-                <input type="email" placeholder="your@email.com" value={authEmail} onChange={e=>setAuthEmail(e.target.value)} onKeyDown={e=>e.key==='Enter'&&signInWithEmail()} style={{flex:1,background:B.bgDeep,border:`1px solid ${B.border}`,borderRadius:8,padding:"8px 12px",color:B.cream,fontSize:12,fontFamily:SF,outline:"none"}}/>
-                <button onClick={signInWithEmail} style={{background:`${B.gold}15`,border:`1px solid ${B.border}`,borderRadius:8,padding:"8px 14px",cursor:"pointer",color:B.gold,fontSize:11,fontFamily:SF,whiteSpace:"nowrap"}}>Sign in</button>
+            {supabase && authUser && (
+              <div style={{borderTop:"1px solid rgba(248,242,229,0.06)", paddingTop:14, marginTop:14, display:"flex", alignItems:"center", justifyContent:"space-between"}}>
+                <div style={{display:"flex", alignItems:"center", gap:8}}>
+                  <Mail size={11} color="rgba(248,242,229,0.50)"/>
+                  <span style={{fontFamily:SF, fontSize:11, color:"rgba(248,242,229,0.65)"}}>{authUser.email}</span>
+                </div>
+                <button onClick={signOut} style={{background:"none", border:"none", color:"rgba(248,242,229,0.55)", fontFamily:SF, fontSize:10, cursor:"pointer", letterSpacing:"0.22em", textTransform:"uppercase", display:"flex", alignItems:"center", gap:5}}>
+                  <LogOut size={10}/>Sign out
+                </button>
               </div>
-              {authSent && <p style={{fontSize:11,color:"#5A8A5A",fontFamily:SF,margin:"8px 0 0"}}>Check your email for a sign-in link.</p>}
-              {authError && <p style={{fontSize:11,color:"#C4786A",fontFamily:SF,margin:"8px 0 0"}}>{authError}</p>}
-            </div>
-          )}
+            )}
+            {supabase && !authUser && (
+              <div style={{borderTop:"1px solid rgba(248,242,229,0.06)", paddingTop:14, marginTop:14}}>
+                <p style={{fontFamily:SF, fontSize:11, color:"rgba(248,242,229,0.55)", margin:"0 0 10px"}}>Sign in to sync access across devices.</p>
+                <div style={{display:"flex", gap:8}}>
+                  <input type="email" placeholder="your@email.com" value={authEmail} onChange={e=>setAuthEmail(e.target.value)} onKeyDown={e=>e.key==='Enter'&&signInWithEmail()} style={{flex:1, background:"rgba(248,242,229,0.04)", border:"1px solid rgba(248,242,229,0.10)", borderRadius:10, padding:"9px 14px", color:"#F8F2E5", fontSize:12, fontFamily:SF, outline:"none"}}/>
+                  <button onClick={signInWithEmail} style={{background:"rgba(245,200,120,0.15)", border:"1px solid rgba(245,200,120,0.30)", borderRadius:10, padding:"9px 16px", cursor:"pointer", color:"#F5C878", fontSize:11, fontFamily:SF, letterSpacing:"0.06em", fontWeight:500, whiteSpace:"nowrap"}}>Sign in</button>
+                </div>
+                {authSent && <p style={{fontFamily:F, fontStyle:"italic", fontSize:11, color:"rgba(180,220,190,0.85)", margin:"10px 0 0"}}>Check your email for a sign-in link.</p>}
+                {authError && <p style={{fontFamily:F, fontStyle:"italic", fontSize:11, color:"rgba(228,138,118,0.85)", margin:"10px 0 0"}}>{authError}</p>}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+        </div>
       </div>
     );
   };
@@ -3134,8 +3399,22 @@ export default function ObrizApp() {
           completeSessionOnServer('ritual',ritualType,totalDuration,checkinState?.dominant||null);
         }}
       />}
-      {/* Bottom Nav — 4 tabs */}
-      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,background:`${B.bgDeep}F2`,backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:`1px solid ${B.border}`,display:"flex",justifyContent:"space-around",padding:"11px 0 env(safe-area-inset-bottom, 22px)",paddingBottom:"max(env(safe-area-inset-bottom), 22px)",zIndex:50}}>
+      {/* Bottom Nav — luxury glass dock */}
+      <div style={{
+        position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)",
+        width:"100%", maxWidth:430,
+        background:"rgba(10,6,4,0.78)",
+        backdropFilter:"blur(28px) saturate(1.4)",
+        WebkitBackdropFilter:"blur(28px) saturate(1.4)",
+        borderTop:"1px solid rgba(245,200,120,0.14)",
+        boxShadow:"0 -20px 50px -20px rgba(245,200,120,0.06)",
+        display:"flex", justifyContent:"space-around",
+        padding:"12px 0 env(safe-area-inset-bottom, 22px)",
+        paddingBottom:"max(env(safe-area-inset-bottom), 22px)",
+        zIndex:50,
+      }}>
+        {/* Top hairline glow */}
+        <div style={{position:"absolute", top:0, left:"15%", right:"15%", height:1, background:"linear-gradient(90deg, transparent, rgba(245,200,120,0.40), transparent)", pointerEvents:"none"}}/>
         {navBtn("home",Home,"Today")}
         {navBtn("rituals",Sparkles,"Rituals")}
         {navBtn("meditations",Headphones,"Meditate")}
