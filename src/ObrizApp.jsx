@@ -100,11 +100,11 @@ const GLOBAL_CSS = `
 
 // ── Nervous System Resets ──
 const sessions = [
-  { id:1, title:"Morning Reset", subtitle:"Before the day begins", duration:179, icon:Sun, description:"Sets your nervous system baseline before anything else can. Three minutes of breathing — extended exhale, somatic grounding, vagal activation. Best done before your phone.", technique:"Extended exhale · Somatic grounding · Vagal humming", bestFor:"First minutes after waking", timeOfDay:"morning", audioFile:"/audio/morning-reset.mp3", occasion:"morning" },
-  { id:2, title:"Pre-Meeting Reset", subtitle:"Walk in composed, not reactive", duration:200, icon:Shield, description:"Activates vagal tone and grounds the nervous system before high-stakes moments. The difference between responding and reacting.", technique:"Physiological sigh · Somatic grounding · Cognitive anchor", bestFor:"Five minutes before any demanding interaction", timeOfDay:"any", audioFile:"/audio/pre-meeting-reset.mp3", occasion:"event" },
-  { id:3, title:"The Transition", subtitle:"From performance mode to presence", duration:234, icon:Sunset, description:"Releases the activation that lingers after a workday. Designed for the shift between professional and personal life — so you don't bring it home.", technique:"Progressive release · Body scan · Identity shift", bestFor:"The commute home, or before walking through the door", timeOfDay:"evening", audioFile:"/audio/transition-reset.mp3", occasion:"evening" },
-  { id:4, title:"Post-Conflict Reset", subtitle:"Release what you're still holding", duration:194, icon:Wind, description:"After a difficult conversation, the body stays physiologically activated long after the moment ends. This is how you actually leave it.", technique:"Bilateral stimulation · Physiological sigh · Self-compassion", bestFor:"After difficult conversations or anything emotionally costly", timeOfDay:"any", audioFile:"/audio/post-conflict-reset.mp3", occasion:"recovery" },
-  { id:5, title:"General Reset", subtitle:"Return to yourself", duration:172, icon:RefreshCw, description:"The foundational reset. No specific trigger required — use it whenever you've drifted or tensed. Three minutes, anywhere.", technique:"Diaphragmatic breathing · Body awareness · Vagal activation", bestFor:"Any moment you need to come back to center", timeOfDay:"any", audioFile:"/audio/general-reset.mp3", occasion:"any" },
+  { id:1, title:"Soft Awakening", subtitle:"Before the day begins", duration:179, icon:Sun,     accent:"#D9A98C", description:"Sets your nervous system baseline before anything else can. Three minutes of breathing — extended exhale, somatic grounding, vagal activation. Best done before your phone.",                                                technique:"Extended exhale · Somatic grounding · Vagal humming",            bestFor:"First minutes after waking",                              timeOfDay:"morning", audioFile:"/audio/morning-reset.mp3",       occasion:"morning"  },
+  { id:2, title:"Inner Warmth",    subtitle:"Composure before something asks for it",       duration:200, icon:Shield,  accent:"#D4AD6A", description:"Activates vagal tone and grounds the nervous system before high-stakes moments. The difference between responding and reacting.",                                                                                  technique:"Physiological sigh · Somatic grounding · Cognitive anchor",     bestFor:"Five minutes before any demanding interaction",          timeOfDay:"any",     audioFile:"/audio/pre-meeting-reset.mp3",   occasion:"event"    },
+  { id:3, title:"Evening Melt",    subtitle:"From performance to presence",                  duration:234, icon:Sunset,  accent:"#C99656", description:"Releases the activation that lingers after a workday. Designed for the shift between professional and personal life — so you don't bring it home.",                                                              technique:"Progressive release · Body scan · Identity shift",              bestFor:"The commute home, or before walking through the door",   timeOfDay:"evening", audioFile:"/audio/transition-reset.mp3",    occasion:"evening"  },
+  { id:4, title:"Emotional Release",subtitle:"Put down what you're still holding",           duration:194, icon:Wind,    accent:"#C4786A", description:"After a difficult conversation, the body stays physiologically activated long after the moment ends. This is how you actually leave it.",                                                                          technique:"Bilateral stimulation · Physiological sigh · Self-compassion",  bestFor:"After difficult conversations or anything emotionally costly", timeOfDay:"any", audioFile:"/audio/post-conflict-reset.mp3", occasion:"recovery" },
+  { id:5, title:"Return to Self",  subtitle:"Wherever you are",                              duration:172, icon:RefreshCw,accent:"#B88940", description:"The foundational reset. No specific trigger required — use it whenever you've drifted or tensed. Three minutes, anywhere.",                                                                                       technique:"Diaphragmatic breathing · Body awareness · Vagal activation",   bestFor:"Any moment you need to come back to center",             timeOfDay:"any",     audioFile:"/audio/general-reset.mp3",       occasion:"any"      },
 ];
 
 // ── Face states — drives ritual + meditation recommendations ──
@@ -209,7 +209,7 @@ const meditationStates = [
 const rituals = [
   {
     id: "gua-sha", title: "Sculpt & Define", subtitle: "Gua Sha — stone work for the jawline, cheekbones, and neck",
-    duration: "6 min", isPremium: false, svgFile: "/svgs/gua-sha-zones.svg",
+    duration: "6 min", isPremium: false, svgFile: "/svgs/gua-sha-zones.svg", accent: "#D4AD6A",
     description: "True gua sha protocol with a stone tool held at a fifteen-degree angle. Every stroke is firm, outward, and repeated three to five times — the classical sequence used in Chinese facial practice and adapted by modern practitioners. Visible sculpting after a single session.",
     tools: "Gua sha stone (rose quartz, jade, or bian) · facial oil · about 6 minutes",
     occasion: "morning", audioFollowUp: 1,
@@ -226,7 +226,7 @@ const rituals = [
   },
   {
     id: "lymphatic", title: "Depuff & Restore Glow", subtitle: "Manual Lymphatic Drainage — fingers only, feather pressure",
-    duration: "6 min", isPremium: false, svgFile: "/svgs/lymphatic-paths.svg",
+    duration: "6 min", isPremium: false, svgFile: "/svgs/lymphatic-paths.svg", accent: "#8A9BAF",
     description: "True manual lymphatic drainage in the Vodder tradition. Pressure is featherlight — about five grams — because lymph vessels sit just under the skin and collapse if pressed harder. The work is pumps and lifts, never sliding. Always start and end at the collarbone terminus, where everything ultimately drains.",
     tools: "Clean fingertips and flat palms · no tools, no oil",
     occasion: "morning", audioFollowUp: 5,
@@ -243,7 +243,7 @@ const rituals = [
   },
   {
     id: "face-lift", title: "Lift & Firm", subtitle: "Face Yoga — isometric holds against finger resistance",
-    duration: "7 min", isPremium: false, svgFile: "/svgs/face-lifting-points.svg",
+    duration: "7 min", isPremium: false, svgFile: "/svgs/face-lifting-points.svg", accent: "#E8C088",
     description: "This is not massage — this is muscle work. Isometric contractions against fingertip resistance, in the tradition of facial yoga (Carole Maggio, Danielle Collins). The face has over forty muscles and most of them have forgotten they're there. Holds are five to ten seconds. Repetitions matter. Visible tone with consistency.",
     tools: "Clean fingertips · facial oil",
     occasion: "evening", audioFollowUp: 3,
@@ -260,7 +260,7 @@ const rituals = [
   },
   {
     id: "buccal", title: "Release & Decompress", subtitle: "Buccal Massage — hands inside the mouth, the deepest release",
-    duration: "5 min", isPremium: false, svgFile: "/svgs/face-base.svg",
+    duration: "5 min", isPremium: false, svgFile: "/svgs/face-base.svg", accent: "#C4786A",
     description: "Buccal massage in the Nichola Joss tradition — the technique used in private facials at Claridge's and Le Bristol. The thumb enters the mouth and works the masseter, buccinator, and pterygoid muscles directly, from inside. Most face tension lives in these muscles and cannot be reached any other way. Intimate, surprising, and unmistakably effective. Wash your hands.",
     tools: "Washed hands or single-use glove · facial oil · about 5 minutes",
     occasion: "recovery", audioFollowUp: 4,
@@ -276,7 +276,7 @@ const rituals = [
   },
   {
     id: "pre-event", title: "Show Up Glowing", subtitle: "Pre-Event Ritual — cold, percussion, and speed",
-    duration: "4 min", isPremium: true, svgFile: "/svgs/face-base.svg",
+    duration: "4 min", isPremium: true, svgFile: "/svgs/face-base.svg", accent: "#F5D89A",
     description: "The technique facialists use before a shoot or red carpet. Cold tools for instant vasoconstriction, rapid percussion tapping to bring blood to the surface, fast lymphatic flushing, and a cold seal at the end. The opposite tempo of the other rituals — urgency is the technique. Four minutes, visible result.",
     tools: "Chilled gua sha stone or cold spoons (from the freezer) · facial oil · about 4 minutes",
     occasion: "event", audioFollowUp: 2,
@@ -291,7 +291,7 @@ const rituals = [
   },
   {
     id: "eye-revival", title: "Brighten & Open", subtitle: "Eye Revival — ring fingers and the orbital bone, nothing else",
-    duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg",
+    duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg", accent: "#A08BAA",
     description: "Targeted orbital drainage. The under-eye skin is the thinnest on the body — about 0.5 millimeters — and the ring finger is the only finger that can move it without overpressuring it. Every step is built around specific landmarks on the orbital bone: the tear trough, the brow trio, the temple anchor. Cold tools amplify it. Never pull skin.",
     tools: "Ring fingers only · optional chilled spoon or eye stone · serum",
     occasion: "morning", audioFollowUp: 5,
@@ -307,7 +307,7 @@ const rituals = [
   },
   {
     id: "belly-flow", title: "Soften the Belly", subtitle: "Abdominal Lymphatic Drainage — debloat and calm the gut",
-    duration: "6 min", isPremium: false, svgFile: "/svgs/face-base.svg",
+    duration: "6 min", isPremium: false, svgFile: "/svgs/face-base.svg", accent: "#B88940",
     description: "A real lymphatic drainage sequence for the abdomen — the kind massage therapists charge $200/hour for. Releases trapped fluid, eases bloating, and signals the gut that the bracing can stop. Follows the actual colonic and inguinal lymph pathways. Best done on an empty or near-empty stomach, lying down.",
     tools: "Clean flat hands · body oil optional · skip if pregnant or recovering from abdominal surgery",
     occasion: "evening", audioFollowUp: 5,
@@ -864,6 +864,104 @@ function GoldenHourAtmosphere({
       {/* Film grain (always last) */}
       <div className="rhei-grain"/>
     </>
+  );
+}
+
+// ══════════════════════════════════
+// DRAMATIC GOD RAYS — Luminar-style streaming light from above
+// Theatrical diagonal shafts piercing near-black void.
+// Use for screens that need cinematic drama, not just warmth.
+// ══════════════════════════════════
+function DramaticGodRays({ intensity = 1, pierce = "50%" }) {
+  // pierce = where the rays converge (x position, like a sun above the frame)
+  return (
+    <>
+      {/* Deep void base wash — pulls eye to top */}
+      <div style={{
+        position:"absolute", inset:0,
+        background:`radial-gradient(ellipse 120% 70% at ${pierce} -10%, rgba(245,200,120,${0.42*intensity}) 0%, rgba(232,170,90,${0.22*intensity}) 18%, rgba(180,120,50,${0.10*intensity}) 38%, transparent 62%)`,
+        pointerEvents:"none",
+      }}/>
+
+      {/* The pierce point — concentrated hot spot just above frame */}
+      <div style={{
+        position:"absolute", top:"-8%", left:pierce,
+        width:"60vmin", height:"60vmin", borderRadius:"50%",
+        background:`radial-gradient(circle, rgba(255,220,150,${0.65*intensity}) 0%, rgba(245,200,120,${0.40*intensity}) 18%, rgba(220,160,80,${0.18*intensity}) 38%, transparent 62%)`,
+        filter:"blur(28px)",
+        transform:"translateX(-50%)",
+        animation:"rhei-ember 18s ease-in-out infinite",
+        mixBlendMode:"screen", pointerEvents:"none",
+      }}/>
+
+      {/* Streaming diagonal shafts — multiple angles, varied width */}
+      <div style={{
+        position:"absolute", inset:0, pointerEvents:"none", mixBlendMode:"screen",
+        background:`
+          linear-gradient(165deg, transparent 30%, rgba(255,220,150,${0.18*intensity}) 44%, rgba(245,200,120,${0.10*intensity}) 50%, transparent 64%),
+          linear-gradient(178deg, transparent 28%, rgba(255,210,130,${0.14*intensity}) 42%, transparent 60%),
+          linear-gradient(195deg, transparent 32%, rgba(245,200,120,${0.16*intensity}) 46%, rgba(220,160,80,${0.08*intensity}) 54%, transparent 68%),
+          linear-gradient(212deg, transparent 30%, rgba(232,170,90,${0.12*intensity}) 44%, transparent 60%),
+          linear-gradient(155deg, transparent 36%, rgba(255,220,150,${0.10*intensity}) 48%, transparent 60%)
+        `,
+        filter:"blur(2px)",
+      }}/>
+
+      {/* Soft outer shafts — widest, lowest opacity (peripheral light) */}
+      <div style={{
+        position:"absolute", inset:0, pointerEvents:"none", mixBlendMode:"screen",
+        background:`
+          linear-gradient(140deg, transparent 25%, rgba(245,200,120,${0.07*intensity}) 50%, transparent 75%),
+          linear-gradient(225deg, transparent 25%, rgba(220,160,80,${0.06*intensity}) 50%, transparent 75%)
+        `,
+        filter:"blur(8px)",
+      }}/>
+
+      {/* Floor reaches — light spilling down toward bottom */}
+      <div style={{
+        position:"absolute", bottom:0, left:0, right:0, height:"42%",
+        background:`linear-gradient(180deg, transparent 0%, rgba(180,120,50,${0.06*intensity}) 60%, rgba(120,80,30,${0.10*intensity}) 100%)`,
+        pointerEvents:"none", mixBlendMode:"screen",
+      }}/>
+
+      {/* Slow drifting motes — fewer than golden hour, like dust in a beam */}
+      <div style={{position:"absolute", inset:0, pointerEvents:"none", overflow:"hidden"}}>
+        {Array.from({length: 9}).map((_, i) => (
+          <span key={i} style={{
+            position:"absolute",
+            left: `${15 + (i * 9.5) % 70}%`,
+            top: `${(i * 11.3 + 12) % 70}%`,
+            width: 2 + (i%3), height: 2 + (i%3),
+            borderRadius:"50%",
+            background: i%2 ? `rgba(255,220,150,${0.55*intensity})` : `rgba(245,200,120,${0.42*intensity})`,
+            filter:"blur(1.2px)",
+            animation: `rhei-drift-${i%3} ${28 + (i%4)*4}s ease-in-out infinite`,
+            animationDelay: `${i * 0.6}s`,
+          }}/>
+        ))}
+      </div>
+
+      {/* Side vignette — pulls eye to center column, like a theatrical spotlight */}
+      <div style={{
+        position:"absolute", inset:0, pointerEvents:"none",
+        background:"radial-gradient(ellipse 70% 100% at 50% 50%, transparent 30%, rgba(8,5,2,0.40) 75%, rgba(8,5,2,0.85) 100%)",
+      }}/>
+
+      {/* Film grain */}
+      <div className="rhei-grain"/>
+    </>
+  );
+}
+
+// ══════════════════════════════════
+// MINIMAL STARBURST — tiny gold icon (like the Luminar reference)
+// ══════════════════════════════════
+function Starburst({ size = 28, color = "#F5C878" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M16 2 L17.2 13.4 L28 14.8 L17.2 16.6 L16 30 L14.8 16.6 L4 14.8 L14.8 13.4 Z" fill={color} opacity="0.95"/>
+      <path d="M16 6 L16.6 13.8 L24 14.8 L16.6 15.8 L16 26 L15.4 15.8 L8 14.8 L15.4 13.8 Z" fill="#FFE4B0" opacity="0.7"/>
+    </svg>
   );
 }
 
@@ -2062,190 +2160,576 @@ export default function ObrizApp() {
 
   // ══════════ RITUALS — face check-in inline ══════════
   const renderRituals=()=>{
-    const zoneMap = {"gua-sha":"jawline","lymphatic":"nodes","face-lift":"cheeks","buccal":"jawline","pre-event":"full","eye-revival":"undereye"};
+    const zoneMap = {"gua-sha":"jawline","lymphatic":"nodes","face-lift":"cheeks","buccal":"jawline","pre-event":"full","eye-revival":"undereye","belly-flow":"navel"};
     const recommended = checkinDone && checkinState
       ? rituals.find(r=>r.id===checkinState.ritualId)
       : null;
     return (
-    <div style={{padding:"56px 22px 120px"}}>
-      <div style={{marginBottom:24}}>
-        <h1 style={{fontSize:22,fontWeight:400,color:B.cream,margin:"0 0 4px",fontFamily:F}}>Face Rituals</h1>
-        <p style={{fontSize:13,color:B.muted,fontFamily:SF}}>Hands-on techniques that sculpt, drain, and lift.</p>
-      </div>
+    <div style={{
+      position:"relative",
+      padding:"calc(env(safe-area-inset-top, 0px) + 32px) 0 140px",
+      minHeight:"100vh",
+      background:"linear-gradient(180deg, #0A0604 0%, #100804 38%, #0A0604 100%)",
+      overflow:"hidden",
+    }}>
+      <DramaticGodRays intensity={0.95} pierce="50%" />
 
-      {/* ── Featured: Mirror Mode (the brand differentiator) ── */}
-      <button
-        onClick={()=>setScreen("mirror")}
-        style={{
-          width:"100%",
-          background:`linear-gradient(135deg, ${B.card} 0%, ${B.cardHover} 100%)`,
-          border:`1.5px solid ${B.borderActive}`,
-          borderRadius:20,
-          padding:"20px 18px",
-          marginBottom:18,
-          cursor:"pointer",
-          textAlign:"left",
-          position:"relative",
-          overflow:"hidden",
-          boxShadow:`0 4px 24px rgba(196,154,75,0.08)`,
+      <div style={{position:"relative", zIndex:1, maxWidth:480, margin:"0 auto", padding:"0 24px"}}>
+
+        {/* ── HERO: Luminar-style starburst + serif title ── */}
+        <div className="rhei-rise rhei-rise-1" style={{
+          textAlign:"center",
+          paddingTop:"min(12vh, 90px)",
+          marginBottom:48,
         }}>
-        {/* Top gold accent line */}
-        <div style={{position:"absolute",top:0,left:0,right:0,height:1,background:`linear-gradient(90deg, transparent, ${B.gold}66, transparent)`}}/>
-        {/* "New" tag */}
-        <div style={{position:"absolute",top:14,right:14,background:`${B.gold}18`,border:`1px solid ${B.gold}40`,padding:"3px 10px",borderRadius:7}}>
-          <span style={{fontSize:8,color:B.gold,fontFamily:SF,letterSpacing:1.5}}>NEW</span>
-        </div>
-        <div style={{display:"flex",alignItems:"center",gap:14}}>
-          {/* Camera/eye icon container */}
-          <div style={{width:54,height:54,borderRadius:14,background:`${B.gold}10`,border:`1px solid ${B.borderActive}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-            <Camera size={22} color={B.gold} strokeWidth={1.5}/>
+          <div style={{
+            display:"inline-flex", alignItems:"center", justifyContent:"center",
+            width:46, height:46, borderRadius:10,
+            background:"rgba(8,5,2,0.55)",
+            border:"1px solid rgba(245,200,120,0.18)",
+            boxShadow:"0 0 40px rgba(245,200,120,0.30), inset 0 0 20px rgba(245,200,120,0.10)",
+            marginBottom:32,
+          }}>
+            <Starburst size={26} />
           </div>
-          <div style={{flex:1,minWidth:0,paddingRight:50}}>
-            <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 4px"}}>Mirror Mode</p>
-            <h3 style={{fontSize:17,color:B.cream,margin:"0 0 4px",fontWeight:400,fontFamily:F,lineHeight:1.25}}>Your face, guided live.</h3>
-            <p style={{fontSize:11,color:B.creamMuted,margin:0,fontStyle:"italic",fontFamily:F,lineHeight:1.4}}>
-              Camera-guided ritual. Personalized to where you're holding tension today.
+
+          <p style={{fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(245,200,120,0.75)", margin:"0 0 16px"}}>
+            The Hands Room
+          </p>
+          <h1 style={{
+            fontFamily:F, fontSize:"clamp(34px, 8.5vw, 44px)",
+            fontWeight:300, color:B.vellum,
+            letterSpacing:"-0.02em", lineHeight:1.05,
+            margin:"0 0 14px",
+            fontVariationSettings:"'opsz' 96",
+            textShadow:"0 2px 20px rgba(0,0,0,0.4)",
+          }}>
+            Hands on the surface.
+          </h1>
+          <p style={{fontFamily:F, fontStyle:"italic", fontSize:14, color:"rgba(248,242,229,0.62)", lineHeight:1.55, margin:"0 auto", maxWidth:300}}>
+            Seven rituals. Each with its own tool, its own pressure, its own room.
+          </p>
+        </div>
+
+        {/* ── HERO LIVE BUTTON: Mirror Mode — luminar pill on dark ── */}
+        <button
+          onClick={()=>setScreen("mirror")}
+          className="rhei-press rhei-rise rhei-rise-2"
+          style={{
+            width:"100%", marginBottom:64,
+            background:"transparent",
+            border:"none",
+            cursor:"pointer", textAlign:"center",
+            position:"relative",
+            padding:"24px 0 0",
+          }}>
+          {/* Subtle inner light bloom behind the pill */}
+          <div style={{
+            position:"absolute", top:"50%", left:"50%",
+            width:320, height:160, borderRadius:"50%",
+            background:"radial-gradient(ellipse, rgba(245,200,120,0.22) 0%, rgba(245,200,120,0.06) 40%, transparent 70%)",
+            filter:"blur(28px)",
+            transform:"translate(-50%, -50%)",
+            pointerEvents:"none",
+          }}/>
+          <div style={{position:"relative", zIndex:1}}>
+            <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(245,200,120,0.80)", margin:"0 0 12px"}}>
+              Mirror Mode — New
+            </p>
+            <p style={{fontFamily:F, fontStyle:"italic", fontSize:14, color:"rgba(248,242,229,0.65)", lineHeight:1.5, margin:"0 0 24px", maxWidth:320, marginLeft:"auto", marginRight:"auto"}}>
+              Your face, guided live. The camera finds the tension and walks you through it.
+            </p>
+            <div style={{
+              display:"inline-flex", alignItems:"center", gap:10,
+              background:"rgba(248,242,229,0.95)",
+              color:"#1A0F06",
+              fontFamily:SF, fontSize:13, fontWeight:600,
+              letterSpacing:"0.06em",
+              padding:"13px 28px",
+              borderRadius:100,
+              boxShadow:"0 16px 40px -14px rgba(248,242,229,0.40), 0 4px 14px rgba(15,9,5,0.4)",
+            }}>
+              <Camera size={13} color="#1A0F06" strokeWidth={2}/>
+              <span>Begin live ritual</span>
+            </div>
+            <p style={{fontFamily:SF, fontSize:11, color:"rgba(248,242,229,0.45)", margin:"14px 0 0", letterSpacing:"0.04em"}}>
+              or browse below
             </p>
           </div>
-        </div>
-      </button>
+        </button>
 
-      {/* Section label for the standard rituals below */}
-      <p style={{fontSize:9,letterSpacing:3,color:B.muted,textTransform:"uppercase",fontFamily:SF,margin:"22px 0 12px"}}>All rituals</p>
-
-      {/* ── Ritual cards ── */}
-      {rituals.map((r)=>{
-        const locked = r.isPremium && !isPremium;
-        const isRecommended = recommended?.id === r.id;
-        return (
-          <button key={r.id} onClick={()=>{if(locked){setScreen("premium");}else{setActiveRitual(generateAdaptiveRitual(r,checkinState));}}}
-            style={{width:"100%",background:B.card,border:`1.5px solid ${isRecommended?B.borderActive:locked?B.border:B.border}`,borderRadius:20,padding:"18px 16px",marginBottom:10,cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",opacity:locked?0.6:1}}>
-            {isRecommended&&<div style={{position:"absolute",top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,rgba(196,154,75,0.4),transparent)`}}/>}
-            {locked&&<div style={{position:"absolute",top:13,right:13,display:"flex",alignItems:"center",gap:4,background:`${B.gold}10`,padding:"3px 8px",borderRadius:7}}><Lock size={8} color={B.goldMuted}/><span style={{fontSize:8,color:B.goldMuted,fontFamily:SF,letterSpacing:1}}>PREMIUM</span></div>}
-            {isRecommended&&<div style={{position:"absolute",top:13,right:13,background:`${B.gold}18`,border:`1px solid ${B.gold}40`,padding:"3px 10px",borderRadius:7}}><span style={{fontSize:8,color:B.gold,fontFamily:SF,letterSpacing:1}}>RECOMMENDED</span></div>}
-            <div style={{display:"flex",alignItems:"center",gap:12}}>
-              <div style={{width:52,height:52,borderRadius:14,background:`${B.gold}07`,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-                <FaceGuideIllustration zone={zoneMap[r.id]||"full"} size={40}/>
-              </div>
-              <div style={{flex:1,minWidth:0}}>
-                <h3 style={{fontSize:16,color:B.cream,margin:"0 0 2px",fontWeight:400,fontFamily:F}}>{r.title}</h3>
-                <p style={{fontSize:11,color:B.goldMuted,margin:"0 0 6px",fontStyle:"italic"}}>{r.subtitle}</p>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <span style={{fontSize:10,color:B.muted,fontFamily:SF,display:"flex",alignItems:"center",gap:3}}><Clock size={9}/>{r.duration}</span>
-                  {!r.isPremium&&<span style={{fontSize:8,color:"#5A8A5A",background:"rgba(90,138,90,0.1)",border:"1px solid rgba(90,138,90,0.2)",padding:"2px 7px",borderRadius:5,letterSpacing:0.5}}>Free</span>}
-                </div>
-              </div>
-            </div>
-          </button>
-        );
-      })}
-
-      {!isPremium&&(
-        <div style={{background:B.card,borderRadius:18,padding:"22px 20px",marginTop:8,border:`1px solid ${B.borderActive}`,textAlign:"center"}}>
-          <Crown size={20} color={B.gold} style={{marginBottom:10}}/>
-          <h3 style={{fontSize:16,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>Unlock premium rituals</h3>
-          <p style={{fontSize:12,color:B.muted,margin:"0 0 16px",fontFamily:SF,lineHeight:1.5}}>Pre-Event Glow and Eye Revival — plus everything added in future.</p>
-          <button onClick={()=>setScreen("premium")} style={{background:B.goldGrad,border:"none",borderRadius:22,padding:"11px 26px",cursor:"pointer",color:B.warmBlack,fontSize:12,fontFamily:SF,letterSpacing:1,fontWeight:600}}>Unlock Premium</button>
-        </div>
-      )}
-    </div>
-  );};
-
-  // ══════════ MEDITATIONS — mood check-in + streak ══════════
-  const renderMeditations=()=>{
-    const recommendedSession = medCheckinDone && medCheckinState
-      ? sessions.find(s=>s.id===medCheckinState.sessionId)
-      : null;
-    return (
-    <div style={{padding:"56px 22px 120px"}}>
-      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:24}}>
-        <div>
-          <h1 style={{fontSize:22,fontWeight:400,color:B.cream,margin:"0 0 4px",fontFamily:F}}>Meditations</h1>
-          <p style={{fontSize:13,color:B.muted,fontFamily:SF}}>Audio-guided nervous system resets.</p>
-        </div>
-        {meditationStreak>0&&(
-          <div style={{background:B.card,border:`1px solid ${B.border}`,borderRadius:14,padding:"10px 14px",textAlign:"center"}}>
-            <p style={{fontSize:20,color:B.cream,margin:0,fontFamily:SF,fontWeight:300}}>{meditationStreak}</p>
-            <p style={{fontSize:9,color:B.muted,margin:"1px 0 0",textTransform:"uppercase",letterSpacing:1.5,fontFamily:SF}}>Streak</p>
+        {/* ── Recommended ribbon ── */}
+        {recommended && (
+          <div className="rhei-rise rhei-rise-3" style={{marginBottom:24, textAlign:"center"}}>
+            <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color:"rgba(245,200,120,0.70)", margin:"0 0 6px"}}>For where you are</p>
+            <p style={{fontFamily:F, fontStyle:"italic", fontSize:13, color:"rgba(248,242,229,0.60)", margin:0, lineHeight:1.5}}>
+              We'd guide you to <span style={{color:B.vellum, fontStyle:"normal"}}>{recommended.title}</span>.
+            </p>
           </div>
         )}
-      </div>
 
-      {/* ── Mood check-in ── */}
-      <div style={{background:B.card,borderRadius:18,padding:"18px 18px 14px",marginBottom:20,border:`1px solid ${B.border}`}}>
-        <p style={{fontSize:9,letterSpacing:2,color:B.gold,textTransform:"uppercase",fontFamily:SF,margin:"0 0 10px"}}>How are you feeling today?</p>
-        <div style={{display:"flex",flexDirection:"column",gap:7,marginBottom:medCheckinDone?12:0}}>
-          {meditationStates.map(state=>{
-            const selected = medCheckinState?.id===state.id;
+        {/* ── Section divider ── */}
+        <div style={{height:1, background:"linear-gradient(90deg, transparent, rgba(245,200,120,0.22), transparent)", margin:"0 -8px 8px"}}/>
+        <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color:"rgba(245,200,120,0.65)", margin:"22px 0 8px", textAlign:"center"}}>
+          The Full Library — Seven Rituals
+        </p>
+
+        {/* ── Editorial ritual list — gallery program typography ── */}
+        <div className="rhei-rise rhei-rise-4" style={{display:"flex", flexDirection:"column", marginTop:18}}>
+          {rituals.map((r, idx)=>{
+            const locked = r.isPremium && !isPremium;
+            const isRecommended = recommended?.id === r.id;
+            const accent = r.accent || "#D4AD6A";
+            const ritualZone = zoneMap[r.id] || "full";
             return (
-              <button key={state.id}
-                onClick={()=>{setMedCheckinState(state);setMedCheckinDone(true);}}
-                style={{width:"100%",background:selected?`${state.color}15`:B.bgDeep,border:`1.5px solid ${selected?state.color:B.border}`,borderRadius:12,padding:"11px 14px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:10,transition:"all 0.15s"}}>
-                <div style={{width:8,height:8,borderRadius:"50%",background:state.color,flexShrink:0,opacity:selected?1:0.4}}/>
-                <div style={{flex:1}}>
-                  <p style={{fontSize:13,color:selected?B.cream:B.creamMuted,margin:0,fontFamily:SF,fontWeight:selected?500:400}}>{state.label}</p>
-                  <p style={{fontSize:10,color:B.muted,margin:"1px 0 0",fontFamily:SF}}>{state.sublabel}</p>
+              <button
+                key={r.id}
+                onClick={()=>{if(locked){setScreen("premium");}else{setActiveRitual(generateAdaptiveRitual(r,checkinState));}}}
+                className="rhei-press"
+                style={{
+                  width:"100%",
+                  background:"transparent",
+                  border:"none",
+                  borderBottom: idx === rituals.length-1 ? "none" : "1px solid rgba(248,242,229,0.06)",
+                  padding:"24px 4px",
+                  cursor:"pointer",
+                  textAlign:"left",
+                  position:"relative",
+                  display:"flex",
+                  alignItems:"center",
+                  gap:16,
+                  opacity: locked ? 0.55 : 1,
+                  overflow:"hidden",
+                }}>
+                {/* Glowing orb with embossed illustration inside */}
+                <div style={{
+                  flexShrink:0,
+                  width:64, height:64, borderRadius:"50%",
+                  position:"relative",
+                  background:`radial-gradient(circle, ${accent}55 0%, ${accent}18 45%, transparent 72%)`,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  boxShadow: isRecommended ? `0 0 36px ${accent}50` : "none",
+                  transition:"all 0.3s ease",
+                }}>
+                  <div style={{opacity:0.85, transform:"scale(0.5)"}}>
+                    <RitualIllustration ritualId={r.id} zone={ritualZone} size={70}/>
+                  </div>
+                  {/* Inner glow dot at center */}
+                  <div style={{
+                    position:"absolute", top:"50%", left:"50%",
+                    transform:"translate(-50%, -50%)",
+                    width:8, height:8, borderRadius:"50%",
+                    background:accent,
+                    boxShadow:`0 0 12px ${accent}, 0 0 24px ${accent}80`,
+                    opacity:0.65,
+                    pointerEvents:"none",
+                  }}/>
                 </div>
-                {selected&&<Check size={14} color={state.color}/>}
+
+                {/* Content — editorial serif */}
+                <div style={{flex:1, minWidth:0}}>
+                  <div style={{display:"flex", alignItems:"baseline", gap:10, marginBottom:5, flexWrap:"wrap"}}>
+                    <h3 style={{
+                      fontFamily:F,
+                      fontSize:"clamp(20px, 5vw, 24px)",
+                      fontWeight:300,
+                      color:B.vellum,
+                      letterSpacing:"-0.015em",
+                      lineHeight:1.1,
+                      margin:0,
+                      fontVariationSettings:"'opsz' 48",
+                    }}>
+                      {r.title}
+                    </h3>
+                    {isRecommended && !locked && (
+                      <span style={{fontFamily:SF, fontSize:8, letterSpacing:"0.28em", textTransform:"uppercase", color:accent, fontWeight:500}}>
+                        For you
+                      </span>
+                    )}
+                  </div>
+                  <p style={{
+                    fontFamily:F, fontStyle:"italic",
+                    fontSize:12.5, color:"rgba(248,242,229,0.58)",
+                    margin:"0 0 8px", lineHeight:1.5,
+                  }}>
+                    {r.subtitle}
+                  </p>
+                  <div style={{display:"flex", alignItems:"center", gap:10}}>
+                    <span style={{fontFamily:SF, fontSize:10, letterSpacing:"0.22em", textTransform:"uppercase", color:"rgba(248,242,229,0.50)", fontWeight:500}}>
+                      {r.duration}
+                    </span>
+                    {locked && (
+                      <span style={{fontFamily:SF, fontSize:9, letterSpacing:"0.22em", textTransform:"uppercase", color:"rgba(245,200,120,0.70)", fontWeight:500, display:"inline-flex", alignItems:"center", gap:4}}>
+                        <Lock size={8} strokeWidth={2}/> Members
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {isRecommended && !locked ? (
+                  <div style={{
+                    flexShrink:0,
+                    background:"rgba(248,242,229,0.95)",
+                    color:"#1A0F06",
+                    fontFamily:SF, fontSize:11, fontWeight:600,
+                    letterSpacing:"0.06em",
+                    padding:"9px 18px",
+                    borderRadius:100,
+                    boxShadow:"0 8px 22px -8px rgba(248,242,229,0.35), 0 2px 8px rgba(15,9,5,0.4)",
+                  }}>
+                    Enter
+                  </div>
+                ) : (
+                  <ArrowRight size={16} color="rgba(248,242,229,0.45)" strokeWidth={1.5} style={{flexShrink:0}}/>
+                )}
               </button>
             );
           })}
         </div>
-        {medCheckinDone && recommendedSession && (
-          <div style={{display:"flex",alignItems:"center",gap:8,paddingTop:4,borderTop:`1px solid ${B.border}`}}>
-            <Sparkles size={12} color={B.gold}/>
-            <p style={{fontSize:12,color:B.gold,fontFamily:SF,margin:0}}>Recommended: <strong style={{color:B.cream}}>{recommendedSession.title}</strong></p>
+
+        {/* ── Membership invitation — light pill at bottom ── */}
+        {!isPremium && (
+          <div className="rhei-rise rhei-rise-4" style={{
+            marginTop:56,
+            textAlign:"center",
+            padding:"40px 24px",
+            position:"relative",
+          }}>
+            <div style={{
+              position:"absolute", top:"50%", left:"50%",
+              width:280, height:280, borderRadius:"50%",
+              background:"radial-gradient(circle, rgba(245,200,120,0.18) 0%, rgba(245,200,120,0.05) 40%, transparent 70%)",
+              filter:"blur(28px)",
+              transform:"translate(-50%, -50%)",
+              pointerEvents:"none",
+            }}/>
+            <div style={{position:"relative", zIndex:1}}>
+              <p style={{fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(245,200,120,0.70)", margin:"0 0 14px"}}>
+                Membership
+              </p>
+              <h3 style={{
+                fontFamily:F, fontSize:"clamp(22px, 5.5vw, 26px)",
+                fontWeight:300, color:B.vellum,
+                letterSpacing:"-0.015em", lineHeight:1.18,
+                margin:"0 0 12px",
+                fontVariationSettings:"'opsz' 48",
+                maxWidth:320, marginLeft:"auto", marginRight:"auto",
+              }}>
+                Every ritual, open to you.
+              </h3>
+              <p style={{
+                fontFamily:F, fontStyle:"italic",
+                fontSize:13, color:"rgba(248,242,229,0.60)",
+                lineHeight:1.55, margin:"0 auto 26px",
+                maxWidth:280,
+              }}>
+                Every tool. Every audio room. The whole practice.
+              </p>
+              <button
+                onClick={()=>setScreen("premium")}
+                className="rhei-press"
+                style={{
+                  background:"rgba(248,242,229,0.95)",
+                  border:"none",
+                  color:"#1A0F06",
+                  fontFamily:SF, fontSize:13, fontWeight:600,
+                  letterSpacing:"0.06em",
+                  padding:"13px 30px",
+                  borderRadius:100,
+                  cursor:"pointer",
+                  boxShadow:"0 16px 40px -14px rgba(248,242,229,0.40), 0 4px 14px rgba(15,9,5,0.4)",
+                }}>
+                Continue
+              </button>
+            </div>
           </div>
         )}
       </div>
+    </div>
+  );};
 
-      {/* ── Session cards ── */}
-      {sessions.map(s=>{
-        const locked = s.id!==1&&!isPremium;
-        const done = completedToday.includes(s.id);
-        const isRec = recommendedSession?.id===s.id;
-        const Icon = s.icon;
-        return (
-          <button key={s.id} onClick={()=>{if(locked){setScreen("premium");}else{startSession(s.id);}}}
-            style={{width:"100%",background:B.card,border:`1.5px solid ${isRec?B.borderActive:B.border}`,borderRadius:18,padding:"16px 16px",marginBottom:10,cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:14,position:"relative",opacity:locked?0.6:1}}>
-            {isRec&&<div style={{position:"absolute",top:0,left:0,right:0,height:1,background:`linear-gradient(90deg,transparent,rgba(196,154,75,0.4),transparent)`}}/>}
-            <div style={{width:44,height:44,borderRadius:"50%",background:done?`rgba(90,138,90,0.15)`:isRec?`${B.gold}15`:`${B.gold}10`,border:`1px solid ${done?"rgba(90,138,90,0.3)":B.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-              {done?<Check size={15} color="#5A8A5A"/>:<Play size={14} color={B.gold} fill={B.gold} style={{marginLeft:2}}/>}
-            </div>
-            <div style={{flex:1}}>
-              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
-                <h3 style={{fontSize:15,color:B.cream,margin:0,fontWeight:400,fontFamily:F}}>{s.title}</h3>
-                {isRec&&<span style={{fontSize:8,color:B.gold,background:`${B.gold}12`,border:`1px solid ${B.gold}30`,padding:"1px 6px",borderRadius:5,letterSpacing:0.5}}>For you</span>}
-              </div>
-              <p style={{fontSize:11,color:B.muted,margin:"0 0 6px",fontFamily:SF}}>{s.subtitle}</p>
-              {/* Technique tag pills — primary technique shown prominently */}
-              {s.technique && (
-                <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-                  {s.technique.split(" · ").slice(0,2).map((tech, i) => (
-                    <span key={i} style={{fontSize:7.5,color:B.goldMuted,background:"transparent",border:`1px solid ${B.border}`,padding:"2px 6px",borderRadius:4,letterSpacing:1,textTransform:"uppercase",fontFamily:SF,fontWeight:500}}>{tech}</span>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div style={{textAlign:"right",flexShrink:0}}>
-              {locked
-                ?<Lock size={12} color={B.goldMuted}/>
-                :<span style={{fontSize:10,color:B.muted,fontFamily:SF}}>{Math.ceil(s.duration/60)}m</span>
-              }
-              {s.id===1&&!locked&&<p style={{fontSize:8,color:"#5A8A5A",margin:"2px 0 0",fontFamily:SF}}>Free</p>}
-            </div>
-          </button>
-        );
-      })}
+  // ══════════ MEDITATIONS — Luminar god-rays edition ══════════
+  const renderMeditations=()=>{
+    const recommendedSession = medCheckinDone && medCheckinState
+      ? sessions.find(s=>s.id===medCheckinState.sessionId)
+      : null;
+    const [moodOpen, _] = [true, null]; // mood always inline now
+    return (
+    <div style={{
+      position:"relative",
+      minHeight:"100vh",
+      background:"linear-gradient(180deg, #0A0604 0%, #100804 38%, #0A0604 100%)",
+      overflow:"hidden",
+      padding:"calc(env(safe-area-inset-top, 0px) + 32px) 0 140px",
+    }}>
+      <DramaticGodRays intensity={1} pierce="50%" />
 
-      {!isPremium&&(
-        <div style={{background:B.card,borderRadius:18,padding:"20px",marginTop:8,border:`1px solid ${B.borderActive}`,textAlign:"center"}}>
-          <Crown size={20} color={B.gold} style={{marginBottom:10}}/>
-          <h3 style={{fontSize:16,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>Unlock all meditations</h3>
-          <p style={{fontSize:12,color:B.muted,margin:"0 0 16px",fontFamily:SF,lineHeight:1.5}}>4 more audio resets — Pre-Meeting, Evening, Post-Conflict, and Quick Reset.</p>
-          <button onClick={()=>setScreen("premium")} style={{background:B.goldGrad,border:"none",borderRadius:22,padding:"11px 26px",cursor:"pointer",color:B.warmBlack,fontSize:12,fontFamily:SF,letterSpacing:1,fontWeight:600}}>Unlock Premium</button>
+      <div style={{position:"relative", zIndex:1, maxWidth:480, margin:"0 auto", padding:"0 24px"}}>
+
+        {/* ── HERO: Luminar-style centered starburst + serif title ── */}
+        <div className="rhei-rise rhei-rise-1" style={{
+          textAlign:"center",
+          paddingTop:"min(14vh, 100px)",
+          marginBottom:48,
+        }}>
+          {/* Streak floats in top-right corner, tiny */}
+          {meditationStreak>0 && (
+            <div style={{position:"absolute", top:0, right:24, display:"flex", alignItems:"baseline", gap:6}}>
+              <span style={{fontFamily:F, fontSize:22, fontWeight:300, color:B.vellum, fontVariationSettings:"'opsz' 48"}}>{meditationStreak}</span>
+              <span style={{fontFamily:SF, fontSize:8, letterSpacing:"0.3em", color:"rgba(248,242,229,0.45)", textTransform:"uppercase"}}>day streak</span>
+            </div>
+          )}
+
+          {/* The starburst — minimal, centered, like Luminar */}
+          <div style={{
+            display:"inline-flex", alignItems:"center", justifyContent:"center",
+            width:46, height:46, borderRadius:10,
+            background:"rgba(8,5,2,0.55)",
+            border:"1px solid rgba(245,200,120,0.18)",
+            boxShadow:"0 0 40px rgba(245,200,120,0.30), inset 0 0 20px rgba(245,200,120,0.10)",
+            marginBottom:32,
+          }}>
+            <Starburst size={26} />
+          </div>
+
+          <p style={{fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(245,200,120,0.75)", margin:"0 0 16px"}}>
+            The Audio Room
+          </p>
+          <h1 style={{
+            fontFamily:F, fontSize:"clamp(34px, 8.5vw, 44px)",
+            fontWeight:300, color:B.vellum,
+            letterSpacing:"-0.02em", lineHeight:1.05,
+            margin:"0 0 14px",
+            fontVariationSettings:"'opsz' 96",
+            textShadow:"0 2px 20px rgba(0,0,0,0.4)",
+          }}>
+            Step into the light.
+          </h1>
+          <p style={{fontFamily:F, fontStyle:"italic", fontSize:14, color:"rgba(248,242,229,0.62)", lineHeight:1.55, margin:"0 auto", maxWidth:300}}>
+            Five audio rooms. Each one a different temperature of warmth.
+          </p>
         </div>
-      )}
+
+        {/* ── Mood pill row — soft horizontal scroll, integrated into atmosphere ── */}
+        <div className="rhei-rise rhei-rise-2" style={{marginBottom:48}}>
+          <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color:"rgba(245,200,120,0.65)", margin:"0 0 14px", textAlign:"center"}}>
+            Where are you, right now?
+          </p>
+          <div style={{display:"flex", gap:8, overflowX:"auto", paddingBottom:6, justifyContent:"center", flexWrap:"wrap"}}>
+            {meditationStates.map(state=>{
+              const selected = medCheckinState?.id===state.id;
+              return (
+                <button key={state.id}
+                  onClick={()=>{setMedCheckinState(state);setMedCheckinDone(true);}}
+                  className="rhei-press"
+                  style={{
+                    background: selected ? "rgba(248,242,229,0.92)" : "rgba(248,242,229,0.06)",
+                    backdropFilter:"blur(14px)",
+                    WebkitBackdropFilter:"blur(14px)",
+                    border: selected ? "1px solid rgba(248,242,229,0.92)" : "1px solid rgba(248,242,229,0.16)",
+                    borderRadius:100,
+                    padding:"9px 16px",
+                    cursor:"pointer",
+                    fontFamily:SF, fontSize:11, fontWeight:500,
+                    color: selected ? "#1A0F06" : "rgba(248,242,229,0.78)",
+                    letterSpacing:"0.04em",
+                    whiteSpace:"nowrap",
+                    transition:"all 0.18s ease",
+                  }}>
+                  {state.label}
+                </button>
+              );
+            })}
+          </div>
+          {medCheckinDone && recommendedSession && (
+            <p style={{fontFamily:F, fontStyle:"italic", fontSize:12, color:"rgba(245,200,120,0.78)", textAlign:"center", margin:"16px 0 0"}}>
+              We'd guide you to <span style={{color:B.vellum, fontStyle:"normal"}}>{recommendedSession.title}</span>.
+            </p>
+          )}
+        </div>
+
+        {/* ── Section divider line ── */}
+        <div style={{height:1, background:"linear-gradient(90deg, transparent, rgba(245,200,120,0.22), transparent)", margin:"0 -8px 36px"}}/>
+
+        {/* ── Editorial vertical session list — gallery-program typography ── */}
+        <div className="rhei-rise rhei-rise-3" style={{display:"flex", flexDirection:"column"}}>
+          {sessions.map((s, idx)=>{
+            const locked = s.id!==1 && !isPremium;
+            const done = completedToday.includes(s.id);
+            const isRec = recommendedSession?.id===s.id;
+            const accent = s.accent || "#D4AD6A";
+            const mins = Math.ceil(s.duration/60);
+            return (
+              <button
+                key={s.id}
+                onClick={()=>{if(locked){setScreen("premium");}else{startSession(s.id);}}}
+                className="rhei-press"
+                style={{
+                  width:"100%",
+                  background:"transparent",
+                  border:"none",
+                  borderBottom: idx === sessions.length-1 ? "none" : "1px solid rgba(248,242,229,0.06)",
+                  padding:"26px 4px 26px",
+                  cursor:"pointer",
+                  textAlign:"left",
+                  position:"relative",
+                  display:"flex",
+                  alignItems:"center",
+                  gap:18,
+                  opacity: locked ? 0.55 : 1,
+                }}>
+                {/* Glowing orb on the left — each session's signature color */}
+                <div style={{
+                  flexShrink:0,
+                  width:54, height:54, borderRadius:"50%",
+                  position:"relative",
+                  background: done
+                    ? "radial-gradient(circle, rgba(120,180,140,0.45) 0%, rgba(120,180,140,0.12) 50%, transparent 70%)"
+                    : `radial-gradient(circle, ${accent}55 0%, ${accent}18 40%, transparent 70%)`,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  boxShadow: isRec ? `0 0 30px ${accent}40` : "none",
+                  transition:"all 0.3s ease",
+                }}>
+                  <div style={{
+                    width:14, height:14, borderRadius:"50%",
+                    background: done
+                      ? "rgba(180,220,190,0.95)"
+                      : `radial-gradient(circle, ${accent} 0%, ${accent} 40%, ${accent}80 100%)`,
+                    boxShadow: done
+                      ? "0 0 12px rgba(180,220,190,0.6)"
+                      : `0 0 14px ${accent}, inset 0 0 6px rgba(255,255,255,0.4)`,
+                  }}/>
+                </div>
+
+                {/* Content — editorial serif stack */}
+                <div style={{flex:1, minWidth:0}}>
+                  <div style={{display:"flex", alignItems:"baseline", gap:10, marginBottom:6, flexWrap:"wrap"}}>
+                    <h3 style={{
+                      fontFamily:F,
+                      fontSize:"clamp(22px, 5.5vw, 26px)",
+                      fontWeight:300,
+                      color: B.vellum,
+                      letterSpacing:"-0.015em",
+                      lineHeight:1.1,
+                      margin:0,
+                      fontVariationSettings:"'opsz' 48",
+                    }}>
+                      {s.title}
+                    </h3>
+                    {isRec && !locked && (
+                      <span style={{fontFamily:SF, fontSize:8, letterSpacing:"0.28em", textTransform:"uppercase", color:accent, fontWeight:500}}>
+                        For you
+                      </span>
+                    )}
+                  </div>
+                  <p style={{
+                    fontFamily:F, fontStyle:"italic",
+                    fontSize:13, color:"rgba(248,242,229,0.58)",
+                    margin:"0 0 10px", lineHeight:1.5,
+                  }}>
+                    {s.subtitle}
+                  </p>
+                  <div style={{display:"flex", alignItems:"center", gap:10}}>
+                    <span style={{fontFamily:SF, fontSize:10, letterSpacing:"0.22em", textTransform:"uppercase", color:"rgba(248,242,229,0.50)", fontWeight:500}}>
+                      {mins} min
+                    </span>
+                    {s.id===1 && !locked && (
+                      <span style={{fontFamily:SF, fontSize:9, letterSpacing:"0.22em", textTransform:"uppercase", color:"rgba(180,220,190,0.70)", fontWeight:500}}>
+                        · Free
+                      </span>
+                    )}
+                    {locked && (
+                      <span style={{fontFamily:SF, fontSize:9, letterSpacing:"0.22em", textTransform:"uppercase", color:"rgba(245,200,120,0.70)", fontWeight:500, display:"inline-flex", alignItems:"center", gap:4}}>
+                        <Lock size={8} strokeWidth={2}/> Members
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right-side white pill CTA (Luminar-style) — only on recommended, otherwise arrow */}
+                {isRec && !locked ? (
+                  <div style={{
+                    flexShrink:0,
+                    background:"rgba(248,242,229,0.95)",
+                    color:"#1A0F06",
+                    fontFamily:SF, fontSize:11, fontWeight:600,
+                    letterSpacing:"0.06em",
+                    padding:"9px 18px",
+                    borderRadius:100,
+                    boxShadow:"0 8px 22px -8px rgba(248,242,229,0.35), 0 2px 8px rgba(15,9,5,0.4)",
+                  }}>
+                    Begin
+                  </div>
+                ) : (
+                  <ArrowRight size={16} color="rgba(248,242,229,0.45)" strokeWidth={1.5} style={{flexShrink:0}}/>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* ── Membership invitation — light pill at bottom, Luminar-style ── */}
+        {!isPremium && (
+          <div className="rhei-rise rhei-rise-4" style={{
+            marginTop:56,
+            textAlign:"center",
+            padding:"40px 24px",
+            position:"relative",
+          }}>
+            {/* Soft halo behind the CTA */}
+            <div style={{
+              position:"absolute", top:"50%", left:"50%",
+              width:280, height:280, borderRadius:"50%",
+              background:"radial-gradient(circle, rgba(245,200,120,0.18) 0%, rgba(245,200,120,0.05) 40%, transparent 70%)",
+              filter:"blur(28px)",
+              transform:"translate(-50%, -50%)",
+              pointerEvents:"none",
+            }}/>
+            <div style={{position:"relative", zIndex:1}}>
+              <p style={{fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.4em", textTransform:"uppercase", color:"rgba(245,200,120,0.70)", margin:"0 0 14px"}}>
+                Membership
+              </p>
+              <h3 style={{
+                fontFamily:F, fontSize:"clamp(22px, 5.5vw, 26px)",
+                fontWeight:300, color:B.vellum,
+                letterSpacing:"-0.015em", lineHeight:1.18,
+                margin:"0 0 12px",
+                fontVariationSettings:"'opsz' 48",
+                maxWidth:320, marginLeft:"auto", marginRight:"auto",
+              }}>
+                Four more rooms. One key.
+              </h3>
+              <p style={{
+                fontFamily:F, fontStyle:"italic",
+                fontSize:13, color:"rgba(248,242,229,0.60)",
+                lineHeight:1.55, margin:"0 auto 26px",
+                maxWidth:280,
+              }}>
+                Pre-meeting, evening melt, post-conflict, and quick return. All yours.
+              </p>
+              <button
+                onClick={()=>setScreen("premium")}
+                className="rhei-press"
+                style={{
+                  background:"rgba(248,242,229,0.95)",
+                  border:"none",
+                  color:"#1A0F06",
+                  fontFamily:SF, fontSize:13, fontWeight:600,
+                  letterSpacing:"0.06em",
+                  padding:"13px 30px",
+                  borderRadius:100,
+                  cursor:"pointer",
+                  boxShadow:"0 16px 40px -14px rgba(248,242,229,0.40), 0 4px 14px rgba(15,9,5,0.4)",
+                }}>
+                Continue
+              </button>
+              <p style={{fontFamily:SF, fontSize:11, color:"rgba(248,242,229,0.45)", margin:"18px 0 0", letterSpacing:"0.04em"}}>
+                or <button onClick={()=>setScreen("premium")} style={{background:"none", border:"none", color:"rgba(248,242,229,0.70)", fontFamily:SF, fontSize:11, cursor:"pointer", textDecoration:"underline", textUnderlineOffset:3, padding:0}}>see what's inside</button>
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );};
 
