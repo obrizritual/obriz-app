@@ -15,6 +15,48 @@ function RitualIllustration({ ritualId, zone, size }) {
   }
   return <FaceGuideIllustration zone={zone || "full"} size={size} />;
 }
+
+// RitualStepImage — real-portrait + gold gesture overlay for each ritual step.
+// Falls back to the old diagrammatic illustration for any ritual without
+// photo assets yet (currently: belly-flow, awaiting source photography).
+const FACE_RITUALS_WITH_PHOTOS = new Set([
+  "gua-sha", "lymphatic", "face-lift", "buccal", "pre-event", "eye-revival",
+]);
+function RitualStepImage({ ritualId, stepIndex, zone, size = 280 }) {
+  // stepIndex is 1-based to match the file naming (01.png, 02.png, ...)
+  if (!FACE_RITUALS_WITH_PHOTOS.has(ritualId)) {
+    return <RitualIllustration ritualId={ritualId} zone={zone} size={size} />;
+  }
+  const stepStr = String(stepIndex).padStart(2, "0");
+  const src = `/images/ritual-steps/${ritualId}/${stepStr}.png`;
+  return (
+    <div style={{
+      width: size,
+      // 4:5 aspect of the source portraits
+      height: size * 1.25,
+      borderRadius: 14,
+      overflow: "hidden",
+      position: "relative",
+      boxShadow: "0 18px 40px -16px rgba(0,0,0,0.5)",
+    }}>
+      <img
+        src={src}
+        alt=""
+        loading="eager"
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          display: "block",
+        }}
+        onError={(e) => {
+          // Graceful fallback: hide the broken image so the layout doesn't break
+          e.currentTarget.style.opacity = "0";
+        }}
+      />
+    </div>
+  );
+}
 import AffirmationsScreen from "./AffirmationsScreen";
 import FaceMirrorMode from "./FaceMirrorMode";
 import { CornerBrackets, PrecisionStamp, Hairline, StarburstPlinth as SharedStarburstPlinth, RheiMark, EditorialPhoto, EditorialAmbient } from "./Atmosphere";
@@ -738,13 +780,12 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
           {ritual.steps.map((_,i)=>(<div key={i} style={{width:i===step?20:8,height:4,borderRadius:2,background:i<step?B.gold:i===step?B.goldLight:`${B.gold}20`,transition:"all 0.4s"}}/>))}
         </div>
 
-        {/* Face illustration + timer */}
+        {/* Editorial step photograph + timer */}
         <div style={{position:"relative",width:"100%",display:"flex",justifyContent:"center",alignItems:"center",marginBottom:16}}>
-          {/* Timer ring top-right of illustration */}
           <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <RitualIllustration ritualId={ritual.id} zone={currentStep.zone||"full"} size={170}/>
-            {/* Floating timer pill */}
-            <div style={{position:"absolute",bottom:8,right:-8,background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"5px 12px",display:"flex",alignItems:"center",gap:6,boxShadow:`0 4px 16px ${B.warmBlack}60`}}>
+            <RitualStepImage ritualId={ritual.id} stepIndex={step + 1} zone={currentStep.zone||"full"} size={260}/>
+            {/* Floating timer pill — anchored to the photo's bottom-right */}
+            <div style={{position:"absolute",bottom:14,right:-10,background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"5px 12px",display:"flex",alignItems:"center",gap:6,boxShadow:`0 4px 16px ${B.warmBlack}60`}}>
               <div style={{position:"relative",width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center"}}>
                 <Ring progress={pct} size={28} sw={2.5}/>
                 <span style={{fontSize:9,color:B.cream,fontWeight:500,zIndex:2,fontFamily:SF}}>{timeLeft}</span>
