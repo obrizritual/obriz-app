@@ -169,6 +169,65 @@
       100% { background-position: 220% 0; }
     }
 
+    /* ─── RITUAL STEP ANIMATIONS ───
+       Live animated gold gestures overlaid on the ritual portrait.
+       Each gesture type has its own keyframe; all loop forever so
+       the user always sees motion they can imitate. */
+
+    /* Arrow / curve / wave: line draws itself, holds briefly, fades, repeats */
+    @keyframes rhei-arrow-draw {
+      0%   { stroke-dasharray: 0 200; opacity: 0; }
+      8%   { opacity: 1; }
+      55%  { stroke-dasharray: 200 0; opacity: 1; }
+      75%  { stroke-dasharray: 200 0; opacity: 1; }
+      90%  { opacity: 0; }
+      100% { stroke-dasharray: 0 200; opacity: 0; }
+    }
+    .rhei-arrow {
+      stroke-dasharray: 0 200;
+      animation: rhei-arrow-draw 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    @keyframes rhei-arrowhead-fade {
+      0%, 40%   { opacity: 0; }
+      55%, 75%  { opacity: 1; }
+      90%, 100% { opacity: 0; }
+    }
+    .rhei-arrowhead {
+      opacity: 0;
+      animation: rhei-arrowhead-fade 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    }
+
+    /* Circle: slow rotation + opacity breath, looped */
+    @keyframes rhei-circle-spin {
+      0%   { transform: rotate(0deg); opacity: 0.4; }
+      20%  { opacity: 1; }
+      80%  { opacity: 1; }
+      100% { transform: rotate(360deg); opacity: 0.4; }
+    }
+    .rhei-g-rotate {
+      animation: rhei-circle-spin 3.6s linear infinite;
+    }
+
+    /* Hold (sonar ping): rings expand outward and fade — three rings,
+       staggered by their animation-delay so they read as a pump */
+    @keyframes rhei-ping {
+      0%   { transform: scale(0.5);   opacity: 0; }
+      20%  {                          opacity: 1; }
+      100% { transform: scale(1.8);   opacity: 0; }
+    }
+    .rhei-ping {
+      animation: rhei-ping 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    }
+    @keyframes rhei-pulse-dot {
+      0%, 100% { opacity: 0.7; transform: scale(0.95); }
+      50%      { opacity: 1;   transform: scale(1.08); }
+    }
+    .rhei-pulse-dot {
+      animation: rhei-pulse-dot 1.6s ease-in-out infinite;
+      transform-origin: center;
+    }
+
     /* Ember pulse — for the bright core of a sun-bloom. Smaller, faster than atmosphere-1. */
     @keyframes rhei-ember {
       0%, 100% { opacity: 0.85; transform: translate(-50%, -50%) scale(1); }

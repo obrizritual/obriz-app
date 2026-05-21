@@ -16,52 +16,26 @@ function RitualIllustration({ ritualId, zone, size }) {
   return <FaceGuideIllustration zone={zone || "full"} size={size} />;
 }
 
-// RitualStepImage — real-portrait + gold gesture overlay for each ritual step.
-// Falls back to the old diagrammatic illustration for any ritual without
-// photo assets yet (currently: belly-flow, awaiting source photography).
-const FACE_RITUALS_WITH_PHOTOS = new Set([
-  "gua-sha", "lymphatic", "face-lift", "buccal", "pre-event", "eye-revival",
-]);
+// RitualStepImage — animated real-portrait + gold gesture overlay for each
+// ritual step. Delegates to AnimatedRitualStep for face rituals (which renders
+// live animated SVG over the woman's portrait). Falls back to the legacy
+// diagrammatic illustration for any ritual without an animated config yet
+// (currently: belly-flow, awaiting source photography).
 function RitualStepImage({ ritualId, stepIndex = 1, zone, size = 280, width, height, radius = 14, shadow = true }) {
-  // stepIndex is 1-based to match the file naming (01.png, 02.png, ...)
-  if (!FACE_RITUALS_WITH_PHOTOS.has(ritualId)) {
+  if (!hasAnimatedSteps(ritualId)) {
     return <RitualIllustration ritualId={ritualId} zone={zone} size={size} />;
   }
-  const stepStr = String(stepIndex).padStart(2, "0");
-  const src = `/images/ritual-steps/${ritualId}/${stepStr}.png`;
-  // Default: size drives width, height is 4:5 aspect of the source.
-  // Callers can override with explicit width + height (e.g. to fill a fixed card).
-  const w = width != null ? width : size;
-  const h = height != null ? height : size * 1.25;
   return (
-    <div style={{
-      width: w,
-      height: h,
-      borderRadius: radius,
-      overflow: "hidden",
-      position: "relative",
-      boxShadow: shadow ? "0 18px 40px -16px rgba(0,0,0,0.5)" : "none",
-    }}>
-      <img
-        src={src}
-        alt=""
-        loading="eager"
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          display: "block",
-        }}
-        onError={(e) => {
-          // Graceful fallback: hide the broken image so the layout doesn't break
-          e.currentTarget.style.opacity = "0";
-        }}
-      />
-    </div>
+    <AnimatedRitualStep
+      ritualId={ritualId}
+      stepIndex={stepIndex}
+      size={size}
+    />
   );
 }
 import AffirmationsScreen from "./AffirmationsScreen";
 import FaceMirrorMode from "./FaceMirrorMode";
+import AnimatedRitualStep, { hasAnimatedSteps } from "./AnimatedRitualStep";
 import { CornerBrackets, PrecisionStamp, Hairline, StarburstPlinth as SharedStarburstPlinth, RheiMark, EditorialPhoto, EditorialAmbient } from "./Atmosphere";
 
 /* ═══════════════════════════════════════════
