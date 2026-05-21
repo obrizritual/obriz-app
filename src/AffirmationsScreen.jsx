@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ChevronLeft, Play, Pause, Plus, Trash2, Save, BookOpen, Sparkles, Volume2, VolumeX, Music2, Mic, MicOff, Square, CircleDot, X, ArrowRight } from "lucide-react";
+import { ChevronLeft, Play, Pause, Plus, Trash2, Save, BookOpen, Sparkles, Volume2, VolumeX, Music2, Mic, MicOff, Square, CircleDot, X, ArrowRight, Lock } from "lucide-react";
 import { DramaticGodRays, StarburstPlinth, CornerBrackets, PrecisionStamp, Hairline, EditorialPhoto, RheiMark } from "./Atmosphere";
 
 /* ═══════════════════════════════════════════
@@ -25,6 +25,7 @@ export const AFFIRMATION_CATEGORIES = [
     label: "Self-worth",
     sublabel: "For the quiet days when you forget",
     accent: "#C9A472",
+    isPremium: true,
     affirmations: [
       "My presence is enough. I do not need to perform.",
       "What I am, before I do anything, is already worthy.",
@@ -41,6 +42,7 @@ export const AFFIRMATION_CATEGORIES = [
     label: "Calm",
     sublabel: "For when the body is running ahead of you",
     accent: "#8E9BA0",
+    isPremium: false,
     affirmations: [
       "My body knows the way back to ease. I do not need to push.",
       "There is nothing I have to solve in this exact minute.",
@@ -57,6 +59,7 @@ export const AFFIRMATION_CATEGORIES = [
     label: "Abundance",
     sublabel: "For expanding what feels possible",
     accent: "#A6957A",
+    isPremium: true,
     affirmations: [
       "There is more than enough. I do not need to grip.",
       "Good things are arranging themselves in my favour.",
@@ -73,6 +76,7 @@ export const AFFIRMATION_CATEGORIES = [
     label: "Body acceptance",
     sublabel: "For coming home to yourself",
     accent: "#B68870",
+    isPremium: true,
     affirmations: [
       "My body is not a project. It is the place I live.",
       "I am allowed to be at home in this skin, today, as it is.",
@@ -89,6 +93,7 @@ export const AFFIRMATION_CATEGORIES = [
     label: "Creative power",
     sublabel: "For the work only you can make",
     accent: "#889080",
+    isPremium: true,
     affirmations: [
       "I have something to make that no one else can make.",
       "I do not have to be ready. I only have to begin.",
@@ -275,7 +280,7 @@ const ORB_CSS = `
 `;
 
 // ══════════ MAIN COMPONENT ══════════
-export default function AffirmationsScreen({ onBack }) {
+export default function AffirmationsScreen({ onBack, hasAccess = true, onUpgrade }) {
   const [view, setView] = useState("home"); // home | category | custom | player
   const [activeCategory, setActiveCategory] = useState(null);
   const [activeList, setActiveList] = useState([]);          // affirmations being played
@@ -457,6 +462,11 @@ export default function AffirmationsScreen({ onBack }) {
   }, [stopVoice]);
 
   const startCategory = (cat) => {
+    // Lock premium categories after the trial ends
+    if (cat.isPremium && !hasAccess) {
+      if (onUpgrade) onUpgrade();
+      return;
+    }
     setActiveCategory(cat);
     setActiveList(cat.affirmations);
     setPlayerIdx(0);
@@ -638,6 +648,7 @@ export default function AffirmationsScreen({ onBack }) {
           <div className="rhei-rise rhei-rise-2" style={{ display:"flex", flexDirection:"column" }}>
             {AFFIRMATION_CATEGORIES.map((cat, idx) => {
               const num = String(idx + 1).padStart(2, "0");
+              const locked = cat.isPremium && !hasAccess;
               return (
                 <button
                   key={cat.id}
@@ -655,6 +666,7 @@ export default function AffirmationsScreen({ onBack }) {
                     display:"flex",
                     alignItems:"center",
                     gap:16,
+                    opacity: locked ? 0.55 : 1,
                   }}>
                   {/* Tabular index */}
                   <span style={{
@@ -700,14 +712,22 @@ export default function AffirmationsScreen({ onBack }) {
                     }}>
                       {cat.sublabel}
                     </p>
-                    <div style={{ display:"flex", alignItems:"center", gap:8, marginTop:8 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:10, marginTop:8 }}>
                       <span style={{ fontFamily:SF, fontSize:9, letterSpacing:"0.28em", textTransform:"uppercase", color:"rgba(248,242,229,0.40)", fontVariantNumeric:"tabular-nums" }}>
                         {cat.affirmations.length} affirmations
                       </span>
+                      {locked && (
+                        <span style={{ fontFamily:SF, fontSize:9, letterSpacing:"0.28em", textTransform:"uppercase", color:"rgba(245,200,120,0.75)", fontWeight:500, display:"inline-flex", alignItems:"center", gap:5 }}>
+                          <Lock size={9} strokeWidth={2}/> Members
+                        </span>
+                      )}
                     </div>
                   </div>
 
-                  <ArrowRight size={15} color="rgba(248,242,229,0.45)" strokeWidth={1.5} style={{ flexShrink:0 }}/>
+                  {locked
+                    ? <Lock size={14} color="rgba(245,200,120,0.55)" strokeWidth={1.5} style={{ flexShrink:0 }}/>
+                    : <ArrowRight size={15} color="rgba(248,242,229,0.45)" strokeWidth={1.5} style={{ flexShrink:0 }}/>
+                  }
                 </button>
               );
             })}

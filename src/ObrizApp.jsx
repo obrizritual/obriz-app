@@ -227,7 +227,7 @@ const rituals = [
   },
   {
     id: "lymphatic", title: "Depuff & Restore Glow", subtitle: "Manual Lymphatic Drainage — fingers only, feather pressure",
-    duration: "6 min", isPremium: false, svgFile: "/svgs/lymphatic-paths.svg", accent: "#8E9BA0",
+    duration: "6 min", isPremium: true, svgFile: "/svgs/lymphatic-paths.svg", accent: "#8E9BA0",
     description: "True manual lymphatic drainage in the Vodder tradition. Pressure is featherlight — about five grams — because lymph vessels sit just under the skin and collapse if pressed harder. The work is pumps and lifts, never sliding. Always start and end at the collarbone terminus, where everything ultimately drains.",
     tools: "Clean fingertips and flat palms · no tools, no oil",
     occasion: "morning", audioFollowUp: 5,
@@ -244,7 +244,7 @@ const rituals = [
   },
   {
     id: "face-lift", title: "Lift & Firm", subtitle: "Face Yoga — isometric holds against finger resistance",
-    duration: "7 min", isPremium: false, svgFile: "/svgs/face-lifting-points.svg", accent: "#C9A472",
+    duration: "7 min", isPremium: true, svgFile: "/svgs/face-lifting-points.svg", accent: "#C9A472",
     description: "This is not massage — this is muscle work. Isometric contractions against fingertip resistance, in the tradition of facial yoga (Carole Maggio, Danielle Collins). The face has over forty muscles and most of them have forgotten they're there. Holds are five to ten seconds. Repetitions matter. Visible tone with consistency.",
     tools: "Clean fingertips · facial oil",
     occasion: "evening", audioFollowUp: 3,
@@ -261,7 +261,7 @@ const rituals = [
   },
   {
     id: "buccal", title: "Release & Decompress", subtitle: "Buccal Massage — hands inside the mouth, the deepest release",
-    duration: "5 min", isPremium: false, svgFile: "/svgs/face-base.svg", accent: "#B08775",
+    duration: "5 min", isPremium: true, svgFile: "/svgs/face-base.svg", accent: "#B08775",
     description: "Buccal massage in the Nichola Joss tradition — the technique used in private facials at Claridge's and Le Bristol. The thumb enters the mouth and works the masseter, buccinator, and pterygoid muscles directly, from inside. Most face tension lives in these muscles and cannot be reached any other way. Intimate, surprising, and unmistakably effective. Wash your hands.",
     tools: "Washed hands or single-use glove · facial oil · about 5 minutes",
     occasion: "recovery", audioFollowUp: 4,
@@ -308,7 +308,7 @@ const rituals = [
   },
   {
     id: "belly-flow", title: "Soften the Belly", subtitle: "Abdominal Lymphatic Drainage — debloat and calm the gut",
-    duration: "6 min", isPremium: false, svgFile: "/svgs/face-base.svg", accent: "#A8916C",
+    duration: "6 min", isPremium: true, svgFile: "/svgs/face-base.svg", accent: "#A8916C",
     description: "A real lymphatic drainage sequence for the abdomen — the kind massage therapists charge $200/hour for. Releases trapped fluid, eases bloating, and signals the gut that the bracing can stop. Follows the actual colonic and inguinal lymph pathways. Best done on an empty or near-empty stomach, lying down.",
     tools: "Clean flat hands · body oil optional · skip if pregnant or recovering from abdominal surgery",
     occasion: "evening", audioFollowUp: 5,
@@ -3420,7 +3420,7 @@ export default function ObrizApp() {
       {screen==="meditations"&&renderMeditations()}
       {screen==="premium"&&renderPremium()}
       {screen==="progress"&&renderProgress()}
-      {screen==="affirmations"&&<AffirmationsScreen onBack={()=>setScreen("home")}/>}
+      {screen==="affirmations"&&<AffirmationsScreen onBack={()=>setScreen("home")} hasAccess={hasAccess} onUpgrade={()=>setScreen("premium")}/>}
       {screen==="mirror"&&<FaceMirrorMode onClose={()=>setScreen("rituals")} onTransitionToReset={(id)=>startSession(id)} rituals={rituals} isPremium={hasAccess}/>}
       {showCheckin&&renderCheckin()}
       {microActive&&renderMicro()}
