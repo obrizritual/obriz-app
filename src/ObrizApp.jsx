@@ -22,22 +22,25 @@ function RitualIllustration({ ritualId, zone, size }) {
 const FACE_RITUALS_WITH_PHOTOS = new Set([
   "gua-sha", "lymphatic", "face-lift", "buccal", "pre-event", "eye-revival",
 ]);
-function RitualStepImage({ ritualId, stepIndex, zone, size = 280 }) {
+function RitualStepImage({ ritualId, stepIndex = 1, zone, size = 280, width, height, radius = 14, shadow = true }) {
   // stepIndex is 1-based to match the file naming (01.png, 02.png, ...)
   if (!FACE_RITUALS_WITH_PHOTOS.has(ritualId)) {
     return <RitualIllustration ritualId={ritualId} zone={zone} size={size} />;
   }
   const stepStr = String(stepIndex).padStart(2, "0");
   const src = `/images/ritual-steps/${ritualId}/${stepStr}.png`;
+  // Default: size drives width, height is 4:5 aspect of the source.
+  // Callers can override with explicit width + height (e.g. to fill a fixed card).
+  const w = width != null ? width : size;
+  const h = height != null ? height : size * 1.25;
   return (
     <div style={{
-      width: size,
-      // 4:5 aspect of the source portraits
-      height: size * 1.25,
-      borderRadius: 14,
+      width: w,
+      height: h,
+      borderRadius: radius,
       overflow: "hidden",
       position: "relative",
-      boxShadow: "0 18px 40px -16px rgba(0,0,0,0.5)",
+      boxShadow: shadow ? "0 18px 40px -16px rgba(0,0,0,0.5)" : "none",
     }}>
       <img
         src={src}
@@ -710,11 +713,15 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
             <h1 style={{fontSize:24,fontWeight:400,color:B.cream,margin:"0 0 6px",fontFamily:F}}>{ritual.title}</h1>
             <p style={{fontSize:13,color:B.muted,margin:"0 0 16px"}}>{ritual.subtitle}</p>
           </div>
-          <div style={{width:"100%",height:220,borderRadius:20,background:B.card,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:24,overflow:"hidden"}}>
-            <RitualIllustration
+          <div style={{width:"100%",height:260,borderRadius:20,background:B.card,border:`1px solid ${B.border}`,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:24,overflow:"hidden"}}>
+            <RitualStepImage
               ritualId={ritual.id}
+              stepIndex={1}
               zone={ritual.id==="gua-sha"?"jawline":ritual.id==="lymphatic"?"nodes":ritual.id==="belly-flow"?"navel":"cheeks"}
-              size={160}
+              width={"100%"}
+              height={260}
+              radius={0}
+              shadow={false}
             />
           </div>
           <div style={{background:B.card,borderRadius:16,padding:18,border:`1px solid ${B.border}`,marginBottom:16}}>
@@ -2000,9 +2007,17 @@ export default function ObrizApp() {
             style={{width:"100%",background:"linear-gradient(180deg, rgba(58,37,22,0.65) 0%, rgba(36,21,9,0.85) 100%)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(196,154,75,0.22)",borderRadius:24,padding:"24px 22px 22px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",boxShadow:"0 24px 60px -20px rgba(15,9,5,0.7), 0 8px 20px rgba(15,9,5,0.4)"}}>
             {/* Soft warm light bleed in upper-right */}
             <div style={{position:"absolute",top:"-20%",right:"-15%",width:200,height:200,borderRadius:"50%",background:"radial-gradient(circle, rgba(212,173,106,0.18) 0%, transparent 60%)",filter:"blur(20px)",pointerEvents:"none"}}/>
-            {/* Embossed FaceGuide */}
-            <div style={{position:"absolute",top:-12,right:-18,width:160,height:200,opacity:0.7,pointerEvents:"none"}}>
-              <RitualIllustration ritualId={arc.ritual.id} zone={ritualZone} size={120}/>
+            {/* Editorial portrait peeking from the corner */}
+            <div style={{position:"absolute",top:-12,right:-18,width:160,height:200,opacity:0.85,pointerEvents:"none",borderRadius:20,overflow:"hidden"}}>
+              <RitualStepImage
+                ritualId={arc.ritual.id}
+                stepIndex={1}
+                zone={ritualZone}
+                width={160}
+                height={200}
+                radius={20}
+                shadow={false}
+              />
             </div>
             {ritualLocked && (
               <div style={{position:"absolute",top:14,left:14,display:"flex",alignItems:"center",gap:5,background:"rgba(196,154,75,0.14)",backdropFilter:"blur(8px)",padding:"4px 9px",borderRadius:100,border:"1px solid rgba(196,154,75,0.25)"}}>
@@ -2370,7 +2385,8 @@ export default function ObrizApp() {
                   opacity: locked ? 0.55 : 1,
                   overflow:"hidden",
                 }}>
-                {/* Glowing orb with embossed illustration inside */}
+                {/* Glowing orb marker — the diagram inside has been removed;
+                    the orb's accent halo + center glow is the ritual's signature */}
                 <div style={{
                   flexShrink:0,
                   width:64, height:64, borderRadius:"50%",
@@ -2380,18 +2396,10 @@ export default function ObrizApp() {
                   boxShadow: isRecommended ? `0 0 36px ${accent}50` : "none",
                   transition:"all 0.3s ease",
                 }}>
-                  <div style={{opacity:0.85, transform:"scale(0.5)"}}>
-                    <RitualIllustration ritualId={r.id} zone={ritualZone} size={70}/>
-                  </div>
-                  {/* Inner glow dot at center */}
                   <div style={{
-                    position:"absolute", top:"50%", left:"50%",
-                    transform:"translate(-50%, -50%)",
-                    width:8, height:8, borderRadius:"50%",
+                    width:10, height:10, borderRadius:"50%",
                     background:accent,
-                    boxShadow:`0 0 12px ${accent}, 0 0 24px ${accent}80`,
-                    opacity:0.65,
-                    pointerEvents:"none",
+                    boxShadow:`0 0 14px ${accent}, 0 0 28px ${accent}80, inset 0 0 4px rgba(255,255,255,0.4)`,
                   }}/>
                 </div>
 
