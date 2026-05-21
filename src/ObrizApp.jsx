@@ -1546,6 +1546,31 @@ export default function ObrizApp() {
   const [userName,setUserName]=useState(()=>load('userName',''));
   const [isPremium,setIsPremium]=useState(()=>load('isPremium',false));
 
+  // ── Free trial ──
+  // 14-day full-access trial. Morning Reset stays free forever; everything
+  // else unlocks during trial, locks again when trial expires + user hasn't paid.
+  const TRIAL_DAYS = 14;
+  const [trialStartedAt,setTrialStartedAt]=useState(()=>load('trialStartedAt',null));
+
+  // Initialize trial start on first launch (for new users) AND backfill it
+  // for existing onboarded users who don't have it yet (grandfather in).
+  useEffect(() => {
+    if (!trialStartedAt) {
+      const now = Date.now();
+      setTrialStartedAt(now);
+      save('trialStartedAt', now);
+    }
+  }, [trialStartedAt]);
+
+  const trialMsLeft = trialStartedAt
+    ? Math.max(0, (trialStartedAt + TRIAL_DAYS * 24 * 60 * 60 * 1000) - Date.now())
+    : TRIAL_DAYS * 24 * 60 * 60 * 1000;
+  const trialDaysLeft = Math.ceil(trialMsLeft / (24 * 60 * 60 * 1000));
+  const isInTrial = trialMsLeft > 0;
+  const trialEnded = trialStartedAt && trialMsLeft === 0 && !isPremium;
+  // hasAccess: paid subscriber OR currently inside the trial window
+  const hasAccess = isPremium || isInTrial;
+
   // Navigation
   const [screen,setScreen]=useState("home");
   const [activeSession,setActiveSession]=useState(null);
@@ -1820,7 +1845,7 @@ export default function ObrizApp() {
   const renderHome=()=>{
     const tc = timeCtx();
     const arc = getArc(checkinDone?checkinState:null, tc);
-    const ritualLocked = arc.ritual.isPremium && !isPremium;
+    const ritualLocked = arc.ritual.isPremium && !hasAccess;
     const zoneMap = {"gua-sha":"jawline","lymphatic":"nodes","face-lift":"cheeks","buccal":"jawline","pre-event":"full","eye-revival":"undereye","belly-flow":"navel"};
     const ritualZone = zoneMap[arc.ritual.id]||"full";
     const personalizedMsg = checkinState?.message || null;
@@ -1863,9 +1888,11 @@ export default function ObrizApp() {
           <button
             className="rhei-press"
             onClick={()=>setScreen("premium")}
-            style={{background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:`1px solid ${isPremium?"rgba(196,154,75,0.35)":"rgba(248,242,229,0.10)"}`,borderRadius:100,padding:"5px 11px",cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
-            <Crown size={10} color={isPremium?B.polished:"rgba(248,242,229,0.55)"} strokeWidth={1.5}/>
-            <span style={{fontSize:9,color:isPremium?B.polished:"rgba(248,242,229,0.65)",fontFamily:SF,letterSpacing:"0.18em",textTransform:"uppercase",fontWeight:500}}>{isPremium?"Member":"Enter"}</span>
+            style={{background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:`1px solid ${isPremium?"rgba(196,154,75,0.35)":isInTrial?"rgba(196,154,75,0.25)":"rgba(248,242,229,0.10)"}`,borderRadius:100,padding:"5px 11px",cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
+            <Crown size={10} color={isPremium||isInTrial?B.polished:"rgba(248,242,229,0.55)"} strokeWidth={1.5}/>
+            <span style={{fontSize:9,color:isPremium||isInTrial?B.polished:"rgba(248,242,229,0.65)",fontFamily:SF,letterSpacing:"0.18em",textTransform:"uppercase",fontWeight:500}}>
+              {isPremium ? "Member" : isInTrial ? `Trial \u00B7 ${trialDaysLeft}d` : "Continue"}
+            </span>
           </button>
         </div>
 
@@ -1964,7 +1991,7 @@ export default function ObrizApp() {
             <style>{`.rhei-collection-strip::-webkit-scrollbar{display:none;}`}</style>
             {collections.slice(0,6).map((c, i)=>{
               const firstRitual = rituals.find(r => r.id === c.ritualIds[0]);
-              const locked = firstRitual?.isPremium && !isPremium;
+              const locked = firstRitual?.isPremium && !hasAccess;
               return (
                 <button
                   key={c.id}
@@ -1998,7 +2025,7 @@ export default function ObrizApp() {
           </div>
           <button
             className="rhei-press"
-            onClick={()=>{const locked=arc.audio.id!==1&&!isPremium;if(locked){setScreen("premium");}else{startSession(arc.audio.id);}}}
+            onClick={()=>{const locked=arc.audio.id!==1&&!hasAccess;if(locked){setScreen("premium");}else{startSession(arc.audio.id);}}}
             style={{width:"100%",background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(248,242,229,0.10)",borderRadius:18,padding:"18px 18px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:16}}>
             <div style={{width:46,height:46,borderRadius:"50%",background:"linear-gradient(135deg, rgba(212,173,106,0.18), rgba(196,154,75,0.06))",border:"1px solid rgba(196,154,75,0.25)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
               <Play size={14} color={B.polished} fill={B.polished} style={{marginLeft:2}}/>
@@ -2059,7 +2086,7 @@ export default function ObrizApp() {
         )}
 
         {/* ── PREMIUM WHISPER (only if not member) ── */}
-        {!isPremium && (
+        {!isPremium && !isInTrial && (
           <div className="rhei-rise rhei-rise-5" style={{marginBottom:24}}>
             <button
               className="rhei-press"
@@ -2278,7 +2305,7 @@ export default function ObrizApp() {
         {/* ── Editorial ritual list — gallery program typography ── */}
         <div className="rhei-rise rhei-rise-4" style={{display:"flex", flexDirection:"column", marginTop:18}}>
           {rituals.map((r, idx)=>{
-            const locked = r.isPremium && !isPremium;
+            const locked = r.isPremium && !hasAccess;
             const isRecommended = recommended?.id === r.id;
             const accent = r.accent || "#D4AD6A";
             const ritualZone = zoneMap[r.id] || "full";
@@ -2389,7 +2416,7 @@ export default function ObrizApp() {
         </div>
 
         {/* ── Membership invitation — light pill at bottom ── */}
-        {!isPremium && (
+        {!isPremium && !isInTrial && (
           <div className="rhei-rise rhei-rise-4" style={{
             marginTop:56,
             textAlign:"center",
@@ -2558,7 +2585,7 @@ export default function ObrizApp() {
         {/* ── Editorial vertical session list — gallery-program typography ── */}
         <div className="rhei-rise rhei-rise-3" style={{display:"flex", flexDirection:"column"}}>
           {sessions.map((s, idx)=>{
-            const locked = s.id!==1 && !isPremium;
+            const locked = s.id!==1 && !hasAccess;
             const done = completedToday.includes(s.id);
             const isRec = recommendedSession?.id===s.id;
             const accent = s.accent || "#D4AD6A";
@@ -2673,7 +2700,7 @@ export default function ObrizApp() {
         </div>
 
         {/* ── Membership invitation — light pill at bottom, Luminar-style ── */}
-        {!isPremium && (
+        {!isPremium && !isInTrial && (
           <div className="rhei-rise rhei-rise-4" style={{
             marginTop:56,
             textAlign:"center",
@@ -2752,11 +2779,11 @@ export default function ObrizApp() {
 
         {/* Top stamp row */}
         <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:24}}>
-          <PrecisionStamp label="RHEI" value="MEMBERSHIP" color="rgba(242,235,220,0.85)"/>
-          <PrecisionStamp label="01 / 01" color="rgba(242,235,220,0.45)"/>
+          <PrecisionStamp label="RHEI" value={isPremium ? "MEMBER" : isInTrial ? "TRIAL" : "MEMBERSHIP"} color="rgba(242,235,220,0.85)"/>
+          <PrecisionStamp label={isInTrial ? `${trialDaysLeft}D LEFT` : "01 / 01"} color="rgba(242,235,220,0.45)"/>
         </div>
 
-        {/* HERO — editorial photo + tight type */}
+        {/* HERO — editorial photo + tight type, copy adapts to trial state */}
         <div className="rhei-rise rhei-rise-1" style={{ marginBottom:36, marginTop:8 }}>
           <div style={{ position:"relative", marginBottom:24, borderRadius:2, overflow:"hidden" }}>
             <EditorialPhoto src="/images/membership-hero.jpg" tone="stone" aspect="3 / 2" overlay={true}>
@@ -2768,7 +2795,7 @@ export default function ObrizApp() {
                   margin:0,
                   fontVariationSettings:"'opsz' 144",
                 }}>
-                  Membership
+                  {isPremium ? "Member" : isInTrial ? "Your trial" : "Continue"}
                 </h1>
               </div>
             </EditorialPhoto>
@@ -2779,7 +2806,11 @@ export default function ObrizApp() {
             margin:0, letterSpacing:"-0.005em",
             maxWidth:380,
           }}>
-            Every ritual. Every audio reset. The complete practice, open to you.
+            {isPremium
+              ? "You're in. The whole practice is yours."
+              : isInTrial
+                ? `You have ${trialDaysLeft} day${trialDaysLeft===1?"":"s"} of full access remaining. Continue past your trial whenever you're ready — your practice carries over.`
+                : "Your trial has ended. Continue with full access, or keep the Morning Reset — yours forever."}
           </p>
         </div>
 
@@ -3187,8 +3218,8 @@ export default function ObrizApp() {
                 </div>
                 <div>
                   <p style={{fontFamily:F, fontSize:15, fontWeight:300, color:"#F8F2E5", margin:0, fontVariationSettings:"'opsz' 48", letterSpacing:"-0.01em"}}>{userName||"Set your name"}</p>
-                  <p style={{fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.22em", textTransform:"uppercase", color: isPremium ? "#F5C878" : "rgba(248,242,229,0.45)", margin:"3px 0 0"}}>
-                    {isPremium ? "Member" : "Free"}
+                  <p style={{fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.22em", textTransform:"uppercase", color: isPremium ? "#F5C878" : isInTrial ? "#F5C878" : "rgba(248,242,229,0.45)", margin:"3px 0 0"}}>
+                    {isPremium ? "Member" : isInTrial ? `Trial \u00B7 ${trialDaysLeft} day${trialDaysLeft===1?"":"s"} left` : "Trial ended"}
                   </p>
                 </div>
               </div>
@@ -3390,7 +3421,7 @@ export default function ObrizApp() {
       {screen==="premium"&&renderPremium()}
       {screen==="progress"&&renderProgress()}
       {screen==="affirmations"&&<AffirmationsScreen onBack={()=>setScreen("home")}/>}
-      {screen==="mirror"&&<FaceMirrorMode onClose={()=>setScreen("rituals")} onTransitionToReset={(id)=>startSession(id)} rituals={rituals} isPremium={isPremium}/>}
+      {screen==="mirror"&&<FaceMirrorMode onClose={()=>setScreen("rituals")} onTransitionToReset={(id)=>startSession(id)} rituals={rituals} isPremium={hasAccess}/>}
       {showCheckin&&renderCheckin()}
       {microActive&&renderMicro()}
       {activeRitual&&<RitualPlayer
