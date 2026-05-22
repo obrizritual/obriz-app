@@ -84,6 +84,7 @@ function RitualStepImage({ ritualId, stepIndex = 1, zone, size = 280, width, hei
 import AffirmationsScreen from "./AffirmationsScreen";
 import FaceMirrorMode from "./FaceMirrorMode";
 import AnimatedRitualStep, { hasAnimatedSteps } from "./AnimatedRitualStep";
+import RitualMirrorView from "./RitualMirrorView";
 import { CornerBrackets, PrecisionStamp, Hairline, StarburstPlinth as SharedStarburstPlinth, RheiMark, EditorialPhoto, EditorialAmbient } from "./Atmosphere";
 
 /* ═══════════════════════════════════════════
@@ -613,6 +614,21 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
   });
   const voiceAudioRef = useRef(null);
 
+  // ── Camera mode (live mirror inside the ritual) ──
+  // Opt-in: the default ritual experience is the woman's portrait with
+  // animated gestures (no camera). A clear "Do it on my face" toggle on
+  // the player turns on the camera — the user's own face becomes the main
+  // view with the woman as a small reference PiP in the upper-right.
+  // Permission is requested only when the toggle is enabled, and the
+  // preference is remembered so the user isn't re-prompted next session.
+  const [cameraMode, setCameraMode] = useState(() => {
+    try { return localStorage.getItem("rhei_camera_mode") === "1"; } catch { return false; }
+  });
+  const [cameraStatus, setCameraStatus] = useState("idle"); // idle | ready | denied
+  useEffect(() => {
+    try { localStorage.setItem("rhei_camera_mode", cameraMode ? "1" : "0"); } catch {}
+  }, [cameraMode]);
+
   const currentStep = step >= 0 && step < ritual.steps.length ? ritual.steps[step] : null;
   const totalSteps = ritual.steps.length;
 
@@ -819,12 +835,29 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
           }}/>))}
         </div>
 
-        {/* Editorial step photograph + timer */}
+        {/* Editorial step view + timer.
+            cameraMode=true (default): user's camera is the main view with
+            gold gestures animating on their face via MediaPipe tracking, and
+            the woman portrait sits as a small reference PiP in the upper-right.
+            cameraMode=false OR camera denied: the static portrait experience.
+            Toggle button below the view lets the user switch any time. */}
         <div style={{position:"relative",width:"100%",display:"flex",justifyContent:"center",alignItems:"center",marginBottom:16}}>
           <div style={{position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
-            <RitualStepImage ritualId={ritual.id} stepIndex={step + 1} zone={currentStep.zone||"full"} size={260}/>
-            {/* Floating timer pill — anchored to the photo's bottom-right */}
-            <div style={{position:"absolute",bottom:14,right:-10,background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"5px 12px",display:"flex",alignItems:"center",gap:6,boxShadow:`0 4px 16px ${B.warmBlack}60`}}>
+            {(cameraMode && cameraStatus !== "denied") ? (
+              <div style={{position:"relative"}}>
+                <RitualMirrorView
+                  ritualId={ritual.id}
+                  stepIndex={step + 1}
+                  width={300}
+                  height={380}
+                  onCameraStatus={setCameraStatus}
+                />
+              </div>
+            ) : (
+              <RitualStepImage ritualId={ritual.id} stepIndex={step + 1} zone={currentStep.zone||"full"} size={260}/>
+            )}
+            {/* Floating timer pill */}
+            <div style={{position:"absolute",bottom:14,right:-10,background:B.card,border:`1px solid ${B.borderActive}`,borderRadius:20,padding:"5px 12px",display:"flex",alignItems:"center",gap:6,boxShadow:`0 4px 16px ${B.warmBlack}60`,zIndex:5}}>
               <div style={{position:"relative",width:28,height:28,display:"flex",alignItems:"center",justifyContent:"center"}}>
                 <Ring progress={pct} size={28} sw={2.5}/>
                 <span style={{fontSize:9,color:B.cream,fontWeight:500,zIndex:2,fontFamily:SF}}>{timeLeft}</span>
@@ -833,6 +866,46 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
             </div>
           </div>
         </div>
+
+        {/* Camera option — opt-in pill that turns on the live mirror.
+            When enabled, the user's own face becomes the main view and
+            the woman portrait shifts to a small reference PiP in the
+            corner. Permission is requested only when the user opts in. */}
+        {hasAnimatedSteps(ritual.id) && (
+          <button
+            onClick={() => {
+              if (cameraStatus === "denied") setCameraStatus("idle");
+              setCameraMode(m => !m);
+            }}
+            className="rhei-press"
+            style={{
+              background: cameraMode
+                ? "rgba(228,195,138,0.14)"
+                : "rgba(248,242,229,0.05)",
+              border: `1px solid ${cameraMode ? "rgba(228,195,138,0.40)" : "rgba(248,242,229,0.14)"}`,
+              borderRadius: 100,
+              padding: "9px 18px",
+              cursor: "pointer",
+              color: cameraMode ? "#F2D9A6" : "rgba(248,242,229,0.78)",
+              fontSize: 11,
+              fontFamily: SF,
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              fontWeight: 500,
+              marginBottom: 20,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 7,
+              boxShadow: cameraMode ? "0 4px 16px rgba(228,195,138,0.18)" : "none",
+            }}>
+            <Camera size={12} strokeWidth={1.7}/>
+            {cameraStatus === "denied"
+              ? "Re-enable camera"
+              : cameraMode
+                ? "Back to portrait"
+                : "Do it on my face"}
+          </button>
+        )}
 
         {/* Instruction */}
         <h3 style={{fontSize:20,color:B.cream,fontWeight:400,fontFamily:F,marginBottom:8,textAlign:"center"}}>{currentStep.title}</h3>
