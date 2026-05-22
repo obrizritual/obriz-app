@@ -112,7 +112,13 @@ export default function RitualMirrorView({
   const ritualRef = useRef(ritualId);
   const stepRef   = useRef(stepIndex);
   useEffect(() => { ritualRef.current = ritualId; }, [ritualId]);
-  useEffect(() => { stepRef.current = stepIndex;   }, [stepIndex]);
+  useEffect(() => {
+    stepRef.current = stepIndex;
+    // Reset animation cycles so the new step's gestures start from frame 0
+    // rather than picking up mid-cycle from the previous step.
+    cycleT.current = 0;
+    pulseT.current = 0;
+  }, [stepIndex]);
 
   const [cameraReady, setCameraReady] = useState(false);
   const [cameraError, setCameraError] = useState(null);
@@ -157,6 +163,9 @@ export default function RitualMirrorView({
   }, []);
 
   // ── 2. Match canvas to the video object-fit:cover crop region ──
+  // DPR-aware: the canvas internal resolution is multiplied by the device's
+  // pixel ratio so gold strokes render crisp on Retina / HiDPI screens, then
+  // the drawing context is scaled to match. CSS size stays in logical pixels.
   const matchCanvasToVideo = useCallback(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -168,12 +177,15 @@ export default function RitualMirrorView({
     const scale = Math.max(cw / vw, ch / vh);
     const dispW = vw * scale, dispH = vh * scale;
     const offX = (cw - dispW) / 2, offY = (ch - dispH) / 2;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.style.width  = `${dispW}px`;
     canvas.style.height = `${dispH}px`;
     canvas.style.left   = `${offX}px`;
     canvas.style.top    = `${offY}px`;
-    canvas.width = Math.round(dispW);
-    canvas.height = Math.round(dispH);
+    canvas.width  = Math.round(dispW * dpr);
+    canvas.height = Math.round(dispH * dpr);
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // scale all draw ops to dpr
   }, []);
 
   useEffect(() => {
@@ -230,8 +242,17 @@ export default function RitualMirrorView({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
-    const cw = canvas.width, ch = canvas.height;
-    ctx.clearRect(0, 0, cw, ch);
+    // canvas.width/height are in DPR-scaled pixels; we draw in CSS logical
+    // pixels because the context was setTransform'd to the DPR.
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const cw = canvas.width / dpr;
+    const ch = canvas.height / dpr;
+    // Use raw pixel clearRect (clears the entire bitmap) — setTransform
+    // affects draw ops but not clearRect's interpretation of raw pixels.
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
 
     const ritual = RITUALS[ritualRef.current];
     if (!ritual) return;
@@ -460,7 +481,9 @@ export default function RitualMirrorView({
   if (cameraError) return null;
 
   // ── PiP corner positioning ──
-  const pipBase = { width: 96, height: 120, borderRadius: 10 };
+  // Slightly larger than v1 so the user can actually read the gestures
+  // animating on the woman's face from a glance.
+  const pipBase = { width: 108, height: 135, borderRadius: 10 };
   const pipPlacement = {
     "top-right":    { top: 14, right: 14 },
     "top-left":     { top: 14, left: 14 },
@@ -503,12 +526,29 @@ export default function RitualMirrorView({
       {!cameraReady && (
         <div style={{
           position: "absolute", inset: 0,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          color: "rgba(242,235,220,0.55)",
-          fontFamily: "'Inter', system-ui, sans-serif",
-          fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          gap: 12,
+          background: "linear-gradient(180deg, #1A0F06 0%, #0C0907 100%)",
         }}>
-          Opening camera…
+          {/* Soft pulsing center dot — luxurious "preparing" state */}
+          <div style={{
+            width: 14, height: 14, borderRadius: "50%",
+            background: "radial-gradient(circle, #F2D9A6 0%, #E4C38A 50%, transparent 80%)",
+            animation: "rhei-pulse-dot 1.8s ease-in-out infinite",
+            boxShadow: "0 0 16px rgba(228,195,138,0.6)",
+          }}/>
+          <p style={{
+            color: "rgba(242,235,220,0.72)",
+            fontFamily: "'Fraunces', Georgia, serif",
+            fontSize: 13,
+            fontWeight: 300,
+            fontStyle: "italic",
+            margin: 0,
+            letterSpacing: "-0.005em",
+          }}>
+            preparing the mirror
+          </p>
         </div>
       )}
 
