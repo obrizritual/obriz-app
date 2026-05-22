@@ -3,7 +3,7 @@
 // (Chrome stalls when it gets a 200 OK without Range support). New SW only
 // caches the five legacy reset files; everything else under /audio/ passes
 // straight through to Vercel's CDN so Range requests work natively.
-const CACHE_NAME = 'obriz-v8';
+const CACHE_NAME = 'obriz-v9';
 const AUDIO_CACHE = 'obriz-audio-v2';
 const SVG_CACHE = 'obriz-svg-v1';
 

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { X, Camera, ChevronLeft, Check, ArrowRight, Sparkles, Play, Pause, Volume2, VolumeX } from "lucide-react";
 import FaceGuideIllustration from "./FaceGuideIllustration";
+import { RITUALS, resolveLandmark as resolveRitualLandmark } from "./RitualSteps";
 
 /* ═══════════════════════════════════════════
    RHEI — Mirror Mode  v3
@@ -64,6 +65,100 @@ const OVERLAY_TO_ILLUS = {
   jawline:"jawline",
 };
 
+// ── Bridge: ritual landmark name → MediaPipe Face Mesh index ─────────────────
+// The new RitualSteps.js gesture system uses anatomical landmark names
+// (chin_tip, cheekbone_l, brow_inner_r…). Mirror Mode tracks the user's actual
+// face via MediaPipe Face Mesh (468 landmarks indexed 0..467). This table maps
+// the name → MediaPipe index so the SAME gestures show in the SAME anatomical
+// places on the user's real face.
+//
+// MediaPipe doesn't cover the neck or collarbones, so those are derived as
+// offsets below the face. Offsets are in normalized [0..1] of the canvas.
+const LM_MAP = {
+  // Top / forehead
+  forehead_top:      { idx: 10                          },
+  forehead_center:   { idx: 10,   dy: 0.04              },
+  forehead_left:     { idx: 67                          },
+  forehead_right:    { idx: 297                         },
+  // Brow
+  brow_inner_l:      { idx: 107                         },
+  brow_mid_l:        { idx: 66                          },
+  brow_outer_l:      { idx: 70                          },
+  brow_inner_r:      { idx: 336                         },
+  brow_mid_r:        { idx: 296                         },
+  brow_outer_r:      { idx: 300                         },
+  // Eyes
+  eye_center_l:      { idx: 159                         },  // upper lid center
+  eye_center_r:      { idx: 386                         },
+  eye_inner_l:       { idx: 173                         },
+  eye_inner_r:       { idx: 398                         },
+  eye_outer_l:       { idx: 33                          },
+  eye_outer_r:       { idx: 263                         },
+  // Temple
+  temple_l:          { idx: 21                          },
+  temple_r:          { idx: 251                         },
+  // Cheekbone / cheek
+  cheekbone_l:       { idx: 116                         },
+  cheekbone_r:       { idx: 345                         },
+  cheek_l:           { idx: 213                         },
+  cheek_r:           { idx: 433                         },
+  // Nose
+  nose_tip:          { idx: 1                           },
+  nose_bridge:       { idx: 6                           },
+  nostril_l:         { idx: 64                          },
+  nostril_r:         { idx: 294                         },
+  // Mouth
+  lip_top:           { idx: 13                          },
+  lip_bottom:        { idx: 14                          },
+  mouth_corner_l:    { idx: 61                          },
+  mouth_corner_r:    { idx: 291                         },
+  // Nasolabial fold
+  nasolabial_l:      { idx: 129                         },
+  nasolabial_r:      { idx: 358                         },
+  // Jaw
+  chin_tip:          { idx: 152                         },
+  chin_left:         { idx: 169                         },
+  chin_right:        { idx: 394                         },
+  jaw_mid_l:         { idx: 172                         },
+  jaw_mid_r:         { idx: 397                         },
+  jaw_angle_l:       { idx: 58                          },
+  jaw_angle_r:       { idx: 288                         },
+  // Ear
+  ear_l:             { idx: 234                         },
+  ear_r:             { idx: 454                         },
+  behind_ear_l:      { idx: 234, dx: -0.015, dy: 0.04   },
+  behind_ear_r:      { idx: 454, dx:  0.015, dy: 0.04   },
+  // Neck + collarbone — derived as offsets from chin/ears since MediaPipe
+  // Face Mesh does not cover this region.
+  neck_side_l:       { idx: 234, dy: 0.18                },
+  neck_side_r:       { idx: 454, dy: 0.18                },
+  neck_center:       { idx: 152, dy: 0.12                },
+  collarbone_l:      { idx: 234, dy: 0.32                },
+  collarbone_r:      { idx: 454, dy: 0.32                },
+  collarbone_center: { idx: 152, dy: 0.28                },
+  // Orbital fine work
+  tear_trough_l:     { idx: 159, dy: 0.014               },
+  tear_trough_r:     { idx: 386, dy: 0.014               },
+  undereye_l:        { idx: 173                          },
+  undereye_r:        { idx: 398                          },
+  crowsfeet_l:       { idx: 33                           },
+  crowsfeet_r:       { idx: 263                          },
+};
+
+// Resolve a ritual landmark reference (string or [name, dx, dy]) to pixel
+// coordinates on the canvas using MediaPipe landmarks.
+function resolveLM(lm, ref, cw, ch) {
+  let name = ref, addX = 0, addY = 0;
+  if (Array.isArray(ref)) {
+    [name, addX = 0, addY = 0] = ref;
+  }
+  const m = LM_MAP[name];
+  if (!m || !lm[m.idx]) return null;
+  const baseX = lm[m.idx].x + (m.dx || 0) + addX;
+  const baseY = lm[m.idx].y + (m.dy || 0) + addY;
+  return [baseX * cw, baseY * ch];
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, isPremium }) {
 
@@ -92,6 +187,7 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
   const ritualRef = useRef(null);
   const stepRef   = useRef(0);
   const pulseT    = useRef(0);
+  const cycleT    = useRef(0); // 0..1 master cycle for gesture animations
 
   useEffect(() => { phasRef.current   = phase;        }, [phase]);
   useEffect(() => { ritualRef.current = activeRitual; }, [activeRitual]);
@@ -250,129 +346,271 @@ export default function FaceMirrorMode({ onClose, onTransitionToReset, rituals, 
       return;
     }
 
-    // During mirror: draw step-specific overlay
+    // During mirror: draw the SAME gestures as the AnimatedRitualStep portrait,
+    // but mapped to MediaPipe Face Mesh landmarks on the user's actual face.
+    // The visual language matches the still portraits — same gold, same glow,
+    // same animation pattern — just rendered on Canvas with live face tracking.
     if (phasRef.current !== "mirror" || !ritualRef.current) return;
-    const overlays = OVERLAYS[ritualRef.current.id];
-    if (!overlays) return;
-    const type = overlays[stepRef.current];
+    const ritual = RITUALS[ritualRef.current.id];
+    if (!ritual) return;
+    const step = ritual.steps[stepRef.current];
+    if (!step) return;
 
-    const gold = "#C49A4B";
-    const goldBright = "#E8C988";
-    pulseT.current = (pulseT.current + 0.025) % (Math.PI * 2);
+    const GOLD        = "#E4C38A";
+    const GOLD_BRIGHT = "#F2D9A6";
+    pulseT.current = (pulseT.current + 0.018) % (Math.PI * 2);
     const p = (Math.sin(pulseT.current) + 1) / 2;
+    // Animation cycle for arrow draw + circle orbit (0..1, repeats every ~5s at 60fps)
+    cycleT.current = (cycleT.current + 0.0033) % 1;
+    const cycle = cycleT.current;
 
-    // Draw a glow dot at a landmark — much bigger, layered glow for visibility
-    const dot = (idx) => {
-      const x = px(idx), y = py(idx);
-      if (!x) return;
-      // Outer soft glow (large, breathing)
-      ctx.beginPath(); ctx.arc(x, y, 22+p*6, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(196,154,75,${0.1+p*0.08})`; ctx.fill();
-      // Mid glow
-      ctx.beginPath(); ctx.arc(x, y, 14+p*3, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(196,154,75,${0.2+p*0.12})`; ctx.fill();
-      // Inner core (solid, bright)
-      ctx.beginPath(); ctx.arc(x, y, 7, 0, Math.PI*2);
-      ctx.fillStyle = goldBright; ctx.fill();
-      // Cream highlight on the core
-      ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI*2);
-      ctx.fillStyle = "rgba(255,250,243,0.9)"; ctx.fill();
+    // Resolve helper bound to current canvas + landmarks
+    const rp = (ref) => resolveLM(lm, ref, cw, ch);
+
+    // ── Gesture rendering primitives (Canvas equivalents of AnimatedRitualStep) ──
+    const drawSmoothPath = (pts, progress) => {
+      // Draw a Catmull-Rom curve through points, up to `progress` (0..1) of length
+      if (pts.length < 2) return [null, null, null];
+      // Build dense interpolated points
+      const samples = 60;
+      const dense = [];
+      if (pts.length === 2) {
+        for (let i = 0; i <= samples; i++) {
+          const t = i / samples;
+          dense.push([
+            pts[0][0] + (pts[1][0] - pts[0][0]) * t,
+            pts[0][1] + (pts[1][1] - pts[0][1]) * t,
+          ]);
+        }
+      } else {
+        const pad = [pts[0], ...pts, pts[pts.length - 1]];
+        for (let i = 1; i < pad.length - 2; i++) {
+          const p0 = pad[i - 1], p1 = pad[i], p2 = pad[i + 1], p3 = pad[i + 2];
+          for (let j = 0; j < samples; j++) {
+            const t = j / samples, tt = t * t, ttt = tt * t;
+            dense.push([
+              0.5 * ((2*p1[0]) + (-p0[0]+p2[0])*t + (2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*tt + (-p0[0]+3*p1[0]-3*p2[0]+p3[0])*ttt),
+              0.5 * ((2*p1[1]) + (-p0[1]+p2[1])*t + (2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*tt + (-p0[1]+3*p1[1]-3*p2[1]+p3[1])*ttt),
+            ]);
+          }
+        }
+        dense.push(pts[pts.length - 1]);
+      }
+      const drawUpTo = Math.max(2, Math.floor(dense.length * progress));
+      ctx.beginPath();
+      ctx.moveTo(dense[0][0], dense[0][1]);
+      for (let i = 1; i < drawUpTo; i++) ctx.lineTo(dense[i][0], dense[i][1]);
+      ctx.stroke();
+      const lastIdx = drawUpTo - 1;
+      const prevIdx = Math.max(0, lastIdx - 1);
+      return [dense[lastIdx], dense[prevIdx], drawUpTo / dense.length];
     };
-    // Draw a dashed line with arrow — thicker, brighter, with shadow for depth
-    const line = (x1,y1,x2,y2) => {
-      // Soft dark shadow underneath for contrast against varied skin tones
-      ctx.strokeStyle = "rgba(0,0,0,0.35)";
+
+    const drawGoldStroke = (drawFn) => {
+      // Layered drop-shadow + gold fill, mimics SVG drop-shadow glow
+      ctx.save();
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      // Outer halo
+      ctx.shadowColor = "rgba(228, 195, 138, 0.55)";
+      ctx.shadowBlur = 14;
+      ctx.strokeStyle = GOLD;
       ctx.lineWidth = 6;
-      ctx.setLineDash([14,7]);
-      ctx.beginPath(); ctx.moveTo(x1+1,y1+1); ctx.lineTo(x2+1,y2+1); ctx.stroke();
-      // Main gold line — much thicker
-      ctx.strokeStyle = `rgba(232,201,136,${0.92+p*0.08})`;
-      ctx.lineWidth = 4;
-      ctx.setLineDash([14,7]);
-      ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
-      ctx.setLineDash([]);
-      // Arrowhead — bigger and bolder
-      const a = Math.atan2(y2-y1,x2-x1);
-      const arrowLen = 18;
-      // Shadow arrowhead
-      ctx.strokeStyle = "rgba(0,0,0,0.35)"; ctx.lineWidth = 5;
-      ctx.beginPath();
-      ctx.moveTo(x2+1,y2+1); ctx.lineTo(x2+1-arrowLen*Math.cos(a-0.5),y2+1-arrowLen*Math.sin(a-0.5));
-      ctx.moveTo(x2+1,y2+1); ctx.lineTo(x2+1-arrowLen*Math.cos(a+0.5),y2+1-arrowLen*Math.sin(a+0.5));
-      ctx.stroke();
-      // Bright arrowhead
-      ctx.strokeStyle = goldBright; ctx.lineWidth = 3.5; ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.moveTo(x2,y2); ctx.lineTo(x2-arrowLen*Math.cos(a-0.5),y2-arrowLen*Math.sin(a-0.5));
-      ctx.moveTo(x2,y2); ctx.lineTo(x2-arrowLen*Math.cos(a+0.5),y2-arrowLen*Math.sin(a+0.5));
-      ctx.stroke();
-      ctx.lineCap = "butt";
+      drawFn();
+      // Sharper inner glow
+      ctx.shadowBlur = 6;
+      ctx.strokeStyle = GOLD_BRIGHT;
+      ctx.lineWidth = 4.5;
+      drawFn();
+      ctx.restore();
     };
 
-    if (type==="jawline_out") {
-      [234,152,454].forEach(dot);
-      if(px(152)&&px(234)) line(px(152),py(152),px(234),py(234));
-      if(px(152)&&px(454)) line(px(152),py(152),px(454),py(454));
-    } else if (type==="neck_down") {
-      if(px(152)) { line(px(152)-cw*.03,py(152),px(152)-cw*.03,py(152)+ch*.09);
-                    line(px(152)+cw*.03,py(152),px(152)+cw*.03,py(152)+ch*.09); }
-    } else if (type==="cheek_lift") {
-      [116,345].forEach(dot);
-      if(px(116)&&px(21))  line(px(116),py(116),px(21),py(21)-ch*.05);
-      if(px(345)&&px(251)) line(px(345),py(345),px(251),py(251)-ch*.05);
-    } else if (type==="undereye_out") {
-      [173,157,398,384].forEach(dot);
-      if(px(173)&&px(161)) line(px(173),py(173),px(161),py(161));
-      if(px(398)&&px(388)) line(px(398),py(398),px(388),py(388));
-    } else if (type==="brow_out") {
-      [107,70,336,300].forEach(dot);
-      if(px(107)&&px(70))  line(px(107),py(107),px(70),py(70));
-      if(px(336)&&px(300)) line(px(336),py(336),px(300),py(300));
-    } else if (type==="forehead_up") {
-      [10,66,296].forEach(dot);
-      if(px(10))  line(px(10), py(10), px(10), py(10)-ch*.09);
-      if(px(66))  line(px(66), py(66), px(66), py(66)-ch*.07);
-      if(px(296)) line(px(296),py(296),px(296),py(296)-ch*.07);
-    } else if (type==="nodes") {
-      [234,454].forEach(i => {
-        const x=px(i),y=py(i); if(!x) return;
-        const r = 14+Math.sin(pulseT.current)*5;
-        ctx.strokeStyle=`rgba(196,154,75,${0.4+p*.35})`; ctx.lineWidth=2;
-        ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke();
-        dot(i);
+    const drawArrow = (g, delay = 0) => {
+      const pts = g.points.map(rp).filter(Boolean);
+      if (pts.length < 2) return;
+      // Phase the animation: arrow draws over first 50% of cycle, holds for 30%, fades for 20%
+      const local = ((cycle * 5 - delay) % 5) / 5; // 5s cycle
+      let progress = 0, alpha = 1;
+      if (local < 0.06)       { progress = 0;                 alpha = 0; }
+      else if (local < 0.50)  { progress = (local - 0.06) / 0.44; alpha = 1; }
+      else if (local < 0.80)  { progress = 1;                 alpha = 1; }
+      else if (local < 0.92)  { progress = 1;                 alpha = 1 - (local - 0.80) / 0.12; }
+      else                    { progress = 1;                 alpha = 0; }
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      let endPt = null, prevPt = null;
+      drawGoldStroke(() => {
+        const r = drawSmoothPath(pts, progress);
+        endPt = r[0]; prevPt = r[1];
       });
-    } else if (type==="temples") {
-      [21,251].forEach(i => {
-        const x=px(i),y=py(i); if(!x) return;
-        const r=18+p*4; ctx.strokeStyle=gold; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
-        ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
-        dot(i);
+      // Arrowhead when path is mostly drawn
+      if (progress > 0.85 && endPt && prevPt) {
+        const dx = endPt[0] - prevPt[0], dy = endPt[1] - prevPt[1];
+        const len = Math.hypot(dx, dy) || 1;
+        const ux = dx / len, uy = dy / len;
+        const head = 16, spread = 0.5;
+        const ax = endPt[0] - head * (ux * Math.cos(spread) - uy * Math.sin(spread));
+        const ay = endPt[1] - head * (uy * Math.cos(spread) + ux * Math.sin(spread));
+        const bx = endPt[0] - head * (ux * Math.cos(spread) + uy * Math.sin(spread));
+        const by = endPt[1] - head * (uy * Math.cos(spread) - ux * Math.sin(spread));
+        drawGoldStroke(() => {
+          ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(endPt[0], endPt[1]); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(endPt[0], endPt[1]); ctx.stroke();
+        });
+      }
+      ctx.restore();
+    };
+
+    const drawCurve = (g, delay = 0) => {
+      // Same as arrow but no arrowhead
+      const pts = g.points.map(rp).filter(Boolean);
+      if (pts.length < 2) return;
+      const local = ((cycle * 5 - delay) % 5) / 5;
+      let progress = 0, alpha = 1;
+      if (local < 0.06)       { progress = 0;                 alpha = 0; }
+      else if (local < 0.50)  { progress = (local - 0.06) / 0.44; alpha = 1; }
+      else if (local < 0.80)  { progress = 1;                 alpha = 1; }
+      else if (local < 0.92)  { progress = 1;                 alpha = 1 - (local - 0.80) / 0.12; }
+      else                    { progress = 1;                 alpha = 0; }
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      drawGoldStroke(() => { drawSmoothPath(pts, progress); });
+      ctx.restore();
+    };
+
+    const drawCircleGesture = (g, delay = 0) => {
+      // Static dashed orbit + orbiting fingertip + center anchor
+      const c = rp(g.center);
+      if (!c) return;
+      // Estimate radius in pixels — gesture.radius is normalized to image width
+      // (the SVG version uses viewBox 0..1). MediaPipe is normalized to canvas
+      // dimensions. We multiply by canvas width for consistent visual size.
+      const r = (g.radius || 0.04) * cw;
+      ctx.save();
+      ctx.lineCap = "round";
+      // Center anchor dot
+      ctx.fillStyle = GOLD;
+      ctx.shadowColor = "rgba(228, 195, 138, 0.65)";
+      ctx.shadowBlur = 6;
+      ctx.beginPath(); ctx.arc(c[0], c[1], 3.5, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      // Static dashed orbit path
+      ctx.strokeStyle = "rgba(228, 195, 138, 0.55)";
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([6, 8]);
+      ctx.beginPath(); ctx.arc(c[0], c[1], r, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      // Orbiting fingertip dot — 3.2s per rotation
+      const orbit = ((cycle * 5 - delay) / 3.2) * Math.PI * 2;
+      const dotX = c[0] + r * Math.cos(orbit);
+      const dotY = c[1] + r * Math.sin(orbit);
+      // Soft halo behind dot
+      ctx.fillStyle = "rgba(228, 195, 138, 0.30)";
+      ctx.beginPath(); ctx.arc(dotX, dotY, 10, 0, Math.PI * 2); ctx.fill();
+      // Bright fingertip core
+      ctx.shadowColor = "rgba(242, 217, 166, 0.95)";
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = GOLD_BRIGHT;
+      ctx.beginPath(); ctx.arc(dotX, dotY, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    };
+
+    const drawHold = (g, delay = 0) => {
+      // Concentric pulsing rings (sonar ping) + bright center dot
+      const c = rp(g.center);
+      if (!c) return;
+      const baseR = (g.radius || 0.035) * cw;
+      ctx.save();
+      // Three rings staggered by 0.55s each, 2.6s cycle
+      for (let i = 0; i < 3; i++) {
+        const ringPhase = ((cycle * 5 - delay - i * 0.55) / 2.6) % 1;
+        if (ringPhase < 0 || ringPhase > 1) continue;
+        const scale = 0.55 + ringPhase * 1.65;
+        let ringAlpha = 0;
+        if (ringPhase < 0.20) ringAlpha = ringPhase / 0.20;
+        else                  ringAlpha = 1 - ringPhase;
+        ctx.globalAlpha = ringAlpha;
+        ctx.strokeStyle = GOLD;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = "rgba(228, 195, 138, 0.55)";
+        ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.arc(c[0], c[1], baseR * scale, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 0.75 + p * 0.25;
+      // Center dot
+      ctx.fillStyle = GOLD_BRIGHT;
+      ctx.shadowColor = "rgba(242, 217, 166, 0.95)";
+      ctx.shadowBlur = 8;
+      ctx.beginPath(); ctx.arc(c[0], c[1], Math.max(4, baseR * 0.30), 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    };
+
+    const drawPoint = (g, delay = 0) => {
+      const c = rp(g.center);
+      if (!c) return;
+      const r = (g.radius || 0.018) * cw;
+      ctx.save();
+      ctx.globalAlpha = 0.6 + p * 0.4;
+      // Soft halo
+      ctx.fillStyle = "rgba(228, 195, 138, 0.30)";
+      ctx.beginPath(); ctx.arc(c[0], c[1], r * 2.4, 0, Math.PI * 2); ctx.fill();
+      // Core
+      ctx.shadowColor = "rgba(242, 217, 166, 0.95)";
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = GOLD_BRIGHT;
+      ctx.beginPath(); ctx.arc(c[0], c[1], r, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    };
+
+    const drawWave = (g, delay = 0) => {
+      const a = rp(g.from);
+      const b = rp(g.to);
+      if (!a || !b) return;
+      const dx = b[0] - a[0], dy = b[1] - a[1];
+      const len = Math.hypot(dx, dy);
+      const ux = dx / len, uy = dy / len;
+      const perpX = -uy, perpY = ux;
+      const amp = 18;
+      const local = ((cycle * 5 - delay) % 5) / 5;
+      let progress = 0, alpha = 1;
+      if (local < 0.06)       { progress = 0;                 alpha = 0; }
+      else if (local < 0.50)  { progress = (local - 0.06) / 0.44; alpha = 1; }
+      else if (local < 0.80)  { progress = 1;                 alpha = 1; }
+      else if (local < 0.92)  { progress = 1;                 alpha = 1 - (local - 0.80) / 0.12; }
+      else                    { progress = 1;                 alpha = 0; }
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      const steps = 40;
+      const drawUpTo = Math.max(2, Math.floor(steps * progress));
+      const pts = [];
+      for (let i = 0; i <= drawUpTo; i++) {
+        const t = i / steps;
+        const damp = Math.sin(Math.PI * t);
+        const wave = Math.sin(Math.PI * 3 * t) * amp * damp;
+        pts.push([a[0] + dx * t + perpX * wave, a[1] + dy * t + perpY * wave]);
+      }
+      drawGoldStroke(() => {
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+        ctx.stroke();
       });
-    } else if (type==="orbital") {
-      [159,386].forEach(i => {
-        const x=px(i),y=py(i); if(!x) return;
-        ctx.strokeStyle=`rgba(196,154,75,${0.5+p*.3})`; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
-        ctx.beginPath(); ctx.ellipse(x,y+ch*.015,cw*.055,ch*.022,0,0,Math.PI*2);
-        ctx.stroke(); ctx.setLineDash([]);
-      });
-    } else if (type==="brow_up") {
-      [107,336].forEach(i => { if(px(i)) line(px(i),py(i),px(i),py(i)-ch*.06); });
-    } else if (type==="jawline_up") {
-      if(px(152)&&px(234)) line(px(152),py(152),px(234),py(234)-ch*.02);
-      if(px(152)&&px(454)) line(px(152),py(152),px(454),py(454)-ch*.02);
-    } else if (type==="marionette_up") {
-      [61,291].forEach(dot);
-      if(px(61)&&px(116))  line(px(61),py(61),px(116),py(116)-ch*.05);
-      if(px(291)&&px(345)) line(px(291),py(291),px(345),py(345)-ch*.05);
-    } else if (type==="neck_up") {
-      if(px(152)) { line(px(152)-cw*.03,py(152)+ch*.06,px(152)-cw*.03,py(152));
-                    line(px(152)+cw*.03,py(152)+ch*.06,px(152)+cw*.03,py(152)); }
-    } else if (type==="nasolabial_up") {
-      if(px(64)&&px(116))  line(px(64),py(64),px(116),py(116)-ch*.04);
-      if(px(294)&&px(345)) line(px(294),py(294),px(345),py(345)-ch*.04);
-    } else if (type==="cheek_out") {
-      if(px(116)&&px(234)) line(px(116),py(116),px(234)+cw*.02,py(234));
-      if(px(345)&&px(454)) line(px(345),py(345),px(454)-cw*.02,py(454));
+      ctx.restore();
+    };
+
+    // Render every gesture in the current step
+    for (const g of step.gestures) {
+      const delay = g.delay || 0;
+      switch (g.type) {
+        case "arrow":  drawArrow(g, delay);          break;
+        case "curve":  drawCurve(g, delay);          break;
+        case "circle": drawCircleGesture(g, delay);  break;
+        case "hold":   drawHold(g, delay);           break;
+        case "point":  drawPoint(g, delay);          break;
+        case "wave":   drawWave(g, delay);           break;
+      }
     }
   }, []);
 
