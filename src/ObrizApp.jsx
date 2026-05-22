@@ -23,7 +23,51 @@ function RitualIllustration({ ritualId, zone, size }) {
 // (currently: belly-flow, awaiting source photography).
 function RitualStepImage({ ritualId, stepIndex = 1, zone, size = 280, width, height, radius = 14, shadow = true, showFrame = true }) {
   if (!hasAnimatedSteps(ritualId)) {
-    return <RitualIllustration ritualId={ritualId} zone={zone} size={size} />;
+    // Fallback (currently belly-flow, awaiting source photography).
+    // Wrap the legacy SVG diagram in an editorial frame so it lives in the
+    // same visual family as the photo rituals — same brown ground, same
+    // corner brackets, same proportions — rather than appearing as a bare
+    // line drawing.
+    const w = width != null ? width : size;
+    const h = height != null ? height : size * 1.25;
+    return (
+      <div
+        key={`${ritualId}-${stepIndex}`}
+        className="rhei-step-enter"
+        style={{
+          position: "relative",
+          width: w,
+          height: h,
+          borderRadius: 14,
+          overflow: "hidden",
+          background: "radial-gradient(ellipse at 50% 38%, rgba(196,154,75,0.16) 0%, rgba(58,37,22,0.55) 45%, #2D1B0E 100%)",
+        }}>
+        <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <div style={{ transform:"scale(1.15)", opacity:0.9 }}>
+            <RitualIllustration ritualId={ritualId} zone={zone} size={Math.min(w, h) * 0.65} />
+          </div>
+        </div>
+        {showFrame && (
+          <>
+            {[
+              { top: 8, left: 8 },
+              { top: 8, right: 8 },
+              { bottom: 8, left: 8 },
+              { bottom: 8, right: 8 },
+            ].map((pos, i) => (
+              <div key={i} style={{
+                position: "absolute", ...pos,
+                width: 12, height: 12,
+                borderTop: "1px solid rgba(242,235,220,0.45)",
+                borderLeft: "1px solid rgba(242,235,220,0.45)",
+                transform: i === 1 ? "rotate(90deg)" : i === 2 ? "rotate(-90deg)" : i === 3 ? "rotate(180deg)" : "none",
+                transformOrigin: "top left",
+              }}/>
+            ))}
+          </>
+        )}
+      </div>
+    );
   }
   return (
     <AnimatedRitualStep
@@ -756,12 +800,21 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
           {voiceEnabled ? <Volume2 size={15}/> : <VolumeX size={15}/>}
         </button>
 
-        <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,marginBottom:4,marginTop:8}}>{ritual.title}</p>
-        <p style={{fontSize:12,color:B.muted,marginBottom:28,fontFamily:SF}}>Step {step+1} of {totalSteps}</p>
+        <p style={{fontSize:9,letterSpacing:3,color:B.gold,textTransform:"uppercase",fontFamily:SF,marginBottom:6,marginTop:8}}>{ritual.title}</p>
+        <p style={{fontSize:10,color:B.muted,marginBottom:24,fontFamily:SF,letterSpacing:"0.22em",textTransform:"uppercase",fontVariantNumeric:"tabular-nums"}}>
+          Step {String(step+1).padStart(2,"0")} <span style={{opacity:0.45,margin:"0 6px"}}>/</span> {String(totalSteps).padStart(2,"0")}
+        </p>
 
-        {/* Progress dots */}
-        <div style={{display:"flex",gap:4,marginBottom:28,flexWrap:"wrap",justifyContent:"center"}}>
-          {ritual.steps.map((_,i)=>(<div key={i} style={{width:i===step?20:8,height:4,borderRadius:2,background:i<step?B.gold:i===step?B.goldLight:`${B.gold}20`,transition:"all 0.4s"}}/>))}
+        {/* Progress dots — editorial pill row */}
+        <div style={{display:"flex",gap:5,marginBottom:32,flexWrap:"wrap",justifyContent:"center",maxWidth:280}}>
+          {ritual.steps.map((_,i)=>(<div key={i} style={{
+            width:i===step?22:7,
+            height:3,
+            borderRadius:2,
+            background:i<step?B.gold:i===step?B.goldLight:`${B.gold}22`,
+            boxShadow:i===step?`0 0 6px ${B.gold}80`:"none",
+            transition:"all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)"
+          }}/>))}
         </div>
 
         {/* Editorial step photograph + timer */}

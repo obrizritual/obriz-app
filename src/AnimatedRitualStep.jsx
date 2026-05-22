@@ -210,13 +210,16 @@ export default function AnimatedRitualStep({ ritualId, stepIndex, size = 280, wi
   const h = height != null ? height : size * 1.25;
 
   return (
-    <div style={{
-      position: "relative",
-      width: w,
-      height: h,
-      borderRadius: 14,
-      overflow: "hidden",
-    }}>
+    <div
+      key={`${ritualId}-${stepIndex}`} // force re-mount on step change → fresh animation cycle
+      className="rhei-step-enter"
+      style={{
+        position: "relative",
+        width: w,
+        height: h,
+        borderRadius: 14,
+        overflow: "hidden",
+      }}>
       <img
         src={`/ritual-source-photos/${woman}-clean.png`}
         alt=""
