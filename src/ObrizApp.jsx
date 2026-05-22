@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Crown, User, Hand, Mail, LogOut, MessageCircle, Camera, Volume2, VolumeX } from "lucide-react";
-import { supabase } from "./supabaseClient";
+import { supabase, supabaseEnabled } from "./supabaseClient";
 import FaceGuideIllustration from "./FaceGuideIllustration";
 import BellyGuideIllustration from "./BellyGuideIllustration";
 
@@ -1144,11 +1144,30 @@ function Onboarding({ onComplete, authUser }) {
   const sendMagicLink = async () => {
     const e = email.trim();
     if (!e) return;
-    if (!supabase) {
-      setAuthError("Account setup isn't available right now. You can continue without one.");
+    // Light format check — keeps the local-only path from saving garbage
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
+      setAuthError("That email doesn't look right. Try again.");
       return;
     }
     setAuthError("");
+    // ── Local-only fallback ──
+    // When Supabase isn't configured (no env vars on Vercel), we still
+    // give the user an account that works fully on this device. Their
+    // email + account-creation timestamp are saved to localStorage; the
+    // app continues to the explainer screens and then asks for a name.
+    // Premium status (when purchased) is saved locally too. Cross-device
+    // sync activates the moment Supabase env vars are wired up.
+    if (!supabaseEnabled) {
+      try {
+        localStorage.setItem("rhei_local_email", e);
+        localStorage.setItem("rhei_local_account_created_at", String(Date.now()));
+        localStorage.setItem("rhei_local_account_active", "1");
+      } catch {}
+      // Skip the "check your inbox" screen — there's no inbox in local mode
+      setStep(0);
+      return;
+    }
+    // ── Full Supabase magic-link flow ──
     setAuthLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOtp({
@@ -1321,7 +1340,11 @@ function Onboarding({ onComplete, authUser }) {
               color:"rgba(248,242,229,0.7)",
               lineHeight:1.55,
               margin:"0 auto 44px", maxWidth:300,
-            }}>{isSignup ? "We'll send a link. No passwords." : "The email you came in with."}</p>
+            }}>{
+              isSignup
+                ? (supabaseEnabled ? "We'll send a link. No passwords." : "Saved to this device.")
+                : (supabaseEnabled ? "The email you came in with." : "The email you set up with.")
+            }</p>
 
             {/* Email input — bark surface, hairline, Fraunces italic placeholder */}
             <div className="rhei-rise rhei-rise-4" style={{position:"relative", maxWidth:360, margin:"0 auto"}}>
@@ -1370,7 +1393,11 @@ function Onboarding({ onComplete, authUser }) {
                   opacity: authLoading ? 0.6 : 1,
                   transition:"all 0.4s var(--rhei-ease)",
                 }}>
-                {authLoading ? "Sending the link…" : "Send my link"}
+                {authLoading
+                  ? "Sending the link…"
+                  : supabaseEnabled
+                    ? (isSignup ? "Send my link" : "Sign in")
+                    : "Continue"}
               </button>
 
               <button
