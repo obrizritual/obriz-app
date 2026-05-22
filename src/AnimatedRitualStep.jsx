@@ -2,29 +2,29 @@
 // RHEI — AnimatedRitualStep
 //
 // Renders one ritual step as a feathered portrait with animated
-// gold gesture overlays. Replaces the previous static PNG approach.
+// gold gesture overlays.
 //
-// Animations are pure CSS keyframes (no JS animation loop).
-//   - arrow / curve: stroke-dashoffset animation → line draws itself
-//   - circle: rotation + opacity pulse → spinning circle
+// Animations are pure CSS keyframes + SVG SMIL (for orbits).
+//   - arrow / curve: stroke-dashoffset → line draws itself
+//   - circle: STATIC dashed circle path + ORBITING dot (the fingertip)
 //   - hold: concentric pulse outward → sonar ping
-//   - point: opacity pulse → dot fades in and out
-//   - wave: sinusoidal path traversal between two points
+//   - point: opacity pulse → dot fades in/out
+//   - wave: sinusoidal path between two points
 // ════════════════════════════════════════════════════════════════
 import { RITUALS, LANDMARKS, resolveLandmark } from "./RitualSteps";
 
-const GOLD = "#F2D58A";        // brighter than before for visibility on brown
-const GOLD_BRIGHT = "#FFE6A8";  // luminous core
+// Slightly softer gold than v1 — less saturated reads more refined,
+// less "honey-tacky" on the brown ground.
+const GOLD = "#E4C38A";
+const GOLD_BRIGHT = "#F2D9A6";
 
-// Convert a list of landmark refs to an SVG path "M x,y L x,y …"
+// Convert a list of landmark refs to an SVG path using smooth bezier curves
 function pathFromPoints(points, landmarks) {
   const pts = points.map(p => resolveLandmark(p, landmarks));
-  // Catmull-Rom-ish curve through points (smooth)
   if (pts.length < 2) return "";
   if (pts.length === 2) {
     return `M ${pts[0][0]},${pts[0][1]} L ${pts[1][0]},${pts[1][1]}`;
   }
-  // Multiple points — use bezier curves through them
   let d = `M ${pts[0][0]},${pts[0][1]}`;
   for (let i = 0; i < pts.length - 1; i++) {
     const p0 = pts[Math.max(0, i - 1)];
@@ -40,16 +40,15 @@ function pathFromPoints(points, landmarks) {
   return d;
 }
 
-// A single animated gesture, rendered as one or more SVG primitives.
-// Stroke widths are expressed in actual pixels — the SVG uses
-// vectorEffect="non-scaling-stroke" so values are raw pixel widths
-// regardless of the viewBox scale.
+// A single animated gesture. Stroke widths are raw pixels because the
+// SVG uses vectorEffect="non-scaling-stroke".
 function Gesture({ gesture, landmarks, index }) {
   const delay = gesture.delay || 0;
-  // Pixel stroke width — sized for visibility on the photo at 260-300px display.
-  const stroke = gesture.width != null ? gesture.width : 12;
+  // Reduced from 12 → 10 default so lines read refined, not tacky.
+  const stroke = gesture.width != null ? gesture.width : 10;
   const color = gesture.color || GOLD;
-  const glow = `drop-shadow(0 0 6px ${color}aa) drop-shadow(0 0 12px ${color}66)`;
+  // Softer glow — 4px close + 8px halo (was 6 + 12) — luminous but restrained.
+  const glow = `drop-shadow(0 0 4px ${color}cc) drop-shadow(0 0 8px ${color}55)`;
 
   if (gesture.type === "arrow" || gesture.type === "curve") {
     const d = pathFromPoints(gesture.points, landmarks);
@@ -60,8 +59,8 @@ function Gesture({ gesture, landmarks, index }) {
     const len = Math.sqrt(dx * dx + dy * dy) || 1;
     const ux = dx / len, uy = dy / len;
     const px = -uy, py = ux;
-    const head = 0.030;
-    const spread = 0.016;
+    const head = 0.028;
+    const spread = 0.014;
     const showHead = gesture.type === "arrow";
     return (
       <g style={{ animationDelay: `${delay}s` }}>
@@ -94,20 +93,48 @@ function Gesture({ gesture, landmarks, index }) {
   }
 
   if (gesture.type === "circle") {
+    // Static dashed circle path + ORBITING dot showing the fingertip.
+    // This reads unmistakably as "circle your finger here at this point."
     const [cx, cy] = resolveLandmark(gesture.center, landmarks);
     const r = gesture.radius || 0.04;
+    const dotR = 0.014; // fingertip dot — ~3.5px at 260px display
     return (
-      <g style={{ animationDelay: `${delay}s`, transformOrigin: `${cx*100}% ${cy*100}%`, transformBox: "view-box" }}
-         className="rhei-g-rotate">
+      <g style={{ animationDelay: `${delay}s` }} className="rhei-circle-fade-in">
+        {/* Center anchor — where the press point sits */}
+        <circle cx={cx} cy={cy} r={0.005}
+                fill={color}
+                opacity={0.8}
+                style={{ filter: `drop-shadow(0 0 4px ${color}aa)` }}/>
+        {/* Static orbit path — thin, dashed, low opacity */}
         <circle cx={cx} cy={cy} r={r}
                 fill="none"
                 stroke={color}
-                strokeWidth={stroke * 0.8}
-                strokeDasharray="0.04 0.05"
+                strokeWidth={stroke * 0.55}
+                strokeDasharray="0.012 0.016"
                 strokeLinecap="round"
                 vectorEffect="non-scaling-stroke"
-                style={{ filter: glow }}
-        />
+                opacity={0.55}/>
+        {/* Orbiting fingertip — uses native SVG animateTransform for
+            reliable rotation around (cx, cy) regardless of CSS scaling. */}
+        <g>
+          <animateTransform
+            attributeName="transform"
+            type="rotate"
+            from={`0 ${cx} ${cy}`}
+            to={`360 ${cx} ${cy}`}
+            dur="3.2s"
+            begin={`${delay}s`}
+            repeatCount="indefinite"
+          />
+          {/* Soft halo behind the dot */}
+          <circle cx={cx + r} cy={cy} r={dotR * 2.2}
+                  fill={color} opacity={0.3}
+                  style={{ filter: "blur(2px)" }}/>
+          {/* The fingertip itself */}
+          <circle cx={cx + r} cy={cy} r={dotR}
+                  fill={GOLD_BRIGHT}
+                  style={{ filter: `drop-shadow(0 0 5px ${color})` }}/>
+        </g>
       </g>
     );
   }
@@ -122,7 +149,7 @@ function Gesture({ gesture, landmarks, index }) {
                   cx={cx} cy={cy} r={r}
                   fill="none"
                   stroke={color}
-                  strokeWidth={stroke * 0.7}
+                  strokeWidth={stroke * 0.55}
                   vectorEffect="non-scaling-stroke"
                   className="rhei-ping"
                   style={{ animationDelay: `${delay + sd}s`,
@@ -131,13 +158,13 @@ function Gesture({ gesture, landmarks, index }) {
                            filter: glow }}
           />
         ))}
-        <circle cx={cx} cy={cy} r={r * 0.30}
+        <circle cx={cx} cy={cy} r={r * 0.26}
                 fill={GOLD_BRIGHT}
                 className="rhei-pulse-dot"
                 style={{ animationDelay: `${delay}s`,
                          transformOrigin: `${cx*100}% ${cy*100}%`,
                          transformBox: "view-box",
-                         filter: `drop-shadow(0 0 8px ${color}cc)` }}/>
+                         filter: `drop-shadow(0 0 6px ${color}bb)` }}/>
       </g>
     );
   }
@@ -150,12 +177,12 @@ function Gesture({ gesture, landmarks, index }) {
                   transformOrigin: `${cx*100}% ${cy*100}%`,
                   transformBox: "view-box" }}
          className="rhei-pulse-dot">
-        <circle cx={cx} cy={cy} r={r * 2.5}
+        <circle cx={cx} cy={cy} r={r * 2.4}
                 fill={color}
-                opacity={0.30}/>
+                opacity={0.25}/>
         <circle cx={cx} cy={cy} r={r}
                 fill={GOLD_BRIGHT}
-                style={{ filter: `drop-shadow(0 0 10px ${color}dd)` }}/>
+                style={{ filter: `drop-shadow(0 0 8px ${color}cc)` }}/>
       </g>
     );
   }
@@ -185,7 +212,7 @@ function Gesture({ gesture, landmarks, index }) {
       <path d={d}
             fill="none"
             stroke={color}
-            strokeWidth={stroke}
+            strokeWidth={stroke * 0.9}
             strokeLinecap="round"
             vectorEffect="non-scaling-stroke"
             className="rhei-arrow"
@@ -196,7 +223,15 @@ function Gesture({ gesture, landmarks, index }) {
   return null;
 }
 
-export default function AnimatedRitualStep({ ritualId, stepIndex, size = 280, width, height, showFrame = true }) {
+export default function AnimatedRitualStep({
+  ritualId,
+  stepIndex,
+  size = 280,
+  width,
+  height,
+  showFrame = true,
+  showGestures = true,   // NEW: when false, only render the portrait (used by overview screen)
+}) {
   const ritual = RITUALS[ritualId];
   if (!ritual) return null;
   const step = ritual.steps[stepIndex - 1];
@@ -204,14 +239,12 @@ export default function AnimatedRitualStep({ ritualId, stepIndex, size = 280, wi
   const woman = ritual.woman;
   const landmarks = LANDMARKS[woman];
 
-  // Width and height can be overridden by parent (e.g. home card uses
-  // a fixed 160x200 frame). Default falls back to size × 1.25 aspect.
   const w = width != null ? width : size;
   const h = height != null ? height : size * 1.25;
 
   return (
     <div
-      key={`${ritualId}-${stepIndex}`} // force re-mount on step change → fresh animation cycle
+      key={`${ritualId}-${stepIndex}-${showGestures}`}
       className="rhei-step-enter"
       style={{
         position: "relative",
@@ -231,22 +264,23 @@ export default function AnimatedRitualStep({ ritualId, stepIndex, size = 280, wi
           display: "block",
         }}
       />
-      <svg
-        viewBox="0 0 1 1.25"
-        preserveAspectRatio="none"
-        style={{
-          position: "absolute", inset: 0,
-          width: "100%", height: "100%",
-          pointerEvents: "none",
-        }}
-      >
-        {/* SVG uses normalized coords [0..1] in x and [0..1.25] in y to match photo aspect */}
-        <g transform="scale(1, 1.25)">
-          {step.gestures.map((g, i) => (
-            <Gesture key={i} gesture={g} landmarks={landmarks} index={i}/>
-          ))}
-        </g>
-      </svg>
+      {showGestures && (
+        <svg
+          viewBox="0 0 1 1.25"
+          preserveAspectRatio="none"
+          style={{
+            position: "absolute", inset: 0,
+            width: "100%", height: "100%",
+            pointerEvents: "none",
+          }}
+        >
+          <g transform="scale(1, 1.25)">
+            {step.gestures.map((g, i) => (
+              <Gesture key={i} gesture={g} landmarks={landmarks} index={i}/>
+            ))}
+          </g>
+        </svg>
+      )}
       {showFrame && (
         <div style={{
           position: "absolute", inset: 0,
@@ -254,7 +288,6 @@ export default function AnimatedRitualStep({ ritualId, stepIndex, size = 280, wi
           fontFamily: "'IBM Plex Mono', 'Geist Mono', monospace",
           color: "rgba(242, 235, 220, 0.85)",
         }}>
-          {/* Corner brackets */}
           {[
             { top: 8, left: 8, transform: "rotate(0deg)" },
             { top: 8, right: 8, transform: "rotate(90deg)" },
@@ -269,24 +302,26 @@ export default function AnimatedRitualStep({ ritualId, stepIndex, size = 280, wi
               transformOrigin: "top left",
             }}/>
           ))}
-          {/* Top label */}
           <span style={{
             position: "absolute", top: 10, left: 28,
             fontSize: 8, letterSpacing: "0.18em",
             color: "rgba(242,235,220,0.7)",
           }}>{ritual.label}</span>
-          <span style={{
-            position: "absolute", top: 10, right: 28,
-            fontSize: 8, letterSpacing: "0.18em",
-            color: "rgba(242,235,220,0.45)",
-          }}>RHEI · STEP</span>
-          {/* Bottom label */}
-          <span style={{
-            position: "absolute", bottom: 10, left: 28,
-            fontSize: 8, letterSpacing: "0.18em",
-            color: "#E4C48A",
-          }}>{step.step}</span>
-          {step.note && (
+          {showGestures && (
+            <span style={{
+              position: "absolute", top: 10, right: 28,
+              fontSize: 8, letterSpacing: "0.18em",
+              color: "rgba(242,235,220,0.45)",
+            }}>RHEI · STEP</span>
+          )}
+          {showGestures && (
+            <span style={{
+              position: "absolute", bottom: 10, left: 28,
+              fontSize: 8, letterSpacing: "0.18em",
+              color: "#E4C38A",
+            }}>{step.step}</span>
+          )}
+          {showGestures && step.note && (
             <span style={{
               position: "absolute", bottom: 10, right: 28,
               fontSize: 8, letterSpacing: "0.18em",
@@ -299,8 +334,6 @@ export default function AnimatedRitualStep({ ritualId, stepIndex, size = 280, wi
   );
 }
 
-// Export a check so callers can decide whether to use this component
-// or fall back to the legacy diagram.
 export function hasAnimatedSteps(ritualId) {
   return Boolean(RITUALS[ritualId]);
 }

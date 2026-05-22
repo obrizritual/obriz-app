@@ -238,6 +238,16 @@
       animation: rhei-step-enter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
     }
 
+    /* Circle gesture fade-in — the path appears before the dot orbits */
+    @keyframes rhei-circle-fade-in {
+      0%   { opacity: 0; }
+      40%  { opacity: 1; }
+      100% { opacity: 1; }
+    }
+    .rhei-circle-fade-in {
+      animation: rhei-circle-fade-in 1.2s ease-out both;
+    }
+
     /* Ember pulse — for the bright core of a sun-bloom. Smaller, faster than atmosphere-1. */
     @keyframes rhei-ember {
       0%, 100% { opacity: 0.85; transform: translate(-50%, -50%) scale(1); }

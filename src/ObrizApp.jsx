@@ -21,7 +21,7 @@ function RitualIllustration({ ritualId, zone, size }) {
 // live animated SVG over the woman's portrait). Falls back to the legacy
 // diagrammatic illustration for any ritual without an animated config yet
 // (currently: belly-flow, awaiting source photography).
-function RitualStepImage({ ritualId, stepIndex = 1, zone, size = 280, width, height, radius = 14, shadow = true, showFrame = true }) {
+function RitualStepImage({ ritualId, stepIndex = 1, zone, size = 280, width, height, radius = 14, shadow = true, showFrame = true, showGestures = true }) {
   if (!hasAnimatedSteps(ritualId)) {
     // Fallback (currently belly-flow, awaiting source photography).
     // Wrap the legacy SVG diagram in an editorial frame so it lives in the
@@ -77,6 +77,7 @@ function RitualStepImage({ ritualId, stepIndex = 1, zone, size = 280, width, hei
       width={width}
       height={height}
       showFrame={showFrame}
+      showGestures={showGestures}
     />
   );
 }
@@ -743,6 +744,7 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
               height={260}
               radius={0}
               shadow={false}
+              showGestures={false}
             />
           </div>
           <div style={{background:B.card,borderRadius:16,padding:18,border:`1px solid ${B.border}`,marginBottom:16}}>
@@ -2995,6 +2997,55 @@ export default function ObrizApp() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* ON THE WAY — Coming Soon section for forthcoming members-only content */}
+        <div className="rhei-rise rhei-rise-3" style={{
+          background:"linear-gradient(180deg, rgba(245,200,120,0.05) 0%, rgba(248,242,229,0.02) 100%)",
+          backdropFilter:"blur(12px)",
+          border:"1px solid rgba(245,200,120,0.18)",
+          borderRadius:22, padding:"24px 22px", marginBottom:18,
+        }}>
+          <div style={{display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:18}}>
+            <PrecisionStamp label="On the Way" color="rgba(245,200,120,0.85)"/>
+            <PrecisionStamp label="Members First" color="rgba(245,200,120,0.50)"/>
+          </div>
+          {[
+            {
+              text: "Professional Guide",
+              sub: "One-on-one sessions with a certified practitioner. Personal program, live feedback, monthly check-ins.",
+              eta: "COMING SOON",
+            },
+            {
+              text: "Mirror Mode AR",
+              sub: "Camera-guided live ritual. The AR finds your tension and walks you through it in real time.",
+              eta: "IN PROGRESS",
+            },
+            {
+              text: "Practitioner Library",
+              sub: "Filmed sessions from a roster of facialists and somatic teachers. New release every month.",
+              eta: "Q3",
+            },
+          ].map((f, i) => (
+            <div key={i} style={{display:"flex", alignItems:"flex-start", gap:14, padding:"14px 0", borderTop: i===0 ? "none" : "1px solid rgba(245,200,120,0.08)"}}>
+              <span style={{flexShrink:0, width:22, fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.22em", color:"rgba(245,200,120,0.55)", fontVariantNumeric:"tabular-nums", paddingTop:4}}>
+                {String(i+1).padStart(2,"0")}
+              </span>
+              <div style={{flexShrink:0, width:8, height:8, borderRadius:"50%", marginTop:6, background:"rgba(245,200,120,0.45)", border:"1px solid rgba(245,200,120,0.6)"}}/>
+              <div style={{flex:1, minWidth:0}}>
+                <div style={{display:"flex", alignItems:"baseline", justifyContent:"space-between", gap:10, marginBottom:6, flexWrap:"wrap"}}>
+                  <p style={{fontFamily:F, fontSize:16, fontWeight:300, color:"#F8F2E5", margin:0, fontVariationSettings:"'opsz' 48", letterSpacing:"-0.01em"}}>{f.text}</p>
+                  <span style={{fontFamily:SF, fontSize:8.5, fontWeight:500, letterSpacing:"0.26em", color:"rgba(245,200,120,0.75)", whiteSpace:"nowrap"}}>{f.eta}</span>
+                </div>
+                <p style={{fontFamily:F, fontSize:13, color:"rgba(248,242,229,0.62)", margin:0, lineHeight:1.5, letterSpacing:"-0.005em"}}>{f.sub}</p>
+              </div>
+            </div>
+          ))}
+          <div style={{marginTop:14, paddingTop:14, borderTop:"1px solid rgba(245,200,120,0.08)"}}>
+            <p style={{fontFamily:F, fontSize:12, color:"rgba(248,242,229,0.55)", margin:0, lineHeight:1.55, letterSpacing:"-0.005em"}}>
+              Members receive everything on the way — included as it releases, no additional cost.
+            </p>
+          </div>
         </div>
 
         {/* RESTORE / SIGN-IN */}

@@ -188,11 +188,27 @@ export const RITUALS = {
           { type: "arrow", points: ["mouth_corner_l", ref("cheek_l", -0.01, -0.04), ref("cheekbone_l", -0.01, -0.04), "temple_l"] },
           { type: "arrow", points: ["mouth_corner_r", ref("cheek_r", 0.01, -0.04), ref("cheekbone_r", 0.01, -0.04), "temple_r"], delay: 0.6 },
         ] },
-      // FIX: undersweep — cleaner under-cheekbone path on both sides
+      // The arrow must trace UNDER the cheekbone ridge the entire time
+      // — never crossing above it — then rise to the temple at the very end.
+      // Cheekbone for woman-a sits at y=0.48; we keep the path at y >= 0.50
+      // for most of its length, only rising at the temple endpoint.
       { step: "05 · UNDERSWEEP THE CHEEKBONE", note: "× 5 EACH SIDE",
         gestures: [
-          { type: "arrow", points: [ref("cheekbone_l", 0.06, 0.02), ref("cheekbone_l", 0.02, 0.0), ref("cheekbone_l", -0.02, -0.02), "temple_l"] },
-          { type: "arrow", points: [ref("cheekbone_r", -0.06, 0.02), ref("cheekbone_r", -0.02, 0.0), ref("cheekbone_r", 0.02, -0.02), "temple_r"], delay: 0.6 },
+          // Left side: starts under cheekbone near nose, sweeps outward
+          // (still under), then rises to temple
+          { type: "arrow", points: [
+              ref("cheekbone_l", 0.07, 0.04),   // under cheekbone, medial
+              ref("cheekbone_l", 0.02, 0.05),   // under cheekbone, center
+              ref("cheekbone_l", -0.03, 0.04),  // under cheekbone, lateral
+              "temple_l"                         // rises to temple
+            ]},
+          // Right side mirror
+          { type: "arrow", points: [
+              ref("cheekbone_r", -0.07, 0.04),
+              ref("cheekbone_r", -0.02, 0.05),
+              ref("cheekbone_r", 0.03, 0.04),
+              "temple_r"
+            ], delay: 0.6 },
         ] },
       { step: "06 · DISSOLVE THE NASOLABIAL", note: "× 5 EACH SIDE",
         gestures: [
@@ -229,11 +245,15 @@ export const RITUALS = {
           { type: "hold", center: "collarbone_r", radius: 0.038, delay: 0.3 },
           { type: "wave", from: "collarbone_l", to: "collarbone_r" },
         ] },
-      // Parotid — rotating pulse circles
+      // Parotid lymph nodes — in front of each ear, slightly below the tragus.
+      // The orbit shows the fingertip making small inward circles right
+      // on top of the parotid landmark.
       { step: "02 · PULSE THE PAROTID", note: "× 8 CIRCLES",
         gestures: [
-          { type: "circle", center: ref("ear_l", 0.04, -0.02), radius: 0.038 },
-          { type: "circle", center: ref("ear_r", -0.04, -0.02), radius: 0.038, delay: 0.4 },
+          // ear_l is at [0.20, 0.49] for woman-b. Parotid sits just IN
+          // FRONT of the ear (medially) and at the same height.
+          { type: "circle", center: ref("ear_l", 0.06, 0.0), radius: 0.030 },
+          { type: "circle", center: ref("ear_r", -0.06, 0.0), radius: 0.030, delay: 0.4 },
         ] },
       // Submandibular pump — sequential wave of pumps along the jaw
       { step: "03 · UNDER THE JAW", note: "PUMP × 10",
@@ -250,10 +270,13 @@ export const RITUALS = {
           { type: "arrow", points: [ref("nostril_l", -0.02, 0.02), "cheek_l", ref("ear_l", 0.04, -0.02)] },
           { type: "arrow", points: [ref("nostril_r", 0.02, 0.02), "cheek_r", ref("ear_r", -0.04, -0.02)], delay: 0.5 },
         ] },
+      // Ring-finger circles around each orbital bone. The radius traces
+      // along the actual orbital ridge — eye socket perimeter — so the
+      // orbiting dot follows the bone, not the whole eye area.
       { step: "05 · RING-FINGER EYE CIRCLES", note: "× 3 EACH EYE",
         gestures: [
-          { type: "circle", center: "eye_center_l", radius: 0.075 },
-          { type: "circle", center: "eye_center_r", radius: 0.075, delay: 0.4 },
+          { type: "circle", center: "eye_center_l", radius: 0.055 },
+          { type: "circle", center: "eye_center_r", radius: 0.055, delay: 0.4 },
         ] },
       { step: "06 · CASCADE THE FOREHEAD", note: "× 10 PASSES",
         gestures: [
