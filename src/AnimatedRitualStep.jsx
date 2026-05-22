@@ -13,8 +13,8 @@
 // ════════════════════════════════════════════════════════════════
 import { RITUALS, LANDMARKS, resolveLandmark } from "./RitualSteps";
 
-const GOLD = "#E4C48A";
-const GOLD_BRIGHT = "#F5DCAA";
+const GOLD = "#F2D58A";        // brighter than before for visibility on brown
+const GOLD_BRIGHT = "#FFE6A8";  // luminous core
 
 // Convert a list of landmark refs to an SVG path "M x,y L x,y …"
 function pathFromPoints(points, landmarks) {
@@ -40,27 +40,31 @@ function pathFromPoints(points, landmarks) {
   return d;
 }
 
-// A single animated gesture, rendered as one or more SVG primitives
+// A single animated gesture, rendered as one or more SVG primitives.
+// Stroke widths are expressed in actual pixels — the SVG uses
+// vectorEffect="non-scaling-stroke" so values are raw pixel widths
+// regardless of the viewBox scale.
 function Gesture({ gesture, landmarks, index }) {
   const delay = gesture.delay || 0;
-  const stroke = (gesture.width != null ? gesture.width : 8) * 0.0008; // px → relative-to-viewbox
+  // Pixel stroke width — sized for visibility on the photo at 260-300px display.
+  const stroke = gesture.width != null ? gesture.width : 12;
   const color = gesture.color || GOLD;
+  const glow = `drop-shadow(0 0 6px ${color}aa) drop-shadow(0 0 12px ${color}66)`;
 
   if (gesture.type === "arrow" || gesture.type === "curve") {
     const d = pathFromPoints(gesture.points, landmarks);
     const last = resolveLandmark(gesture.points[gesture.points.length - 1], landmarks);
     const prev = resolveLandmark(gesture.points[gesture.points.length - 2], landmarks);
-    // Compute arrow head triangle pointing in direction of last segment
     const dx = last[0] - prev[0];
     const dy = last[1] - prev[1];
     const len = Math.sqrt(dx * dx + dy * dy) || 1;
     const ux = dx / len, uy = dy / len;
     const px = -uy, py = ux;
-    const head = 0.022;
-    const spread = 0.012;
+    const head = 0.030;
+    const spread = 0.016;
     const showHead = gesture.type === "arrow";
     return (
-      <g style={{ animationDelay: `${delay}s` }} className="rhei-g-draw">
+      <g style={{ animationDelay: `${delay}s` }}>
         <path d={d}
               fill="none"
               stroke={color}
@@ -69,18 +73,20 @@ function Gesture({ gesture, landmarks, index }) {
               strokeLinejoin="round"
               vectorEffect="non-scaling-stroke"
               className="rhei-arrow"
-              style={{ filter: `drop-shadow(0 0 ${stroke*4} ${color}66)` }}
+              style={{ filter: glow, animationDelay: `${delay}s` }}
         />
         {showHead && (
-          <g className="rhei-arrowhead" style={{ animationDelay: `${delay + 1.4}s` }}>
+          <g className="rhei-arrowhead" style={{ animationDelay: `${delay + 1.6}s` }}>
             <line x1={last[0] - ux*head + px*spread} y1={last[1] - uy*head + py*spread}
                   x2={last[0]} y2={last[1]}
                   stroke={color} strokeWidth={stroke} strokeLinecap="round"
-                  vectorEffect="non-scaling-stroke"/>
+                  vectorEffect="non-scaling-stroke"
+                  style={{ filter: glow }}/>
             <line x1={last[0] - ux*head - px*spread} y1={last[1] - uy*head - py*spread}
                   x2={last[0]} y2={last[1]}
                   stroke={color} strokeWidth={stroke} strokeLinecap="round"
-                  vectorEffect="non-scaling-stroke"/>
+                  vectorEffect="non-scaling-stroke"
+                  style={{ filter: glow }}/>
           </g>
         )}
       </g>
@@ -91,16 +97,16 @@ function Gesture({ gesture, landmarks, index }) {
     const [cx, cy] = resolveLandmark(gesture.center, landmarks);
     const r = gesture.radius || 0.04;
     return (
-      <g style={{ animationDelay: `${delay}s`, transformOrigin: `${cx*100}% ${cy*100}%` }}
+      <g style={{ animationDelay: `${delay}s`, transformOrigin: `${cx*100}% ${cy*100}%`, transformBox: "view-box" }}
          className="rhei-g-rotate">
         <circle cx={cx} cy={cy} r={r}
                 fill="none"
                 stroke={color}
-                strokeWidth={stroke * 0.7}
-                strokeDasharray="0.012 0.020"
+                strokeWidth={stroke * 0.8}
+                strokeDasharray="0.04 0.05"
                 strokeLinecap="round"
                 vectorEffect="non-scaling-stroke"
-                style={{ filter: `drop-shadow(0 0 ${stroke*3} ${color}55)` }}
+                style={{ filter: glow }}
         />
       </g>
     );
@@ -109,27 +115,29 @@ function Gesture({ gesture, landmarks, index }) {
   if (gesture.type === "hold") {
     const [cx, cy] = resolveLandmark(gesture.center, landmarks);
     const r = gesture.radius || 0.035;
-    // Three rings staggered for sonar ping effect
     return (
-      <g style={{ animationDelay: `${delay}s` }}>
-        {[0, 0.4, 0.8].map((sd, i) => (
+      <g>
+        {[0, 0.55, 1.1].map((sd, i) => (
           <circle key={i}
                   cx={cx} cy={cy} r={r}
                   fill="none"
                   stroke={color}
-                  strokeWidth={stroke * 0.6}
+                  strokeWidth={stroke * 0.7}
                   vectorEffect="non-scaling-stroke"
                   className="rhei-ping"
                   style={{ animationDelay: `${delay + sd}s`,
                            transformOrigin: `${cx*100}% ${cy*100}%`,
-                           filter: `drop-shadow(0 0 ${stroke*3} ${color}55)` }}
+                           transformBox: "view-box",
+                           filter: glow }}
           />
         ))}
-        {/* Center dot */}
-        <circle cx={cx} cy={cy} r={r * 0.25}
+        <circle cx={cx} cy={cy} r={r * 0.30}
                 fill={GOLD_BRIGHT}
                 className="rhei-pulse-dot"
-                style={{ animationDelay: `${delay}s` }}/>
+                style={{ animationDelay: `${delay}s`,
+                         transformOrigin: `${cx*100}% ${cy*100}%`,
+                         transformBox: "view-box",
+                         filter: `drop-shadow(0 0 8px ${color}cc)` }}/>
       </g>
     );
   }
@@ -138,13 +146,16 @@ function Gesture({ gesture, landmarks, index }) {
     const [cx, cy] = resolveLandmark(gesture.center, landmarks);
     const r = gesture.radius || 0.018;
     return (
-      <g style={{ animationDelay: `${delay}s` }} className="rhei-pulse-dot">
+      <g style={{ animationDelay: `${delay}s`,
+                  transformOrigin: `${cx*100}% ${cy*100}%`,
+                  transformBox: "view-box" }}
+         className="rhei-pulse-dot">
         <circle cx={cx} cy={cy} r={r * 2.5}
                 fill={color}
-                opacity={0.20}
-                style={{ filter: `blur(${r*1.5}px)` }}/>
+                opacity={0.30}/>
         <circle cx={cx} cy={cy} r={r}
-                fill={GOLD_BRIGHT}/>
+                fill={GOLD_BRIGHT}
+                style={{ filter: `drop-shadow(0 0 10px ${color}dd)` }}/>
       </g>
     );
   }
@@ -152,20 +163,18 @@ function Gesture({ gesture, landmarks, index }) {
   if (gesture.type === "wave") {
     const a = resolveLandmark(gesture.from, landmarks);
     const b = resolveLandmark(gesture.to, landmarks);
-    // Sinusoidal wavy path between a and b
-    const steps = 24;
+    const steps = 32;
     const dx = b[0] - a[0];
     const dy = b[1] - a[1];
     const len = Math.sqrt(dx * dx + dy * dy);
     const ux = dx / len, uy = dy / len;
     const px = -uy, py = ux;
-    const amp = 0.012;
+    const amp = 0.018;
     let d = `M ${a[0]},${a[1]}`;
     for (let i = 1; i <= steps; i++) {
       const t = i / steps;
       const baseX = a[0] + dx * t;
       const baseY = a[1] + dy * t;
-      // Damp the wave at the ends so it kisses the endpoints
       const damp = Math.sin(Math.PI * t);
       const wave = Math.sin(Math.PI * 3 * t) * amp * damp;
       const x = baseX + px * wave;
@@ -180,31 +189,31 @@ function Gesture({ gesture, landmarks, index }) {
             strokeLinecap="round"
             vectorEffect="non-scaling-stroke"
             className="rhei-arrow"
-            style={{
-              animationDelay: `${delay}s`,
-              filter: `drop-shadow(0 0 ${stroke*4} ${color}66)`,
-            }}/>
+            style={{ animationDelay: `${delay}s`, filter: glow }}/>
     );
   }
 
   return null;
 }
 
-export default function AnimatedRitualStep({ ritualId, stepIndex, size = 280, showFrame = true }) {
+export default function AnimatedRitualStep({ ritualId, stepIndex, size = 280, width, height, showFrame = true }) {
   const ritual = RITUALS[ritualId];
-  // Fallback: if this ritual has no animated config, render nothing here;
-  // the parent should pass through to the legacy illustration component.
   if (!ritual) return null;
   const step = ritual.steps[stepIndex - 1];
   if (!step) return null;
   const woman = ritual.woman;
   const landmarks = LANDMARKS[woman];
 
+  // Width and height can be overridden by parent (e.g. home card uses
+  // a fixed 160x200 frame). Default falls back to size × 1.25 aspect.
+  const w = width != null ? width : size;
+  const h = height != null ? height : size * 1.25;
+
   return (
     <div style={{
       position: "relative",
-      width: size,
-      height: size * 1.25,
+      width: w,
+      height: h,
       borderRadius: 14,
       overflow: "hidden",
     }}>
@@ -215,6 +224,7 @@ export default function AnimatedRitualStep({ ritualId, stepIndex, size = 280, sh
           position: "absolute", inset: 0,
           width: "100%", height: "100%",
           objectFit: "cover",
+          objectPosition: "center 28%",
           display: "block",
         }}
       />

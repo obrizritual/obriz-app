@@ -21,7 +21,7 @@ function RitualIllustration({ ritualId, zone, size }) {
 // live animated SVG over the woman's portrait). Falls back to the legacy
 // diagrammatic illustration for any ritual without an animated config yet
 // (currently: belly-flow, awaiting source photography).
-function RitualStepImage({ ritualId, stepIndex = 1, zone, size = 280, width, height, radius = 14, shadow = true }) {
+function RitualStepImage({ ritualId, stepIndex = 1, zone, size = 280, width, height, radius = 14, shadow = true, showFrame = true }) {
   if (!hasAnimatedSteps(ritualId)) {
     return <RitualIllustration ritualId={ritualId} zone={zone} size={size} />;
   }
@@ -30,6 +30,9 @@ function RitualStepImage({ ritualId, stepIndex = 1, zone, size = 280, width, hei
       ritualId={ritualId}
       stepIndex={stepIndex}
       size={size}
+      width={width}
+      height={height}
+      showFrame={showFrame}
     />
   );
 }
@@ -1979,20 +1982,26 @@ export default function ObrizApp() {
             onClick={()=>{if(ritualLocked){setScreen("premium");}else{setActiveRitual(generateAdaptiveRitual(arc.ritual,checkinState));}}}
             className="rhei-press"
             style={{width:"100%",background:"linear-gradient(180deg, rgba(58,37,22,0.65) 0%, rgba(36,21,9,0.85) 100%)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(196,154,75,0.22)",borderRadius:24,padding:"24px 22px 22px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",boxShadow:"0 24px 60px -20px rgba(15,9,5,0.7), 0 8px 20px rgba(15,9,5,0.4)"}}>
-            {/* Soft warm light bleed in upper-right */}
-            <div style={{position:"absolute",top:"-20%",right:"-15%",width:200,height:200,borderRadius:"50%",background:"radial-gradient(circle, rgba(212,173,106,0.18) 0%, transparent 60%)",filter:"blur(20px)",pointerEvents:"none"}}/>
-            {/* Editorial portrait peeking from the corner */}
-            <div style={{position:"absolute",top:-12,right:-18,width:160,height:200,opacity:0.85,pointerEvents:"none",borderRadius:20,overflow:"hidden"}}>
-              <RitualStepImage
-                ritualId={arc.ritual.id}
-                stepIndex={1}
-                zone={ritualZone}
-                width={160}
-                height={200}
-                radius={20}
-                shadow={false}
-              />
-            </div>
+            {/* Layered warm light bleed — gives the card editorial atmosphere */}
+            <div style={{position:"absolute",top:"-25%",right:"-15%",width:280,height:280,borderRadius:"50%",background:"radial-gradient(circle, rgba(245,220,170,0.22) 0%, rgba(212,173,106,0.10) 40%, transparent 70%)",filter:"blur(28px)",pointerEvents:"none"}}/>
+            <div style={{position:"absolute",bottom:"-30%",left:"30%",width:200,height:200,borderRadius:"50%",background:"radial-gradient(circle, rgba(196,154,75,0.12) 0%, transparent 65%)",filter:"blur(24px)",pointerEvents:"none"}}/>
+            {/* Refined abstract gold mark in the upper-right — hints at the ritual's gesture */}
+            <svg viewBox="0 0 200 240" style={{position:"absolute",top:0,right:0,width:160,height:200,opacity:0.55,pointerEvents:"none"}}>
+              <defs>
+                <linearGradient id="cardGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#F5DCAA" stopOpacity="0.85"/>
+                  <stop offset="60%" stopColor="#C9A472" stopOpacity="0.45"/>
+                  <stop offset="100%" stopColor="#8A6E40" stopOpacity="0.15"/>
+                </linearGradient>
+              </defs>
+              {/* Three nested curves, calligraphic gold sweep */}
+              <path d="M 30 180 Q 100 60, 190 80" fill="none" stroke="url(#cardGold)" strokeWidth="1.5" strokeLinecap="round"/>
+              <path d="M 50 200 Q 120 90, 200 110" fill="none" stroke="url(#cardGold)" strokeWidth="1" strokeLinecap="round" opacity="0.7"/>
+              <path d="M 75 220 Q 145 130, 195 140" fill="none" stroke="url(#cardGold)" strokeWidth="0.8" strokeLinecap="round" opacity="0.45"/>
+              {/* Small accent dot — the still point */}
+              <circle cx="172" cy="78" r="3" fill="#F5DCAA" opacity="0.85"/>
+              <circle cx="172" cy="78" r="9" fill="#F5DCAA" opacity="0.18"/>
+            </svg>
             {ritualLocked && (
               <div style={{position:"absolute",top:14,left:14,display:"flex",alignItems:"center",gap:5,background:"rgba(196,154,75,0.14)",backdropFilter:"blur(8px)",padding:"4px 9px",borderRadius:100,border:"1px solid rgba(196,154,75,0.25)"}}>
                 <Lock size={8} color={B.polished} strokeWidth={2}/>
