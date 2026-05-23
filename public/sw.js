@@ -1,9 +1,11 @@
-// Version bumped 2026-05-18: previous SW intercepted /audio/rituals/* and
-// /audio/affirmations/* Range requests, which broke <audio> streaming
-// (Chrome stalls when it gets a 200 OK without Range support). New SW only
-// caches the five legacy reset files; everything else under /audio/ passes
-// straight through to Vercel's CDN so Range requests work natively.
-const CACHE_NAME = 'obriz-v14';
+// Version bumped 2026-05-23: added Web Push handlers (push + notificationclick)
+// and bumped cache to v15. Previous v14 only handled offline caching; v15
+// integrates with Supabase Edge Function `send-push` and the in-app
+// notification opt-in flow.
+//
+// IMPORTANT: We do NOT cache /audio/rituals/* or /audio/affirmations/* — those
+// stream via Range requests which the Cache API can't serve correctly.
+const CACHE_NAME = 'obriz-v15';
 const AUDIO_CACHE = 'obriz-audio-v2';
 const SVG_CACHE = 'obriz-svg-v1';
 
@@ -105,5 +107,59 @@ self.addEventListener('fetch', (event) => {
       }
       return resp;
     }).catch(() => caches.match(event.request))
+  );
+});
+
+// ════════════════════════════════════════════════════════════════
+// WEB PUSH
+// ════════════════════════════════════════════════════════════════
+// Payload contract (from the `send-push` Supabase Edge Function):
+//   { title: string, body: string, url?: string, tag?: string }
+// We render the notification with RHEI gold theme via the icon/badge fields.
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (e) {
+    // Fallback for plain-text payloads
+    data = { title: 'RHEI', body: event.data ? event.data.text() : '' };
+  }
+
+  const title = data.title || 'RHEI';
+  const options = {
+    body: data.body || '',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: data.tag || 'rhei-default',
+    data: { url: data.url || '/' },
+    vibrate: [80, 40, 80],
+    silent: false,
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// When the user taps the notification, focus an existing tab or open a new one.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      // Reuse any open RHEI tab if present
+      for (const client of clientList) {
+        try {
+          const u = new URL(client.url);
+          if (u.origin === self.location.origin && 'focus' in client) {
+            client.navigate(targetUrl).catch(() => {});
+            return client.focus();
+          }
+        } catch (e) { /* ignore */ }
+      }
+      // Otherwise open a fresh window
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
+    })
   );
 });

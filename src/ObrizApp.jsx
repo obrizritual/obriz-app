@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Crown, User, Hand, Mail, LogOut, MessageCircle, Camera, Volume2, VolumeX, Eye, EyeOff, Bell } from "lucide-react";
 import { supabase, supabaseEnabled } from "./supabaseClient";
+import { pushSupported, notificationPermission, currentSubscription, subscribeToPush, unsubscribeFromPush } from "./pushClient";
 import FaceGuideIllustration from "./FaceGuideIllustration";
 import BellyGuideIllustration from "./BellyGuideIllustration";
 
@@ -1175,16 +1176,43 @@ function Onboarding({ onComplete, authUser }) {
     try {
       let result;
       if (authMode === "signup") {
-        // Creates the user and, if email confirmation is disabled in the
-        // Supabase project, signs them in immediately. If confirmation is
-        // ON, the welcome/confirmation email is sent but the user can
-        // continue inside the app — they'll need to confirm to sign in
-        // from another device.
-        result = await supabase.auth.signUp({
-          email: e,
-          password: pw,
-          options: { emailRedirectTo: window.location.origin },
-        });
+        // Hits our Edge Function `signup-confirmed` which uses the service
+        // role to create the user with email_confirm: true so they can sign
+        // in immediately — no Gmail redirect, no confirmation link. If the
+        // function fails (e.g. cold start), fall back to standard signUp.
+        try {
+          const fnUrl = `${import.meta.env.VITE_SUPABASE_URL || 'https://qtrzvxlhaegwlufmnpwc.supabase.co'}/functions/v1/signup-confirmed`;
+          const fnRes = await fetch(fnUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: e, password: pw }),
+          });
+          if (!fnRes.ok) {
+            const body = await fnRes.json().catch(() => ({}));
+            const msg = String(body?.error || "").toLowerCase();
+            if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
+              // Account exists → try signing them in with the provided pw
+              result = await supabase.auth.signInWithPassword({ email: e, password: pw });
+            } else {
+              // Unknown failure → fall back to standard signUp
+              result = await supabase.auth.signUp({
+                email: e,
+                password: pw,
+                options: { emailRedirectTo: window.location.origin },
+              });
+            }
+          } else {
+            // Account created + auto-confirmed. Sign them in now to get a session.
+            result = await supabase.auth.signInWithPassword({ email: e, password: pw });
+          }
+        } catch (_fnErr) {
+          // Network blip on the Edge Function — fall back gracefully
+          result = await supabase.auth.signUp({
+            email: e,
+            password: pw,
+            options: { emailRedirectTo: window.location.origin },
+          });
+        }
       } else {
         result = await supabase.auth.signInWithPassword({ email: e, password: pw });
       }
@@ -1929,6 +1957,16 @@ export default function ObrizApp() {
   const [authSent,setAuthSent]=useState(false);
   const [authError,setAuthError]=useState('');
 
+  // Push notifications state
+  // `pushStatus` cycles through: 'idle' | 'on' | 'off' | 'denied' | 'busy' | 'unsupported'
+  const [pushStatus,setPushStatus]=useState(()=>{
+    if (!pushSupported()) return 'unsupported';
+    const p = notificationPermission();
+    if (p === 'denied') return 'denied';
+    return 'idle';
+  });
+  const [pushMsg,setPushMsg]=useState('');
+
   const audioRef=useRef(null);
   const animRef=useRef(null);
   const deferredPromptRef=useRef(null);
@@ -1986,6 +2024,52 @@ export default function ObrizApp() {
     if(!supabase)return;
     await supabase.auth.signOut();
     setAuthUser(null);
+  };
+
+  // Reflect whether the device is already subscribed to push (e.g. user
+  // already opted in on a previous visit). Re-runs when sign-in changes.
+  useEffect(()=>{
+    if (!pushSupported()) { setPushStatus('unsupported'); return; }
+    const p = notificationPermission();
+    if (p === 'denied') { setPushStatus('denied'); return; }
+    let cancelled = false;
+    currentSubscription().then(sub => {
+      if (cancelled) return;
+      setPushStatus(sub ? 'on' : (p === 'granted' ? 'off' : 'idle'));
+    });
+    return () => { cancelled = true; };
+  }, [authUser]);
+
+  const togglePush = async () => {
+    setPushMsg('');
+    if (!pushSupported()) { setPushStatus('unsupported'); return; }
+    if (!authUser) {
+      setPushMsg('Sign in first so we can deliver to your account.');
+      return;
+    }
+    setPushStatus('busy');
+    if (pushStatus === 'on') {
+      const res = await unsubscribeFromPush();
+      if (res.ok) { setPushStatus('off'); setPushMsg('Notifications paused.'); }
+      else { setPushStatus('on'); setPushMsg("Couldn't pause — try again."); }
+      return;
+    }
+    const res = await subscribeToPush();
+    if (res.ok) {
+      setPushStatus('on');
+      setPushMsg('You\u2019ll hear from us at the right moments.');
+    } else if (res.reason === 'denied') {
+      setPushStatus('denied');
+      setPushMsg('Permission blocked. Enable it in your browser settings.');
+    } else if (res.reason === 'not_signed_in') {
+      setPushStatus('off');
+      setPushMsg('Sign in first so we can deliver to your account.');
+    } else if (res.reason === 'unsupported') {
+      setPushStatus('unsupported');
+    } else {
+      setPushStatus('off');
+      setPushMsg("Couldn't turn on right now. Try again in a moment.");
+    }
   };
 
   // Stripe payment success detection
@@ -3617,6 +3701,46 @@ export default function ObrizApp() {
                 <button onClick={signOut} style={{background:"none", border:"none", color:"rgba(248,242,229,0.55)", fontFamily:SF, fontSize:10, cursor:"pointer", letterSpacing:"0.22em", textTransform:"uppercase", display:"flex", alignItems:"center", gap:5}}>
                   <LogOut size={10}/>Sign out
                 </button>
+              </div>
+            )}
+            {/* Push notifications — only show on browsers that support it */}
+            {pushStatus !== 'unsupported' && (
+              <div style={{borderTop:"1px solid rgba(248,242,229,0.06)", paddingTop:14, marginTop:14}}>
+                <div style={{display:"flex", alignItems:"center", justifyContent:"space-between", gap:12}}>
+                  <div style={{display:"flex", alignItems:"center", gap:10, minWidth:0}}>
+                    <Bell size={12} color={pushStatus === 'on' ? "#F5C878" : "rgba(248,242,229,0.50)"} strokeWidth={1.6}/>
+                    <div style={{minWidth:0}}>
+                      <p style={{fontFamily:SF, fontSize:11, fontWeight:500, color:"rgba(248,242,229,0.85)", margin:0, letterSpacing:"0.04em"}}>Gentle reminders</p>
+                      <p style={{fontFamily:F, fontSize:11, color:"rgba(248,242,229,0.50)", margin:"2px 0 0", lineHeight:1.35}}>
+                        {pushStatus === 'denied' ? "Blocked — enable in browser settings." : "A quiet nudge for your daily reset."}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={togglePush}
+                    disabled={pushStatus === 'busy' || pushStatus === 'denied' || !authUser}
+                    style={{
+                      flexShrink:0,
+                      background: pushStatus === 'on' ? "rgba(245,200,120,0.18)" : "rgba(248,242,229,0.06)",
+                      border: pushStatus === 'on' ? "1px solid rgba(245,200,120,0.40)" : "1px solid rgba(248,242,229,0.12)",
+                      borderRadius:100,
+                      padding:"7px 14px",
+                      cursor: (pushStatus === 'busy' || pushStatus === 'denied' || !authUser) ? "not-allowed" : "pointer",
+                      color: pushStatus === 'on' ? "#F5C878" : "rgba(248,242,229,0.75)",
+                      fontSize:10,
+                      fontFamily:SF, letterSpacing:"0.22em",
+                      textTransform:"uppercase", fontWeight:500,
+                      opacity: (pushStatus === 'denied' || !authUser) ? 0.5 : 1,
+                    }}>
+                    {pushStatus === 'on' ? 'On' : pushStatus === 'busy' ? '…' : pushStatus === 'denied' ? 'Blocked' : 'Turn on'}
+                  </button>
+                </div>
+                {pushMsg && (
+                  <p style={{fontFamily:F, fontSize:10.5, color:"rgba(248,242,229,0.55)", margin:"10px 0 0", lineHeight:1.4}}>{pushMsg}</p>
+                )}
+                {!authUser && (
+                  <p style={{fontFamily:F, fontSize:10.5, color:"rgba(248,242,229,0.45)", margin:"10px 0 0", lineHeight:1.4}}>Sign in to enable reminders across your devices.</p>
+                )}
               </div>
             )}
             {supabase && !authUser && (
