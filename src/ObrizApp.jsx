@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Crown, User, Hand, Mail, LogOut, MessageCircle, Camera, Volume2, VolumeX } from "lucide-react";
+import { Play, Pause, ChevronLeft, Moon, Sun, Wind, Shield, Home, Headphones, BarChart3, Heart, Clock, Check, Flame, X, ArrowRight, Brain, Activity, Zap, Sunset, Timer, Waves, RefreshCw, Sparkles, Lock, Crown, User, Hand, Mail, LogOut, MessageCircle, Camera, Volume2, VolumeX, Eye, EyeOff, Bell } from "lucide-react";
 import { supabase, supabaseEnabled } from "./supabaseClient";
 import FaceGuideIllustration from "./FaceGuideIllustration";
 import BellyGuideIllustration from "./BellyGuideIllustration";
@@ -1132,54 +1132,115 @@ function Onboarding({ onComplete, authUser }) {
   const [authError,setAuthError]=useState("");
   const [authLoading,setAuthLoading]=useState(false);
   const [authMode,setAuthMode]=useState("signup"); // "signup" or "signin"
+  const [password,setPassword]=useState("");
+  const [showPassword,setShowPassword]=useState(false);
+  const [resetSent,setResetSent]=useState(false);
 
-  // When auth state changes mid-flow (user clicks magic link in another tab/window),
-  // advance them to the explainer screens automatically
+  // Advance to explainer screens once the user is signed in
   useEffect(() => {
     if (authUser && (step === "splash" || step === "email" || step === "linkSent")) {
       setStep(0);
     }
   }, [authUser]);
 
-  const sendMagicLink = async () => {
-    const e = email.trim();
+  // Direct sign-up / sign-in with email + password. No magic link, no
+  // redirect to Gmail. The Supabase welcome email arrives in the background
+  // while the user is already inside the app.
+  const handleAuth = async () => {
+    const e = email.trim().toLowerCase();
+    const pw = password;
     if (!e) return;
-    // Light format check — keeps the local-only path from saving garbage
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
       setAuthError("That email doesn't look right. Try again.");
       return;
     }
+    if (pw.length < 6) {
+      setAuthError("Choose a password of at least 6 characters.");
+      return;
+    }
     setAuthError("");
-    // ── Local-only fallback ──
-    // When Supabase isn't configured (no env vars on Vercel), we still
-    // give the user an account that works fully on this device. Their
-    // email + account-creation timestamp are saved to localStorage; the
-    // app continues to the explainer screens and then asks for a name.
-    // Premium status (when purchased) is saved locally too. Cross-device
-    // sync activates the moment Supabase env vars are wired up.
+
+    // ── Local-only fallback (Supabase not configured) ──
     if (!supabaseEnabled) {
       try {
         localStorage.setItem("rhei_local_email", e);
         localStorage.setItem("rhei_local_account_created_at", String(Date.now()));
         localStorage.setItem("rhei_local_account_active", "1");
       } catch {}
-      // Skip the "check your inbox" screen — there's no inbox in local mode
       setStep(0);
       return;
     }
-    // ── Full Supabase magic-link flow ──
+
     setAuthLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: e,
-        options: { emailRedirectTo: window.location.origin }
-      });
-      if (error) {
-        setAuthError(error.message || "Couldn't send the link. Try again.");
+      let result;
+      if (authMode === "signup") {
+        // Creates the user and, if email confirmation is disabled in the
+        // Supabase project, signs them in immediately. If confirmation is
+        // ON, the welcome/confirmation email is sent but the user can
+        // continue inside the app — they'll need to confirm to sign in
+        // from another device.
+        result = await supabase.auth.signUp({
+          email: e,
+          password: pw,
+          options: { emailRedirectTo: window.location.origin },
+        });
       } else {
-        setStep("linkSent");
+        result = await supabase.auth.signInWithPassword({ email: e, password: pw });
+      }
+      const { data, error } = result;
+      if (error) {
+        // Surface common errors with human copy
+        const msg = String(error.message || "").toLowerCase();
+        if (msg.includes("already") && msg.includes("registered")) {
+          setAuthError("This email is already registered. Try signing in instead.");
+        } else if (msg.includes("invalid") && (msg.includes("credentials") || msg.includes("password"))) {
+          setAuthError("That email and password don't match. Try again.");
+        } else if (msg.includes("email not confirmed")) {
+          setAuthError("Confirm your email first — check your inbox for the link.");
+        } else {
+          setAuthError(error.message || "Couldn't sign in. Try again.");
+        }
+      } else if (data?.session) {
+        // Signed in immediately — onAuthStateChange in the parent will
+        // detect this and advance the onboarding step.
+        setStep(0);
+      } else if (data?.user && !data.session) {
+        // Sign-up succeeded but confirmation is required. We still let the
+        // user continue into the app locally; they can confirm by email
+        // anytime to enable cross-device sign-in.
+        try {
+          localStorage.setItem("rhei_local_email", e);
+          localStorage.setItem("rhei_local_account_active", "1");
+        } catch {}
+        setStep(0);
+      } else {
+        setStep(0);
       }
     } catch (err) {
+      setAuthError("Connection issue. Try again in a moment.");
+    }
+    setAuthLoading(false);
+  };
+
+  const handleForgotPassword = async () => {
+    const e = email.trim().toLowerCase();
+    if (!e) {
+      setAuthError("Enter your email above and tap reset again.");
+      return;
+    }
+    if (!supabaseEnabled) {
+      setAuthError("Password reset needs an online account. Continue without one for now.");
+      return;
+    }
+    setAuthLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(e, {
+        redirectTo: window.location.origin,
+      });
+      if (error) setAuthError(error.message || "Couldn't send reset. Try again.");
+      else setResetSent(true);
+    } catch {
       setAuthError("Connection issue. Try again in a moment.");
     }
     setAuthLoading(false);
@@ -1342,19 +1403,20 @@ function Onboarding({ onComplete, authUser }) {
               margin:"0 auto 44px", maxWidth:300,
             }}>{
               isSignup
-                ? (supabaseEnabled ? "We'll send a link. No passwords." : "Saved to this device.")
-                : (supabaseEnabled ? "The email you came in with." : "The email you set up with.")
+                ? (supabaseEnabled ? "Email and a password. That's it." : "Saved to this device.")
+                : (supabaseEnabled ? "Welcome back." : "The email you set up with.")
             }</p>
 
-            {/* Email input — bark surface, hairline, Fraunces italic placeholder */}
-            <div className="rhei-rise rhei-rise-4" style={{position:"relative", maxWidth:360, margin:"0 auto"}}>
+            {/* Email + password — direct sign-up, no magic link redirect */}
+            <div className="rhei-rise rhei-rise-4" style={{maxWidth:360, margin:"0 auto", display:"flex", flexDirection:"column", gap:12}}>
               <input
                 type="email"
                 value={email}
                 onChange={e=>setEmail(e.target.value)}
-                onKeyDown={e=>{if(e.key==="Enter")sendMagicLink();}}
+                onKeyDown={e=>{if(e.key==="Enter")handleAuth();}}
                 placeholder="you@yours.com"
                 autoFocus
+                autoComplete="email"
                 disabled={authLoading}
                 style={{
                   width:"100%",
@@ -1368,35 +1430,108 @@ function Onboarding({ onComplete, authUser }) {
                   fontSize:16, fontFamily:F, fontStyle:email?"normal":"italic",
                   outline:"none", textAlign:"center",
                   boxSizing:"border-box",
-                  transition:"border-color 0.4s var(--rhei-ease), background 0.4s var(--rhei-ease)",
+                  transition:"border-color 0.4s var(--rhei-ease)",
                 }}
               />
+              {supabaseEnabled && (
+                <div style={{position:"relative"}}>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={e=>setPassword(e.target.value)}
+                    onKeyDown={e=>{if(e.key==="Enter")handleAuth();}}
+                    placeholder={isSignup ? "create a password" : "your password"}
+                    autoComplete={isSignup ? "new-password" : "current-password"}
+                    disabled={authLoading}
+                    style={{
+                      width:"100%",
+                      background:"rgba(248,242,229,0.04)",
+                      backdropFilter:"blur(20px) saturate(1.2)",
+                      WebkitBackdropFilter:"blur(20px) saturate(1.2)",
+                      border:`1px solid ${password ? "rgba(196,154,75,0.45)" : "rgba(248,242,229,0.10)"}`,
+                      borderRadius:100,
+                      padding:"17px 50px 17px 26px",
+                      color:B.vellum,
+                      fontSize:16, fontFamily:F, fontStyle:password?"normal":"italic",
+                      outline:"none", textAlign:"center",
+                      boxSizing:"border-box",
+                      transition:"border-color 0.4s var(--rhei-ease)",
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={()=>setShowPassword(s=>!s)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    style={{
+                      position:"absolute", right:18, top:"50%", transform:"translateY(-50%)",
+                      background:"none", border:"none", cursor:"pointer",
+                      color:"rgba(248,242,229,0.55)", padding:6,
+                      display:"flex", alignItems:"center", justifyContent:"center",
+                    }}>
+                    {showPassword ? <EyeOff size={16}/> : <Eye size={16}/>}
+                  </button>
+                </div>
+              )}
             </div>
+
+            {/* Mode toggle + forgot password */}
+            {supabaseEnabled && (
+              <div className="rhei-rise rhei-rise-4" style={{maxWidth:360, margin:"14px auto 0", display:"flex", justifyContent:"space-between", alignItems:"center", gap:10}}>
+                <button
+                  type="button"
+                  onClick={()=>{setAuthMode(isSignup?"signin":"signup"); setAuthError(""); setResetSent(false);}}
+                  style={{
+                    background:"none", border:"none", cursor:"pointer",
+                    color:"rgba(248,242,229,0.6)",
+                    fontFamily:SF, fontSize:11, padding:"6px 0",
+                  }}>
+                  {isSignup ? "I've been here before" : "Create an account"}
+                </button>
+                {!isSignup && (
+                  <button
+                    type="button"
+                    onClick={handleForgotPassword}
+                    disabled={authLoading}
+                    style={{
+                      background:"none", border:"none", cursor:"pointer",
+                      color:"rgba(196,154,75,0.78)",
+                      fontFamily:SF, fontSize:11, padding:"6px 0",
+                    }}>
+                    Forgot password?
+                  </button>
+                )}
+              </div>
+            )}
 
             {authError && (
               <p style={{fontSize:13, color:B.rouge, fontFamily:F, margin:"16px auto 0", maxWidth:300, lineHeight:1.5}}>{authError}</p>
             )}
+            {resetSent && (
+              <p style={{fontSize:13, color:B.gold, fontFamily:F, fontStyle:"italic", margin:"16px auto 0", maxWidth:300, lineHeight:1.5}}>
+                A reset link is on its way to your inbox.
+              </p>
+            )}
 
-            <div className="rhei-rise rhei-rise-5" style={{marginTop:18, display:"flex", flexDirection:"column", alignItems:"center", gap:14}}>
+            <div className="rhei-rise rhei-rise-5" style={{marginTop:22, display:"flex", flexDirection:"column", alignItems:"center", gap:14}}>
               <button
                 className="rhei-press"
-                onClick={sendMagicLink}
-                disabled={!email.trim() || authLoading}
+                onClick={handleAuth}
+                disabled={!email.trim() || (supabaseEnabled && !password) || authLoading}
                 style={{
                   width:"100%", maxWidth:360,
-                  background: email.trim() && !authLoading ? B.paper : "rgba(248,242,229,0.10)",
+                  background: (email.trim() && (!supabaseEnabled || password) && !authLoading) ? B.paper : "rgba(248,242,229,0.10)",
                   border:"none", borderRadius:100, padding:"18px 24px",
-                  cursor: email.trim() && !authLoading ? "pointer" : "not-allowed",
-                  color: email.trim() && !authLoading ? B.espresso : "rgba(248,242,229,0.4)",
+                  cursor: (email.trim() && (!supabaseEnabled || password) && !authLoading) ? "pointer" : "not-allowed",
+                  color: (email.trim() && (!supabaseEnabled || password) && !authLoading) ? B.espresso : "rgba(248,242,229,0.4)",
                   fontFamily:SF, fontSize:14, fontWeight:500, letterSpacing:"0.04em",
-                  boxShadow: email.trim() && !authLoading ? "0 16px 48px -16px rgba(248,242,229,0.3), 0 6px 16px rgba(15,9,5,0.5)" : "none",
+                  boxShadow: (email.trim() && (!supabaseEnabled || password) && !authLoading) ? "0 16px 48px -16px rgba(248,242,229,0.3), 0 6px 16px rgba(15,9,5,0.5)" : "none",
                   opacity: authLoading ? 0.6 : 1,
                   transition:"all 0.4s var(--rhei-ease)",
                 }}>
                 {authLoading
-                  ? "Sending the link…"
+                  ? (isSignup ? "Creating your account…" : "Signing you in…")
                   : supabaseEnabled
-                    ? (isSignup ? "Send my link" : "Sign in")
+                    ? (isSignup ? "Create my account" : "Sign in")
                     : "Continue"}
               </button>
 
