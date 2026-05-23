@@ -16,8 +16,17 @@
 // ════════════════════════════════════════════════════════════════
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl     = import.meta.env.VITE_SUPABASE_URL     || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+// Project credentials. Env vars take precedence when set on Vercel; the
+// fallback constants ensure the magic-link flow works in production today
+// even before env vars are wired up. The anon key is designed for
+// client-side use — it only grants access to actions allowed by Row Level
+// Security policies on the database.
+const FALLBACK_URL = 'https://qtrzvxlhaegwlufmnpwc.supabase.co';
+const FALLBACK_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0cnp2eGxoYWVnd2x1Zm1ucHdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg1ODk4MTgsImV4cCI6MjA5NDE2NTgxOH0.l9-E5au6Awik8XkQdujqjTSHtsqAuHOj02DuqKc_D68';
+
+const supabaseUrl     = import.meta.env.VITE_SUPABASE_URL     || FALLBACK_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || FALLBACK_ANON_KEY;
 
 export const supabase = supabaseUrl && supabaseAnonKey
   ? createClient(supabaseUrl, supabaseAnonKey)
