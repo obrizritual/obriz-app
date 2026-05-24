@@ -108,8 +108,7 @@ export async function subscribeToPush() {
       }, { onConflict: 'user_id,endpoint' });
 
     if (error) {
-      // eslint-disable-next-line no-console
-      console.warn('[RHEI] push_subscriptions upsert failed', error.message);
+      // Surface to caller; UI shows a soft retry toast.
       return { ok: false, reason: 'db_error' };
     }
     return { ok: true };

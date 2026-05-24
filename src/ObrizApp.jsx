@@ -1352,7 +1352,7 @@ function Onboarding({ onComplete, authUser }) {
                 padding:"10px 18px",
                 textShadow:"0 1px 8px rgba(0,0,0,0.5)",
               }}>
-              I've been here before
+              I have an account
             </button>
 
             <button
@@ -1367,7 +1367,7 @@ function Onboarding({ onComplete, authUser }) {
                 marginTop:4,
                 textShadow:"0 1px 6px rgba(0,0,0,0.5)",
               }}>
-              Just look around
+              Explore first
             </button>
           </div>
         </div>
@@ -1513,7 +1513,7 @@ function Onboarding({ onComplete, authUser }) {
                     color:"rgba(248,242,229,0.6)",
                     fontFamily:SF, fontSize:11, padding:"6px 0",
                   }}>
-                  {isSignup ? "I've been here before" : "Create an account"}
+                  {isSignup ? "I have an account" : "Create an account"}
                 </button>
                 {!isSignup && (
                   <button
@@ -1573,7 +1573,7 @@ function Onboarding({ onComplete, authUser }) {
                   letterSpacing:"0.18em", textTransform:"uppercase",
                   padding:8,
                 }}>
-                Set this up later
+                I'll come back
               </button>
             </div>
           </div>
@@ -1626,7 +1626,7 @@ function Onboarding({ onComplete, authUser }) {
               color:"rgba(248,242,229,0.5)",
               lineHeight:1.6,
               margin:"0 auto 44px", maxWidth:320,
-            }}>Open it from this device. It may take a moment.</p>
+            }}>Open it here when it arrives.</p>
 
             <div className="rhei-rise rhei-rise-4" style={{display:"flex", flexDirection:"column", alignItems:"center", gap:14}}>
               <button
@@ -1641,7 +1641,7 @@ function Onboarding({ onComplete, authUser }) {
                   color:B.paper,
                   fontFamily:SF, fontSize:13, fontWeight:400, letterSpacing:"0.04em",
                 }}>
-                Use a different email
+                Try another email
               </button>
 
               <button
@@ -1654,7 +1654,7 @@ function Onboarding({ onComplete, authUser }) {
                   letterSpacing:"0.18em", textTransform:"uppercase",
                   padding:8,
                 }}>
-                Look around without one
+                Browse first
               </button>
             </div>
           </div>
@@ -1967,6 +1967,20 @@ export default function ObrizApp() {
   });
   const [pushMsg,setPushMsg]=useState('');
 
+  // ── Luxury toast + in-app modals (replaces native alert/prompt) ──
+  // Toast is a single transient line of copy at bottom-center; modals are
+  // full-screen overlays styled in the RHEI design language.
+  const [toast,setToast]=useState(null); // { text: string } | null
+  const toastTimerRef=useRef(null);
+  const showToast=(text)=>{
+    if(toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ text });
+    toastTimerRef.current=setTimeout(()=>setToast(null),4200);
+  };
+  const [editingName,setEditingName]=useState(false);
+  const [editingNameValue,setEditingNameValue]=useState('');
+  const [showInstallHelp,setShowInstallHelp]=useState(false);
+
   const audioRef=useRef(null);
   const animRef=useRef(null);
   const deferredPromptRef=useRef(null);
@@ -2089,8 +2103,11 @@ export default function ObrizApp() {
           }
         })
         .catch(()=>{
-          // If verify fails, still unlock (better UX, can re-verify later)
-          setIsPremium(true);save('isPremium',true);
+          // Don't grant premium on verify failure — the URL parameter alone
+          // is forgeable. If Stripe truly succeeded, the webhook will mark
+          // the account premium server-side, and the next sign-in or the
+          // "Restore access" button on the profile screen will pick it up.
+          showToast("Confirming your purchase — your access will appear shortly.");
         });
       // Clean URL
       window.history.replaceState({},'','/');
@@ -2107,16 +2124,15 @@ export default function ObrizApp() {
       const res=await fetch('/api/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan,email:userEmail||undefined})});
       const data=await res.json();
       if(data.url){window.location.href=data.url;}
-      else{alert('Something went wrong. Please try again.');setCheckoutLoading(false);}
+      else{showToast("Checkout couldn't open. Try again in a moment.");setCheckoutLoading(false);}
     }catch(err){
-      alert('Connection error. Please try again.');setCheckoutLoading(false);
+      showToast("Connection issue. Try again in a moment.");setCheckoutLoading(false);
     }
   };
 
   const installApp=async()=>{
     if(deferredPromptRef.current){deferredPromptRef.current.prompt();deferredPromptRef.current=null;setShowInstallPrompt(false);}
-    else if(isIOS){alert("To add RHEI to your home screen:\n\n1. Tap the Share button (square with arrow) at the bottom of Safari\n2. Scroll down and tap \"Add to Home Screen\"\n3. Tap \"Add\"");}
-    else{alert("To install RHEI:\n\nOpen this page in Chrome or Safari, then use your browser menu to \"Add to Home Screen\" or \"Install App\".");}
+    else { setShowInstallHelp(true); }
   };
   const dismissInstall=()=>{setShowInstallPrompt(false);setInstallDismissed(true);save('installDismissed',true);};
 
@@ -3261,13 +3277,13 @@ export default function ObrizApp() {
               position:"relative",
               boxShadow:"0 16px 40px -14px rgba(245,200,120,0.30), inset 0 0 24px rgba(245,200,120,0.06)",
             }}>
-            <div style={{position:"absolute", top:-9, left:"50%", transform:"translateX(-50%)", background:"rgba(248,242,229,0.95)", color:"#1A0F06", padding:"3px 12px", borderRadius:100, fontSize:8, fontWeight:600, letterSpacing:"0.22em", fontFamily:SF, textTransform:"uppercase"}}>Save 59%</div>
+            <div style={{position:"absolute", top:-9, left:"50%", transform:"translateX(-50%)", background:"rgba(248,242,229,0.95)", color:"#1A0F06", padding:"3px 12px", borderRadius:100, fontSize:8, fontWeight:500, letterSpacing:"0.22em", fontFamily:SF, textTransform:"uppercase"}}>A year ahead</div>
             <PrecisionStamp label="Yearly" color="rgba(245,200,120,0.85)"/>
             <p style={{fontFamily:F, fontSize:36, fontWeight:300, color:"#F8F2E5", margin:"12px 0 0", lineHeight:1, fontVariationSettings:"'opsz' 72", letterSpacing:"-0.02em", fontVariantNumeric:"tabular-nums"}}>
               $49
             </p>
             <p style={{fontFamily:SF, fontSize:9, color:"rgba(248,242,229,0.55)", margin:"4px 0 14px", letterSpacing:"0.22em", textTransform:"uppercase"}}>per year</p>
-            <div style={{borderTop:"1px solid rgba(245,200,120,0.30)", paddingTop:10, fontFamily:SF, fontSize:11, color:"#F5C878", letterSpacing:"0.06em", fontWeight:600}}>Best Value</div>
+            <div style={{borderTop:"1px solid rgba(245,200,120,0.30)", paddingTop:10, fontFamily:SF, fontSize:10, color:"#F5C878", letterSpacing:"0.22em", fontWeight:500, textTransform:"uppercase"}}>The full practice</div>
           </button>
         </div>
 
@@ -3391,7 +3407,7 @@ export default function ObrizApp() {
             <button onClick={()=>{
               if(authUser?.email){
                 fetch('/api/check-subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:authUser.email})})
-                  .then(r=>r.json()).then(data=>{if(data.isPremium){setIsPremium(true);save('isPremium',true);}else{alert('No active subscription found for this email.');}}).catch(()=>alert('Could not verify. Try again.'));
+                  .then(r=>r.json()).then(data=>{if(data.isPremium){setIsPremium(true);save('isPremium',true);showToast("Your access is restored. Welcome back.");}else{showToast("No active subscription on this email.");}}).catch(()=>showToast("Couldn't verify just now. Try again in a moment."));
               } else {setIsPremium(true);save('isPremium',true);}
             }} style={{background:"none", border:"none", color:"rgba(248,242,229,0.55)", fontSize:11, fontFamily:SF, cursor:"pointer", padding:8, letterSpacing:"0.04em", textDecoration:"underline", textUnderlineOffset:3}}>Already purchased? Restore access</button>
           </div>
@@ -3679,7 +3695,7 @@ export default function ObrizApp() {
                 </div>
               </div>
               <button
-                onClick={()=>{const n=prompt("What should we call you?",userName);if(n!==null){setUserName(n);save('userName',n);}}}
+                onClick={()=>{setEditingNameValue(userName||'');setEditingName(true);}}
                 style={{
                   background:"rgba(248,242,229,0.06)",
                   border:"1px solid rgba(248,242,229,0.12)",
@@ -3928,6 +3944,160 @@ export default function ObrizApp() {
           completeSessionOnServer('ritual',ritualType,totalDuration,checkinState?.dominant||null);
         }}
       />}
+
+      {/* ── Toast — luxury bottom-pill (replaces native alert) ────────── */}
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          onClick={()=>setToast(null)}
+          style={{
+            position:"fixed",
+            bottom:"calc(env(safe-area-inset-bottom, 0px) + 110px)",
+            left:"50%", transform:"translateX(-50%)",
+            maxWidth:380, width:"calc(100% - 48px)",
+            background:"rgba(26,15,6,0.88)",
+            backdropFilter:"blur(28px) saturate(1.4)",
+            WebkitBackdropFilter:"blur(28px) saturate(1.4)",
+            border:"1px solid rgba(228,195,138,0.30)",
+            borderRadius:100,
+            padding:"15px 24px",
+            color:"#F8F2E5",
+            fontFamily:F, fontSize:13.5, fontWeight:400, lineHeight:1.45,
+            textAlign:"center",
+            boxShadow:"0 24px 64px -16px rgba(15,9,5,0.7), 0 4px 14px rgba(15,9,5,0.5)",
+            cursor:"pointer",
+            zIndex:500,
+            animation:"rhei-rise 0.5s var(--rhei-ease-enter) both",
+          }}>
+          {toast.text}
+        </div>
+      )}
+
+      {/* ── Name edit modal (replaces native prompt) ──────────────────── */}
+      {editingName && (
+        <div style={{
+          position:"fixed", inset:0, zIndex:400,
+          background:"rgba(15,9,5,0.78)",
+          backdropFilter:"blur(20px) saturate(1.2)",
+          WebkitBackdropFilter:"blur(20px) saturate(1.2)",
+          display:"flex", alignItems:"center", justifyContent:"center",
+          padding:"24px",
+          animation:"rhei-rise 0.45s var(--rhei-ease-enter) both",
+        }} onClick={(e)=>{ if(e.target===e.currentTarget) setEditingName(false); }}>
+          <div style={{
+            width:"100%", maxWidth:380,
+            background:"linear-gradient(180deg,#2D1B0E 0%,#1A0F06 100%)",
+            border:"1px solid rgba(228,195,138,0.20)",
+            borderRadius:24,
+            padding:"32px 28px",
+            textAlign:"center",
+            boxShadow:"0 40px 80px -24px rgba(0,0,0,0.7)",
+          }}>
+            <p style={{fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color:"rgba(228,195,138,0.85)", margin:"0 0 16px"}}>Your name</p>
+            <h3 style={{fontFamily:F, fontSize:24, fontWeight:300, color:B.vellum, letterSpacing:"-0.015em", margin:"0 0 22px", lineHeight:1.2, fontVariationSettings:"'opsz' 48"}}>How do we say you?</h3>
+            <input
+              autoFocus
+              type="text"
+              value={editingNameValue}
+              onChange={e=>setEditingNameValue(e.target.value)}
+              onKeyDown={e=>{ if(e.key==='Enter'){ setUserName(editingNameValue.trim()); save('userName',editingNameValue.trim()); setEditingName(false); } if(e.key==='Escape') setEditingName(false); }}
+              placeholder="first name"
+              style={{
+                width:"100%",
+                background:"rgba(248,242,229,0.05)",
+                border:"1px solid rgba(228,195,138,0.30)",
+                borderRadius:100,
+                padding:"15px 22px",
+                color:B.vellum, textAlign:"center",
+                fontFamily:F, fontSize:16, fontWeight:400,
+                outline:"none", boxSizing:"border-box",
+              }}
+            />
+            <div style={{display:"flex", flexDirection:"column", alignItems:"center", gap:10, marginTop:22}}>
+              <button
+                className="rhei-press"
+                onClick={()=>{setUserName(editingNameValue.trim());save('userName',editingNameValue.trim());setEditingName(false);}}
+                style={{
+                  width:"100%", maxWidth:300,
+                  background:B.paper, border:"none", borderRadius:100,
+                  padding:"15px 22px", cursor:"pointer",
+                  color:B.espresso, fontFamily:SF, fontSize:13, fontWeight:500, letterSpacing:"0.04em",
+                  boxShadow:"0 12px 32px -12px rgba(248,242,229,0.3)",
+                }}>Save</button>
+              <button
+                className="rhei-press"
+                onClick={()=>setEditingName(false)}
+                style={{background:"none", border:"none", cursor:"pointer", color:"rgba(248,242,229,0.5)", fontFamily:SF, fontSize:11, fontWeight:400, letterSpacing:"0.18em", textTransform:"uppercase", padding:8}}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Install help modal (replaces native install alert) ──────── */}
+      {showInstallHelp && (
+        <div style={{
+          position:"fixed", inset:0, zIndex:400,
+          background:"rgba(15,9,5,0.82)",
+          backdropFilter:"blur(20px) saturate(1.2)",
+          WebkitBackdropFilter:"blur(20px) saturate(1.2)",
+          display:"flex", alignItems:"center", justifyContent:"center",
+          padding:"24px",
+          animation:"rhei-rise 0.45s var(--rhei-ease-enter) both",
+        }} onClick={(e)=>{ if(e.target===e.currentTarget) setShowInstallHelp(false); }}>
+          <div style={{
+            width:"100%", maxWidth:380,
+            background:"linear-gradient(180deg,#2D1B0E 0%,#1A0F06 100%)",
+            border:"1px solid rgba(228,195,138,0.20)",
+            borderRadius:24,
+            padding:"32px 28px 28px",
+            boxShadow:"0 40px 80px -24px rgba(0,0,0,0.7)",
+          }}>
+            <p style={{fontFamily:SF, fontSize:10, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color:"rgba(228,195,138,0.85)", margin:"0 0 14px", textAlign:"center"}}>Keep RHEI close</p>
+            <h3 style={{fontFamily:F, fontSize:24, fontWeight:300, color:B.vellum, letterSpacing:"-0.015em", margin:"0 0 22px", lineHeight:1.2, textAlign:"center", fontVariationSettings:"'opsz' 48"}}>{isIOS ? "Add to your home screen." : "Pin RHEI to your device."}</h3>
+            {isIOS ? (
+              <ol style={{listStyle:"none", padding:0, margin:"0 0 24px", display:"flex", flexDirection:"column", gap:14, counterReset:"steps"}}>
+                {[
+                  "Tap the Share icon at the bottom of Safari.",
+                  "Scroll and choose 'Add to Home Screen'.",
+                  "Tap Add. RHEI lives there now."
+                ].map((t,i)=>(
+                  <li key={i} style={{display:"flex", gap:14, alignItems:"flex-start"}}>
+                    <span style={{flexShrink:0, width:24, height:24, borderRadius:"50%", background:"rgba(228,195,138,0.12)", border:"1px solid rgba(228,195,138,0.30)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:F, fontSize:12, color:"#E4C38A", fontWeight:500}}>{i+1}</span>
+                    <p style={{fontFamily:F, fontSize:14, color:"rgba(248,242,229,0.85)", margin:0, lineHeight:1.5, paddingTop:2}}>{t}</p>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <ol style={{listStyle:"none", padding:0, margin:"0 0 24px", display:"flex", flexDirection:"column", gap:14}}>
+                {[
+                  "Open this page in Chrome.",
+                  "Open the browser menu (three dots).",
+                  "Choose 'Install app' or 'Add to Home screen'."
+                ].map((t,i)=>(
+                  <li key={i} style={{display:"flex", gap:14, alignItems:"flex-start"}}>
+                    <span style={{flexShrink:0, width:24, height:24, borderRadius:"50%", background:"rgba(228,195,138,0.12)", border:"1px solid rgba(228,195,138,0.30)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:F, fontSize:12, color:"#E4C38A", fontWeight:500}}>{i+1}</span>
+                    <p style={{fontFamily:F, fontSize:14, color:"rgba(248,242,229,0.85)", margin:0, lineHeight:1.5, paddingTop:2}}>{t}</p>
+                  </li>
+                ))}
+              </ol>
+            )}
+            <button
+              className="rhei-press"
+              onClick={()=>setShowInstallHelp(false)}
+              style={{
+                width:"100%",
+                background:B.paper, border:"none", borderRadius:100,
+                padding:"15px 22px", cursor:"pointer",
+                color:B.espresso, fontFamily:SF, fontSize:13, fontWeight:500, letterSpacing:"0.04em",
+                boxShadow:"0 12px 32px -12px rgba(248,242,229,0.3)",
+              }}>Got it</button>
+          </div>
+        </div>
+      )}
+
       {/* Bottom Nav — luxury glass dock */}
       <div style={{
         position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)",
