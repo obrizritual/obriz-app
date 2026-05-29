@@ -378,7 +378,7 @@ const rituals = [
   {
     id: "belly-flow", title: "Soften the Belly", subtitle: "Abdominal Lymphatic Drainage — debloat and calm the gut",
     duration: "6 min", isPremium: true, svgFile: "/svgs/face-base.svg", accent: "#A8916C",
-    description: "A real lymphatic drainage sequence for the abdomen — the kind massage therapists charge $200/hour for. Releases trapped fluid, eases bloating, and signals the gut that the bracing can stop. Follows the actual colonic and inguinal lymph pathways. Best done on an empty or near-empty stomach, lying down.",
+    description: "A real lymphatic drainage sequence for the abdomen — the kind massage therapists charge €200/hour for. Releases trapped fluid, eases bloating, and signals the gut that the bracing can stop. Follows the actual colonic and inguinal lymph pathways. Best done on an empty or near-empty stomach, lying down.",
     tools: "Clean flat hands · body oil optional · skip if pregnant or recovering from abdominal surgery",
     occasion: "evening", audioFollowUp: 5,
     steps: [
@@ -1890,9 +1890,9 @@ export default function ObrizApp() {
   const [isPremium,setIsPremium]=useState(()=>load('isPremium',false));
 
   // ── Free trial ──
-  // 14-day full-access trial. Morning Reset stays free forever; everything
+  // 7-day full-access trial. Morning Reset stays free forever; everything
   // else unlocks during trial, locks again when trial expires + user hasn't paid.
-  const TRIAL_DAYS = 14;
+  const TRIAL_DAYS = 7;
   const [trialStartedAt,setTrialStartedAt]=useState(()=>load('trialStartedAt',null));
 
   // Initialize trial start on first launch (for new users) AND backfill it
@@ -1949,6 +1949,7 @@ export default function ObrizApp() {
   const [isIOS]=useState(()=>/iPad|iPhone|iPod/.test(navigator.userAgent));
   const [isStandalone]=useState(()=>window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true);
   const [checkoutLoading,setCheckoutLoading]=useState(false);
+  const [portalLoading,setPortalLoading]=useState(false);
 
   // Auth state (Supabase)
   const [authUser,setAuthUser]=useState(null);
@@ -2127,6 +2128,24 @@ export default function ObrizApp() {
       else{showToast("Checkout couldn't open. Try again in a moment.");setCheckoutLoading(false);}
     }catch(err){
       showToast("Connection issue. Try again in a moment.");setCheckoutLoading(false);
+    }
+  };
+
+  // Stripe Customer Portal — cancel plan, switch monthly ↔ yearly, update card
+  const openBillingPortal=async()=>{
+    const userEmail=authUser?.email||load('customerEmail','');
+    if(!userEmail){
+      showToast("Sign in with the email used at checkout to manage your plan.");
+      return;
+    }
+    setPortalLoading(true);
+    try{
+      const res=await fetch('/api/create-portal-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:userEmail})});
+      const data=await res.json();
+      if(data.url){window.location.href=data.url;}
+      else{showToast(data.error||"Couldn't open billing portal. Try again in a moment.");setPortalLoading(false);}
+    }catch(err){
+      showToast("Connection issue. Try again in a moment.");setPortalLoading(false);
     }
   };
 
@@ -3253,12 +3272,15 @@ export default function ObrizApp() {
               textAlign:"center",
               position:"relative",
             }}>
+            {!isPremium && (
+              <div style={{position:"absolute", top:-9, left:"50%", transform:"translateX(-50%)", background:"rgba(180,220,190,0.95)", color:"#0A1F12", padding:"3px 12px", borderRadius:100, fontSize:8, fontWeight:600, letterSpacing:"0.22em", fontFamily:SF, textTransform:"uppercase", whiteSpace:"nowrap"}}>7 days free</div>
+            )}
             <PrecisionStamp label="Monthly" color="rgba(248,242,229,0.50)"/>
             <p style={{fontFamily:F, fontSize:36, fontWeight:300, color:"#F8F2E5", margin:"12px 0 0", lineHeight:1, fontVariationSettings:"'opsz' 72", letterSpacing:"-0.02em", fontVariantNumeric:"tabular-nums"}}>
-              $9<span style={{fontSize:18, color:"rgba(248,242,229,0.55)"}}>.99</span>
+              €9<span style={{fontSize:18, color:"rgba(248,242,229,0.55)"}}>.99</span>
             </p>
             <p style={{fontFamily:SF, fontSize:9, color:"rgba(248,242,229,0.45)", margin:"4px 0 14px", letterSpacing:"0.22em", textTransform:"uppercase"}}>per month</p>
-            <div style={{borderTop:"1px solid rgba(248,242,229,0.10)", paddingTop:10, fontFamily:SF, fontSize:11, color:"rgba(245,200,120,0.85)", letterSpacing:"0.06em"}}>Subscribe</div>
+            <div style={{borderTop:"1px solid rgba(248,242,229,0.10)", paddingTop:10, fontFamily:SF, fontSize:11, color:"rgba(245,200,120,0.85)", letterSpacing:"0.06em"}}>{isPremium ? "Subscribe" : "Start free trial"}</div>
           </button>
 
           <button
@@ -3280,12 +3302,16 @@ export default function ObrizApp() {
             <div style={{position:"absolute", top:-9, left:"50%", transform:"translateX(-50%)", background:"rgba(248,242,229,0.95)", color:"#1A0F06", padding:"3px 12px", borderRadius:100, fontSize:8, fontWeight:500, letterSpacing:"0.22em", fontFamily:SF, textTransform:"uppercase"}}>A year ahead</div>
             <PrecisionStamp label="Yearly" color="rgba(245,200,120,0.85)"/>
             <p style={{fontFamily:F, fontSize:36, fontWeight:300, color:"#F8F2E5", margin:"12px 0 0", lineHeight:1, fontVariationSettings:"'opsz' 72", letterSpacing:"-0.02em", fontVariantNumeric:"tabular-nums"}}>
-              $49
+              €79
             </p>
             <p style={{fontFamily:SF, fontSize:9, color:"rgba(248,242,229,0.55)", margin:"4px 0 14px", letterSpacing:"0.22em", textTransform:"uppercase"}}>per year</p>
             <div style={{borderTop:"1px solid rgba(245,200,120,0.30)", paddingTop:10, fontFamily:SF, fontSize:10, color:"#F5C878", letterSpacing:"0.22em", fontWeight:500, textTransform:"uppercase"}}>The full practice</div>
           </button>
         </div>
+
+        <p style={{textAlign:"center", fontFamily:F, fontSize:10.5, color:"rgba(248,242,229,0.40)", margin:"0 0 18px", letterSpacing:"0.02em", fontStyle:"italic"}}>
+          Shown in EUR · billed in your local currency at checkout
+        </p>
 
         {checkoutLoading && (
           <p style={{textAlign:"center", fontFamily:F, fontSize:12, color:"rgba(248,242,229,0.55)", margin:"0 0 20px"}}>
@@ -3410,6 +3436,42 @@ export default function ObrizApp() {
                   .then(r=>r.json()).then(data=>{if(data.isPremium){setIsPremium(true);save('isPremium',true);showToast("Your access is restored. Welcome back.");}else{showToast("No active subscription on this email.");}}).catch(()=>showToast("Couldn't verify just now. Try again in a moment."));
               } else {setIsPremium(true);save('isPremium',true);}
             }} style={{background:"none", border:"none", color:"rgba(248,242,229,0.55)", fontSize:11, fontFamily:SF, cursor:"pointer", padding:8, letterSpacing:"0.04em", textDecoration:"underline", textUnderlineOffset:3}}>Already purchased? Restore access</button>
+          </div>
+        )}
+
+        {/* MANAGE PLAN — Stripe Customer Portal (cancel · switch monthly↔yearly · update card) */}
+        {isPremium && (
+          <div className="rhei-rise rhei-rise-4" style={{
+            background:"rgba(248,242,229,0.03)",
+            backdropFilter:"blur(12px)",
+            border:"1px solid rgba(248,242,229,0.08)",
+            borderRadius:22, padding:"22px 22px", marginTop:18, marginBottom:8,
+          }}>
+            <div style={{display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:14}}>
+              <PrecisionStamp label="Membership" color="rgba(245,200,120,0.75)"/>
+              <PrecisionStamp label="Active" color="rgba(180,220,190,0.85)"/>
+            </div>
+            <button
+              onClick={openBillingPortal}
+              disabled={portalLoading}
+              className="rhei-press"
+              style={{
+                width:"100%",
+                background:"rgba(248,242,229,0.04)",
+                backdropFilter:"blur(14px)",
+                border:"1px solid rgba(248,242,229,0.14)",
+                borderRadius:14, padding:"14px 16px",
+                cursor: portalLoading?"wait":"pointer",
+                opacity: portalLoading?0.6:1,
+                color:"#F8F2E5", fontFamily:SF, fontSize:12,
+                letterSpacing:"0.06em",
+                display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+              }}>
+              {portalLoading ? "Opening…" : "Manage plan · Cancel · Switch"}
+            </button>
+            <p style={{fontFamily:F, fontSize:11.5, color:"rgba(248,242,229,0.55)", margin:"12px 0 0", lineHeight:1.5}}>
+              Change billing, switch monthly ↔ yearly, or cancel at any time. Your practice carries on.
+            </p>
           </div>
         )}
       </div>
