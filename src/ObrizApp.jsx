@@ -1963,6 +1963,7 @@ export default function ObrizApp() {
   const [nsScore,setNsScore]=useState(()=>load('nsScore',50));
   const [scoreHistory,setScoreHistory]=useState(()=>load('scoreHistory',[45,42,48,52,55,50]));
   const [audioLoading,setAudioLoading]=useState(false);
+  const [audioFailed,setAudioFailed]=useState(false);
   const [microActive,setMicroActive]=useState(null);
   const [microDone,setMicroDone]=useState(false);
   const [microMsg,setMicroMsg]=useState("");
@@ -2026,7 +2027,7 @@ export default function ObrizApp() {
       setAuthUser(session?.user||null);
       if(session?.user?.email){
         // Check subscription in Supabase
-        fetch('/api/check-subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:session.user.email})})
+        fetchWithRetry('/api/check-subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:session.user.email})})
           .then(r=>r.json())
           .then(data=>{ if(data.isPremium){setIsPremium(true);save('isPremium',true);save('premiumPlan',data.plan);} })
           .catch(()=>{});
@@ -2038,7 +2039,7 @@ export default function ObrizApp() {
     const {data:{subscription:authSub}}=supabase.auth.onAuthStateChange((_event,session)=>{
       setAuthUser(session?.user||null);
       if(session?.user?.email){
-        fetch('/api/check-subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:session.user.email})})
+        fetchWithRetry('/api/check-subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:session.user.email})})
           .then(r=>r.json())
           .then(data=>{ if(data.isPremium){setIsPremium(true);save('isPremium',true);} })
           .catch(()=>{});
@@ -2145,12 +2146,12 @@ export default function ObrizApp() {
     setCheckoutLoading(true);
     try{
       const userEmail=authUser?.email||load('customerEmail','');
-      const res=await fetch('/api/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan,email:userEmail||undefined})});
+      const res=await fetchWithRetry('/api/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan,email:userEmail||undefined})});
       const data=await res.json();
       if(data.url){window.location.href=data.url;}
-      else{showToast("Checkout couldn't open. Try again in a moment.");setCheckoutLoading(false);}
+      else{showToast("Checkout couldn't open. Tap subscribe to retry.");setCheckoutLoading(false);}
     }catch(err){
-      showToast("Connection issue. Try again in a moment.");setCheckoutLoading(false);
+      showToast("Connection issue. Tap subscribe to retry.");setCheckoutLoading(false);
     }
   };
 
@@ -2163,12 +2164,12 @@ export default function ObrizApp() {
     }
     setPortalLoading(true);
     try{
-      const res=await fetch('/api/create-portal-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:userEmail})});
+      const res=await fetchWithRetry('/api/create-portal-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:userEmail})});
       const data=await res.json();
       if(data.url){window.location.href=data.url;}
-      else{showToast(data.error||"Couldn't open billing portal. Try again in a moment.");setPortalLoading(false);}
+      else{showToast(data.error||"Couldn't open billing portal. Tap Manage Plan to retry.");setPortalLoading(false);}
     }catch(err){
-      showToast("Connection issue. Try again in a moment.");setPortalLoading(false);
+      showToast("Connection issue. Tap Manage Plan to retry.");setPortalLoading(false);
     }
   };
 
@@ -2177,6 +2178,30 @@ export default function ObrizApp() {
     else { setShowInstallHelp(true); }
   };
   const dismissInstall=()=>{setShowInstallPrompt(false);setInstallDismissed(true);save('installDismissed',true);};
+
+  // ── Resilient fetch: silently retries on transient failures (network
+  //    errors and 5xx). 4xx is a client problem and won't fix itself, so
+  //    it returns immediately. The user only sees a toast if all attempts
+  //    fail — meaning network blips and brief server hiccups are invisible.
+  const fetchWithRetry = async (url, options = {}, maxRetries = 2) => {
+    let lastErr;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const res = await fetch(url, options);
+        if (res.status >= 500 && attempt < maxRetries - 1) {
+          await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+          continue;
+        }
+        return res;
+      } catch (err) {
+        lastErr = err;
+        if (attempt < maxRetries - 1) {
+          await new Promise(r => setTimeout(r, 500 * (attempt + 1)));
+        }
+      }
+    }
+    throw lastErr || new Error('fetch failed');
+  };
 
   // ── Streak: real, date-based, consecutive-day logic.
   //    Call this from any session-completion site (meditation OR ritual).
@@ -2248,9 +2273,11 @@ export default function ObrizApp() {
 
   const startSession=(id)=>{
     const s=sessions.find(x=>x.id===id);
-    setActiveSession(id);setElapsed(0);setIsPlaying(false);setShowComplete(false);setAudioLoading(true);setScreen("player");
+    setActiveSession(id);setElapsed(0);setIsPlaying(false);setShowComplete(false);setAudioLoading(true);setAudioFailed(false);setScreen("player");
     if(audioRef.current){audioRef.current.pause();audioRef.current.src='';}
     const a=new Audio(s.audioFile);a.preload='auto';audioRef.current=a;
+    // Track retry attempts per audio instance (silent retry once, then user-facing retry)
+    a._retries=0;
     a.addEventListener('loadedmetadata',()=>{setAudioDuration(a.duration);setAudioLoading(false);});
     a.addEventListener('canplay',()=>setAudioLoading(false));
     a.addEventListener('ended',()=>{
@@ -2263,13 +2290,38 @@ export default function ObrizApp() {
       }
       setShowComplete(true);
     });
-    a.addEventListener('error',()=>setAudioLoading(false));
+    a.addEventListener('error',()=>{
+      // First failure: silent retry. Lots of audio "errors" are just brief
+      // network blips that resolve on a second load() call.
+      if(a._retries < 1){
+        a._retries++;
+        setTimeout(()=>{ try{ a.load(); }catch{} }, 1500);
+        return;
+      }
+      // Second failure: surface to the user. Play button transitions
+      // to retry mode (see togglePlay) so a single tap restarts loading.
+      setAudioLoading(false);
+      setAudioFailed(true);
+      showToast("Audio didn't load. Tap play to retry.");
+    });
   };
 
   const togglePlay=()=>{
+    // If the last audio load failed, the Play button is in "retry" mode —
+    // a single tap restarts the entire session, which re-creates the Audio
+    // element from scratch and clears audioFailed.
+    if(audioFailed && activeSession){
+      startSession(activeSession);
+      return;
+    }
     if(!audioRef.current)return;
     if(isPlaying){audioRef.current.pause();cancelAnimationFrame(animRef.current);setIsPlaying(false);}
-    else{audioRef.current.play().then(()=>{setIsPlaying(true);animRef.current=requestAnimationFrame(trackTime);}).catch(()=>{});}
+    else{audioRef.current.play().then(()=>{setIsPlaying(true);animRef.current=requestAnimationFrame(trackTime);}).catch(()=>{
+      // play() rejected (often a buffering issue). Surface as a retry path
+      // rather than a silent dead-end.
+      setAudioFailed(true);
+      showToast("Couldn't play just now. Tap to retry.");
+    });}
   };
 
   const seekAudio=(e)=>{if(!audioRef.current||!audioDuration)return;const r=e.currentTarget.getBoundingClientRect();const pct=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));audioRef.current.currentTime=pct*audioDuration;setElapsed(audioRef.current.currentTime);};
@@ -3502,8 +3554,8 @@ export default function ObrizApp() {
           <div className="rhei-rise rhei-rise-4" style={{textAlign:"center"}}>
             <button onClick={()=>{
               if(authUser?.email){
-                fetch('/api/check-subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:authUser.email})})
-                  .then(r=>r.json()).then(data=>{if(data.isPremium){setIsPremium(true);save('isPremium',true);showToast("Your access is restored. Welcome back.");}else{showToast("No active subscription on this email.");}}).catch(()=>showToast("Couldn't verify just now. Try again in a moment."));
+                fetchWithRetry('/api/check-subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:authUser.email})})
+                  .then(r=>r.json()).then(data=>{if(data.isPremium){setIsPremium(true);save('isPremium',true);showToast("Your access is restored. Welcome back.");}else{showToast("No active subscription on this email.");}}).catch(()=>showToast("Couldn't verify just now. Tap Restore access to retry."));
               } else {setIsPremium(true);save('isPremium',true);}
             }} style={{background:"none", border:"none", color:"rgba(248,242,229,0.55)", fontSize:11, fontFamily:SF, cursor:"pointer", padding:8, letterSpacing:"0.04em", textDecoration:"underline", textUnderlineOffset:3}}>Already purchased? Restore access</button>
           </div>
