@@ -109,7 +109,7 @@ const WELCOME_HTML = `<!DOCTYPE html>
                   <td style="padding:22px 24px;">
                     <p style="margin:0 0 8px 0;font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:500;letter-spacing:0.28em;text-transform:uppercase;color:#E4C38A !important;">Begin here</p>
                     <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:19px;font-weight:300;line-height:1.35;color:#F8F2E5 !important;letter-spacing:-0.01em;">
-                      The Morning Reset. Four minutes. Anywhere you are.
+                      The Morning Reset. Three minutes. Anywhere you are.
                     </p>
                   </td>
                 </tr>
@@ -187,7 +187,7 @@ You've just stepped into a quieter way of caring for yourself — grounded in th
 For the next seven days, you have full access. Move through it at your own pace. Notice what changes.
 
 If you only do one thing today, do this:
-The Morning Reset. Four minutes. Anywhere you are.
+The Morning Reset. Three minutes. Anywhere you are.
 
 Open Rhei: https://www.rheihouse.com
 
