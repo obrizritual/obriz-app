@@ -395,6 +395,13 @@ const rituals = [
 ];
 
 const fmt = (s) => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0")}`;
+// ── Plausible event tracking — safe no-op if the script hasn't loaded
+//    (or if the user is offline). Use sparingly; only the events that
+//    matter to the activation + revenue funnel.
+const trackEvent = (name, props) => {
+  try { window.plausible?.(name, props ? { props } : undefined); } catch {}
+};
+
 const greetUser = (name) => { const h=new Date().getHours(); const g=h<12?"Good morning":h<17?"Good afternoon":"Good evening"; return name?`${g}, ${name}`:g; };
 const greetShort = () => { const h=new Date().getHours(); if(h<10)return"This morning"; if(h<14)return"This midday"; if(h<18)return"This afternoon"; return"This evening"; };
 const timeCtx = () => { const h=new Date().getHours(); if(h<6)return"night"; if(h<10)return"morning"; if(h<14)return"midday"; if(h<18)return"afternoon"; if(h<21)return"evening"; return"night"; };
@@ -2143,6 +2150,7 @@ export default function ObrizApp() {
 
   // Stripe checkout handler
   const handleCheckout=async(plan)=>{
+    trackEvent('subscribe_clicked', { plan });
     setCheckoutLoading(true);
     try{
       const userEmail=authUser?.email||load('customerEmail','');
@@ -2273,6 +2281,7 @@ export default function ObrizApp() {
 
   const startSession=(id)=>{
     const s=sessions.find(x=>x.id===id);
+    trackEvent('meditation_started', { id: String(id), title: s?.title });
     setActiveSession(id);setElapsed(0);setIsPlaying(false);setShowComplete(false);setAudioLoading(true);setAudioFailed(false);setScreen("player");
     if(audioRef.current){audioRef.current.pause();audioRef.current.src='';}
     const a=new Audio(s.audioFile);a.preload='auto';audioRef.current=a;
@@ -2285,6 +2294,7 @@ export default function ObrizApp() {
       if(!completedToday.includes(id)){
         setCompletedToday(c=>[...c,id]);setTotalSessions(t=>t+1);setTotalMinutes(t=>t+Math.ceil(s.duration/60));
         recordSessionCompletion();
+        trackEvent('meditation_completed', { id: String(id), title: s.title });
         // Persist to Supabase (fire and forget via helper)
         completeSessionOnServer('meditation',null,Math.round(a.duration));
       }
@@ -4126,6 +4136,7 @@ export default function ObrizApp() {
           setTotalSessions(t=>t+1);
           setTotalMinutes(t=>t+Math.ceil(totalDuration/60));
           recordSessionCompletion();
+          trackEvent('ritual_completed', { ritualType, durationSecs: totalDuration });
           completeSessionOnServer('ritual',ritualType,totalDuration,checkinState?.dominant||null);
         }}
       />}
