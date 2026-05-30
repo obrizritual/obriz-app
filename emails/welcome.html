@@ -3,14 +3,44 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="supported-color-schemes" content="dark">
   <title>Welcome to RHEI</title>
   <!--[if mso]>
   <style type="text/css">
     body, table, td, p { font-family: Georgia, 'Times New Roman', serif !important; }
   </style>
   <![endif]-->
+  <style type="text/css">
+    /* Tell iOS Mail / Apple Mail / Outlook 2019+ that this email is
+       designed for dark mode. Without these declarations they apply
+       their own color-shifting algorithm which inverts our cream text
+       into a near-invisible brown against the dark background. */
+    :root {
+      color-scheme: dark;
+      supported-color-schemes: dark;
+    }
+    /* Belt-and-braces: if a client still tries to override, force
+       cream and gold tones to survive in dark mode. */
+    @media (prefers-color-scheme: dark) {
+      body, body * {
+        -webkit-text-fill-color: inherit !important;
+      }
+      .rhei-cream { color: #F8F2E5 !important; }
+      .rhei-gold  { color: #E4C38A !important; }
+    }
+    /* Gmail mobile app dark mode (uses [data-ogsc] attribute injection) */
+    [data-ogsc] .rhei-cream,
+    u + .body .rhei-cream {
+      color: #F8F2E5 !important;
+    }
+    [data-ogsc] .rhei-gold,
+    u + .body .rhei-gold {
+      color: #E4C38A !important;
+    }
+  </style>
 </head>
-<body style="margin:0;padding:0;background:#1A0F06;font-family:Georgia,'Times New Roman',serif;color:#F8F2E5;">
+<body style="margin:0;padding:0;background:#1A0F06;font-family:Georgia,'Times New Roman',serif;color:#F8F2E5 !important;">
   <!-- Preheader (hidden in body, shown in inbox preview) -->
   <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#1A0F06;opacity:0;">
     Welcome home. Your nervous system practice begins now.
@@ -24,8 +54,8 @@
           <!-- Header: wordmark only -->
           <tr>
             <td align="center" style="padding:56px 32px 8px 32px;">
-              <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-weight:300;font-size:56px;letter-spacing:-0.025em;color:#F8F2E5;line-height:1;">Rhei.</h1>
-              <p style="margin:14px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:500;letter-spacing:0.32em;text-transform:uppercase;color:#E4C38A;">A nervous system practice</p>
+              <h1 style="margin:0;font-family:Georgia,'Times New Roman',serif;font-weight:300;font-size:56px;letter-spacing:-0.025em;color:#F8F2E5 !important;line-height:1;">Rhei.</h1>
+              <p style="margin:14px 0 0;font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:500;letter-spacing:0.32em;text-transform:uppercase;color:#E4C38A !important;">A nervous system practice</p>
             </td>
           </tr>
 
@@ -38,15 +68,15 @@
 
           <!-- Body -->
           <tr>
-            <td style="padding:32px 40px 8px 40px;font-family:Georgia,'Times New Roman',serif;color:#F8F2E5;">
-              <h2 style="margin:0 0 22px 0;font-weight:300;font-size:30px;line-height:1.18;letter-spacing:-0.015em;color:#F8F2E5;">Welcome home.</h2>
-              <p style="margin:0 0 18px 0;font-size:15px;line-height:1.65;color:#F8F2E5;">
+            <td style="padding:32px 40px 8px 40px;font-family:Georgia,'Times New Roman',serif;color:#F8F2E5 !important;">
+              <h2 style="margin:0 0 22px 0;font-weight:300;font-size:30px;line-height:1.18;letter-spacing:-0.015em;color:#F8F2E5 !important;">Welcome home.</h2>
+              <p style="margin:0 0 18px 0;font-size:15px;line-height:1.65;color:#F8F2E5 !important;">
                 You've just stepped into a quieter way of caring for yourself — grounded in the science of the nervous system, expressed through rituals that fit between everything else.
               </p>
-              <p style="margin:0 0 18px 0;font-size:15px;line-height:1.65;color:#F8F2E5;">
+              <p style="margin:0 0 18px 0;font-size:15px;line-height:1.65;color:#F8F2E5 !important;">
                 For the next seven days, you have full access. Move through it at your own pace. Notice what changes.
               </p>
-              <p style="margin:0 0 28px 0;font-size:15px;line-height:1.65;color:#F8F2E5;">
+              <p style="margin:0 0 28px 0;font-size:15px;line-height:1.65;color:#F8F2E5 !important;">
                 If you only do one thing today, do this:
               </p>
 
@@ -54,8 +84,8 @@
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(228,195,138,0.06);border:1px solid rgba(228,195,138,0.22);border-radius:14px;margin:0 0 32px 0;">
                 <tr>
                   <td style="padding:22px 24px;">
-                    <p style="margin:0 0 8px 0;font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:500;letter-spacing:0.28em;text-transform:uppercase;color:#E4C38A;">Begin here</p>
-                    <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:19px;font-weight:300;line-height:1.35;color:#F8F2E5;letter-spacing:-0.01em;">
+                    <p style="margin:0 0 8px 0;font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:500;letter-spacing:0.28em;text-transform:uppercase;color:#E4C38A !important;">Begin here</p>
+                    <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:19px;font-weight:300;line-height:1.35;color:#F8F2E5 !important;letter-spacing:-0.01em;">
                       The Morning Reset. Four minutes. Anywhere you are.
                     </p>
                   </td>
@@ -80,20 +110,20 @@
               </table>
 
               <!-- What you have access to (3 short lines) -->
-              <p style="margin:0 0 14px 0;font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:500;letter-spacing:0.28em;text-transform:uppercase;color:rgba(228,195,138,0.85);">Your seven days</p>
+              <p style="margin:0 0 14px 0;font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:500;letter-spacing:0.28em;text-transform:uppercase;color:rgba(228,195,138,0.85) !important;">Your seven days</p>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td style="padding:8px 0;border-top:1px solid rgba(228,195,138,0.22);font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.55;color:#F8F2E5;">
+                  <td style="padding:8px 0;border-top:1px solid rgba(228,195,138,0.22);font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.55;color:#F8F2E5 !important;">
                     Every guided ritual — Gua Sha, Lymphatic Flow, Buccal, Face Lift, Eye Revival.
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding:8px 0;border-top:1px solid rgba(228,195,138,0.22);font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.55;color:#F8F2E5;">
+                  <td style="padding:8px 0;border-top:1px solid rgba(228,195,138,0.22);font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.55;color:#F8F2E5 !important;">
                     Live Mirror Mode — your face, your camera, gold gesture overlays in real time.
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding:8px 0;border-top:1px solid rgba(228,195,138,0.22);border-bottom:1px solid rgba(228,195,138,0.22);font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.55;color:#F8F2E5;">
+                  <td style="padding:8px 0;border-top:1px solid rgba(228,195,138,0.22);border-bottom:1px solid rgba(228,195,138,0.22);font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.55;color:#F8F2E5 !important;">
                     Resets, affirmations, breath — the full sound library.
                   </td>
                 </tr>
@@ -103,11 +133,11 @@
 
           <!-- Closing -->
           <tr>
-            <td style="padding:32px 40px 8px 40px;font-family:Georgia,'Times New Roman',serif;color:#F8F2E5;">
-              <p style="margin:0 0 18px 0;font-size:15px;line-height:1.65;color:#F8F2E5;">
+            <td style="padding:32px 40px 8px 40px;font-family:Georgia,'Times New Roman',serif;color:#F8F2E5 !important;">
+              <p style="margin:0 0 18px 0;font-size:15px;line-height:1.65;color:#F8F2E5 !important;">
                 If you forget, we'll send a single gentle reminder — nothing noisy, nothing daily by default.
               </p>
-              <p style="margin:0;font-size:15px;line-height:1.65;color:#F8F2E5;font-style:italic;">
+              <p style="margin:0;font-size:15px;line-height:1.65;color:#F8F2E5 !important;font-style:italic;">
                 Return to yourself.
               </p>
             </td>
@@ -116,8 +146,8 @@
           <!-- Footer -->
           <tr>
             <td align="center" style="padding:40px 32px 48px 32px;border-top:1px solid rgba(248,242,229,0.06);margin-top:24px;">
-              <p style="margin:0 0 10px 0;font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:500;letter-spacing:0.28em;text-transform:uppercase;color:rgba(228,195,138,0.70);">RHEI</p>
-              <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:10px;line-height:1.6;color:rgba(248,242,229,0.72);">
+              <p style="margin:0 0 10px 0;font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:500;letter-spacing:0.28em;text-transform:uppercase;color:rgba(228,195,138,0.70) !important;">RHEI</p>
+              <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:10px;line-height:1.6;color:rgba(248,242,229,0.72) !important;">
                 You received this because you created an account at rheihouse.com.<br>
                 Manage your reminders inside the app under Journey → Gentle reminders.
               </p>
