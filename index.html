@@ -35,6 +35,17 @@
 
   <title>RHEI</title>
 
+  <!-- Plausible Analytics — privacy-respecting, cookie-free, GDPR-friendly.
+       The site-specific script URL below is tied to Rhea's plausible.io
+       account. Custom events (meditation_completed, subscribe_clicked,
+       etc.) are fired from the React code via the global plausible()
+       queue shim and configured as Goals in the Plausible dashboard. -->
+  <script async src="https://plausible.io/js/pa-lHhJZqvn-N3rmVuv_zcSQ.js"></script>
+  <script>
+    window.plausible=window.plausible||function(){(plausible.q=plausible.q||[]).push(arguments)},plausible.init=plausible.init||function(i){plausible.o=i||{}};
+    plausible.init()
+  </script>
+
   <style>
     /* ── Reset ─────────────────────────────────────────────────────────────── */
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
