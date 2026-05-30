@@ -64,13 +64,13 @@ const WELCOME_HTML = `<!DOCTYPE html>
           <tr>
             <td style="padding:32px 40px 8px 40px;font-family:Georgia,'Times New Roman',serif;color:#F8F2E5;">
               <h2 style="margin:0 0 22px 0;font-weight:300;font-size:30px;line-height:1.18;letter-spacing:-0.015em;color:#F8F2E5;">Welcome home.</h2>
-              <p style="margin:0 0 18px 0;font-size:15px;line-height:1.65;color:rgba(248,242,229,0.85);">
+              <p style="margin:0 0 18px 0;font-size:15px;line-height:1.65;color:#F8F2E5;">
                 You've just stepped into a quieter way of caring for yourself — grounded in the science of the nervous system, expressed through rituals that fit between everything else.
               </p>
-              <p style="margin:0 0 18px 0;font-size:15px;line-height:1.65;color:rgba(248,242,229,0.85);">
+              <p style="margin:0 0 18px 0;font-size:15px;line-height:1.65;color:#F8F2E5;">
                 For the next seven days, you have full access. Move through it at your own pace. Notice what changes.
               </p>
-              <p style="margin:0 0 28px 0;font-size:15px;line-height:1.65;color:rgba(248,242,229,0.85);">
+              <p style="margin:0 0 28px 0;font-size:15px;line-height:1.65;color:#F8F2E5;">
                 If you only do one thing today, do this:
               </p>
 
@@ -89,13 +89,13 @@ const WELCOME_HTML = `<!DOCTYPE html>
                 <tr>
                   <td align="center">
                     <!--[if mso]>
-                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://rhei-app.vercel.app" style="height:48px;v-text-anchor:middle;width:240px;" arcsize="50%" stroke="f" fillcolor="#F8F2E5">
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="https://www.rheihouse.com" style="height:48px;v-text-anchor:middle;width:240px;" arcsize="50%" stroke="f" fillcolor="#F8F2E5">
                       <w:anchorlock/>
                       <center style="color:#2D1B0E;font-family:Helvetica,Arial,sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;">OPEN RHEI</center>
                     </v:roundrect>
                     <![endif]-->
                     <!--[if !mso]><!-- -->
-                    <a href="https://rhei-app.vercel.app" style="display:inline-block;background:#F8F2E5;color:#2D1B0E;font-family:Helvetica,Arial,sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-decoration:none;padding:16px 36px;border-radius:100px;mso-hide:all;">OPEN RHEI</a>
+                    <a href="https://www.rheihouse.com" style="display:inline-block;background:#F8F2E5;color:#2D1B0E;font-family:Helvetica,Arial,sans-serif;font-size:13px;font-weight:500;letter-spacing:0.08em;text-decoration:none;padding:16px 36px;border-radius:100px;mso-hide:all;">OPEN RHEI</a>
                     <!--<![endif]-->
                   </td>
                 </tr>
@@ -104,17 +104,17 @@ const WELCOME_HTML = `<!DOCTYPE html>
               <p style="margin:0 0 14px 0;font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:500;letter-spacing:0.28em;text-transform:uppercase;color:rgba(228,195,138,0.85);">Your seven days</p>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
-                  <td style="padding:8px 0;border-top:1px solid rgba(248,242,229,0.08);font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.55;color:rgba(248,242,229,0.80);">
+                  <td style="padding:8px 0;border-top:1px solid rgba(228,195,138,0.22);font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.55;color:#F8F2E5;">
                     Every guided ritual — Gua Sha, Lymphatic Flow, Buccal, Face Lift, Eye Revival.
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding:8px 0;border-top:1px solid rgba(248,242,229,0.08);font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.55;color:rgba(248,242,229,0.80);">
+                  <td style="padding:8px 0;border-top:1px solid rgba(228,195,138,0.22);font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.55;color:#F8F2E5;">
                     Live Mirror Mode — your face, your camera, gold gesture overlays in real time.
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding:8px 0;border-top:1px solid rgba(248,242,229,0.08);border-bottom:1px solid rgba(248,242,229,0.08);font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.55;color:rgba(248,242,229,0.80);">
+                  <td style="padding:8px 0;border-top:1px solid rgba(228,195,138,0.22);border-bottom:1px solid rgba(228,195,138,0.22);font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.55;color:#F8F2E5;">
                     Resets, affirmations, breath — the full sound library.
                   </td>
                 </tr>
@@ -124,10 +124,10 @@ const WELCOME_HTML = `<!DOCTYPE html>
 
           <tr>
             <td style="padding:32px 40px 8px 40px;font-family:Georgia,'Times New Roman',serif;color:#F8F2E5;">
-              <p style="margin:0 0 18px 0;font-size:15px;line-height:1.65;color:rgba(248,242,229,0.85);">
+              <p style="margin:0 0 18px 0;font-size:15px;line-height:1.65;color:#F8F2E5;">
                 If you forget, we'll send a single gentle reminder — nothing noisy, nothing daily by default.
               </p>
-              <p style="margin:0;font-size:15px;line-height:1.65;color:rgba(248,242,229,0.85);font-style:italic;">
+              <p style="margin:0;font-size:15px;line-height:1.65;color:#F8F2E5;font-style:italic;">
                 Return to yourself.
               </p>
             </td>
@@ -136,8 +136,8 @@ const WELCOME_HTML = `<!DOCTYPE html>
           <tr>
             <td align="center" style="padding:40px 32px 48px 32px;border-top:1px solid rgba(248,242,229,0.06);margin-top:24px;">
               <p style="margin:0 0 10px 0;font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:500;letter-spacing:0.28em;text-transform:uppercase;color:rgba(228,195,138,0.70);">RHEI</p>
-              <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:10px;line-height:1.6;color:rgba(248,242,229,0.42);">
-                You received this because you created an account at rhei-app.vercel.app.<br>
+              <p style="margin:0;font-family:Helvetica,Arial,sans-serif;font-size:10px;line-height:1.6;color:rgba(248,242,229,0.72);">
+                You received this because you created an account at rheihouse.com.<br>
                 Manage your reminders inside the app under Journey → Gentle reminders.
               </p>
             </td>
@@ -159,7 +159,7 @@ For the next seven days, you have full access. Move through it at your own pace.
 If you only do one thing today, do this:
 The Morning Reset. Four minutes. Anywhere you are.
 
-Open Rhei: https://rhei-app.vercel.app
+Open Rhei: https://www.rheihouse.com
 
 Your seven days:
 - Every guided ritual — Gua Sha, Lymphatic Flow, Buccal, Face Lift, Eye Revival.
@@ -172,7 +172,7 @@ Return to yourself.
 
 — Rhei.
 
-You received this because you created an account at rhei-app.vercel.app.
+You received this because you created an account at rheihouse.com.
 Manage your reminders inside the app under Journey → Gentle reminders.`;
 
 function isValidEmail(value) {
