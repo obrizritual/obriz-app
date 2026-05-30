@@ -252,6 +252,13 @@ export default function AnimatedRitualStep({
         height: h,
         borderRadius: 14,
         overflow: "hidden",
+        // GPU-promote so the gesture animations don't fight for paint
+        // bandwidth with the rest of the page — eliminates the micro-lags
+        // when an arrow draws or a circle orbits on the woman's face.
+        transform: "translateZ(0)",
+        backfaceVisibility: "hidden",
+        WebkitBackfaceVisibility: "hidden",
+        contain: "layout paint",
       }}>
       <img
         src={`/ritual-source-photos/${woman}-clean.png`}

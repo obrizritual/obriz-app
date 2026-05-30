@@ -398,6 +398,15 @@ const fmt = (s) => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,"0
 const greetUser = (name) => { const h=new Date().getHours(); const g=h<12?"Good morning":h<17?"Good afternoon":"Good evening"; return name?`${g}, ${name}`:g; };
 const greetShort = () => { const h=new Date().getHours(); if(h<10)return"This morning"; if(h<14)return"This midday"; if(h<18)return"This afternoon"; return"This evening"; };
 const timeCtx = () => { const h=new Date().getHours(); if(h<6)return"night"; if(h<10)return"morning"; if(h<14)return"midday"; if(h<18)return"afternoon"; if(h<21)return"evening"; return"night"; };
+
+// ── Date helpers for streak / daily reset (local time, YYYY-MM-DD) ──
+const todayStr = () => { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const yesterdayOf = (dateStr) => {
+  if(!dateStr) return null;
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, m-1, d); dt.setDate(dt.getDate()-1);
+  return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+};
 // Recommend a ritual + audio arc based on state and time
 const getArc = (checkinState, tc) => {
   if(checkinState) {
@@ -722,13 +731,25 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
     if(step < 0 || step >= totalSteps || paused) return;
     setTimeLeft(currentStep.duration);
     clearInterval(timerRef.current);
+    let advanceTimeout = null;
     timerRef.current = setInterval(()=>{
       setTimeLeft(t=>{
-        if(t<=1) { clearInterval(timerRef.current); return 0; }
+        if(t<=1) {
+          clearInterval(timerRef.current);
+          // Auto-advance so the user can keep their hands on their face.
+          // 400ms grace so the "0" reads briefly before the next gesture
+          // appears. Cancelled by cleanup if the user pauses or manually
+          // advances during the window.
+          advanceTimeout = setTimeout(()=>nextStep(), 400);
+          return 0;
+        }
         return t-1;
       });
     },1000);
-    return()=>clearInterval(timerRef.current);
+    return()=>{
+      clearInterval(timerRef.current);
+      if(advanceTimeout) clearTimeout(advanceTimeout);
+    };
   },[step,paused]);
 
   const nextStep = () => {
@@ -1921,6 +1942,8 @@ export default function ObrizApp() {
   const [elapsed,setElapsed]=useState(0);
   const [audioDuration,setAudioDuration]=useState(0);
   const [completedToday,setCompletedToday]=useState(()=>load('completedToday',[]));
+  const [completedTodayDate,setCompletedTodayDate]=useState(()=>load('completedTodayDate',null));
+  const [lastSessionDate,setLastSessionDate]=useState(()=>load('lastSessionDate',null));
   const [streak,setStreak]=useState(()=>load('streak',1));
   const [longestStreak,setLongestStreak]=useState(()=>load('longestStreak',1));
   const [streakHistory,setStreakHistory]=useState(()=>load('streakHistory',[]));
@@ -2155,10 +2178,60 @@ export default function ObrizApp() {
   };
   const dismissInstall=()=>{setShowInstallPrompt(false);setInstallDismissed(true);save('installDismissed',true);};
 
+  // ── Streak: real, date-based, consecutive-day logic.
+  //    Call this from any session-completion site (meditation OR ritual).
+  //    Same-day repeat sessions don't double-count. Coming back the next day
+  //    extends the streak. A gap of more than one day resets it to 1.
+  const recordSessionCompletion = () => {
+    const today = todayStr();
+    const yesterday = yesterdayOf(today);
+    if (lastSessionDate === today) {
+      // Already counted today — multiple sessions per day still count as 1
+      return;
+    }
+    if (lastSessionDate === yesterday) {
+      setMeditationStreak(n => n + 1);
+    } else {
+      // First session, or returning after a gap > 1 day
+      setMeditationStreak(1);
+    }
+    setLastSessionDate(today);
+    setCompletedTodayDate(today);
+  };
+
   // Persist
   useEffect(()=>{save('completedToday',completedToday);},[completedToday]);
+  useEffect(()=>{save('completedTodayDate',completedTodayDate);},[completedTodayDate]);
+  useEffect(()=>{save('lastSessionDate',lastSessionDate);},[lastSessionDate]);
   useEffect(()=>{save('streak',streak);},[streak]);
   useEffect(()=>{save('meditationStreak',meditationStreak);},[meditationStreak]);
+
+  // ── Daily rollover + one-time migration. Runs once per app open.
+  //    1. Clear "completed today" if we crossed midnight since last open.
+  //    2. Expire the streak if the user missed more than one full day.
+  //    3. Migration: if lastSessionDate has never been set, the existing
+  //       meditationStreak was computed under the old broken logic
+  //       (per-session counter). Reset it so the streak starts clean
+  //       on the next session.
+  useEffect(()=>{
+    const today = todayStr();
+    if (completedTodayDate && completedTodayDate !== today) {
+      setCompletedToday([]);
+      setCompletedTodayDate(today);
+    } else if (!completedTodayDate) {
+      setCompletedTodayDate(today);
+    }
+    if (lastSessionDate === null) {
+      // First time seeing the new streak logic — wipe any inflated legacy value.
+      setMeditationStreak(0);
+    } else if (lastSessionDate !== today && lastSessionDate !== yesterdayOf(today)) {
+      // Gap of more than one day — streak broken.
+      setMeditationStreak(0);
+    }
+  // Intentionally only run once per app open — checking again only matters
+  // after a fresh load (PWAs reload state on relaunch).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
   useEffect(()=>{save('longestStreak',longestStreak);},[longestStreak]);
   useEffect(()=>{save('streakHistory',streakHistory);},[streakHistory]);
   // Keep longestStreak in sync if current streak exceeds it
@@ -2184,7 +2257,7 @@ export default function ObrizApp() {
       cancelAnimationFrame(animRef.current);setIsPlaying(false);setElapsed(a.duration);
       if(!completedToday.includes(id)){
         setCompletedToday(c=>[...c,id]);setTotalSessions(t=>t+1);setTotalMinutes(t=>t+Math.ceil(s.duration/60));
-        setMeditationStreak(n=>n+1);
+        recordSessionCompletion();
         // Persist to Supabase (fire and forget via helper)
         completeSessionOnServer('meditation',null,Math.round(a.duration));
       }
@@ -2569,12 +2642,9 @@ export default function ObrizApp() {
         padding:"36px 22px 120px",minHeight:"100vh",
         display:"flex",flexDirection:"column",alignItems:"center",
         position:"relative",
-        // Warm orb of light photograph as ambient base, with strong dark gradient overlay for legibility
+        // Pure dark warm-black. The <Orb> behind the timer is now the single
+        // source of warm light, perfectly concentric with the <Ring>.
         backgroundColor:B.warmBlack,
-        backgroundImage:`linear-gradient(180deg, rgba(26,15,6,0.55) 0%, rgba(26,15,6,0.78) 45%, rgba(26,15,6,0.95) 100%), url('/images/player-ambient.jpg')`,
-        backgroundSize:"cover",
-        backgroundPosition:"center top",
-        backgroundRepeat:"no-repeat",
       }}>
         <div style={{position:"fixed",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:430,height:"60%",background:"radial-gradient(ellipse at 50% 30%, rgba(196,154,75,0.05) 0%, transparent 70%)",pointerEvents:"none"}}/>
         <button onClick={exitPlayer} style={{position:"absolute",top:18,left:18,background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:4,color:B.muted,fontFamily:SF,fontSize:11,letterSpacing:0.5}}><ChevronLeft size={14}/><span>Back</span></button>
@@ -4003,6 +4073,7 @@ export default function ObrizApp() {
         onComplete={({ritualType,totalDuration})=>{
           setTotalSessions(t=>t+1);
           setTotalMinutes(t=>t+Math.ceil(totalDuration/60));
+          recordSessionCompletion();
           completeSessionOnServer('ritual',ritualType,totalDuration,checkinState?.dominant||null);
         }}
       />}
