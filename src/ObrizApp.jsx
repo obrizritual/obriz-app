@@ -662,7 +662,7 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
   useEffect(() => {
     if (!voiceEnabled) {
       try { window.speechSynthesis?.cancel(); } catch {}
-      if (voiceAudioRef.current) { try { voiceAudioRef.current.pause(); } catch {} voiceAudioRef.current = null; }
+      if (voiceAudioRef.current) { try { voiceAudioRef.current.pause(); } catch {} }
       return;
     }
     if (step < 0 || step >= totalSteps) return;
@@ -670,9 +670,9 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
     if (!stepData) return;
     const text = `${stepData.title}. ${stepData.instruction || ""}`.trim();
 
-    // Synchronously tear down anything still going from the previous step
+    // Synchronously tear down any TTS still going from the previous step.
+    // The audio element itself is REUSED (see below) so we don't tear it down.
     try { window.speechSynthesis?.cancel(); } catch {}
-    if (voiceAudioRef.current) { try { voiceAudioRef.current.pause(); } catch {} voiceAudioRef.current = null; }
 
     let stopped = false;
     let usingTts = false;
@@ -693,25 +693,35 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
     };
 
     const url = `/audio/rituals/${ritual.id}-${step}.mp3`;
-    const audio = new Audio(url);
-    audio.volume = 0.95;
-    audio.preload = "auto";
-    voiceAudioRef.current = audio;
 
-    audio.addEventListener("error", () => {
+    // CRITICAL: REUSE a single audio element across all steps of a ritual.
+    // iOS Safari and Chrome only allow audio.play() if the call chain
+    // originates from a user gesture (tap). When the step advances via
+    // the auto-advance setTimeout there is no gesture in the chain, so
+    // creating a fresh Audio() per step gets blocked silently.
+    // An audio element that was previously unlocked by a user gesture
+    // (the Begin tap on step 1) keeps its permission across src changes,
+    // so we just update src and call play() on the same element.
+    if (!voiceAudioRef.current) {
+      voiceAudioRef.current = new Audio();
+      voiceAudioRef.current.volume = 0.95;
+      voiceAudioRef.current.preload = "auto";
+    }
+    const audio = voiceAudioRef.current;
+    try { audio.pause(); } catch {}
+    audio.onerror = () => {
       if (stopped) return;
       // Genuine load failure — fall back to TTS
-      if (voiceAudioRef.current === audio) voiceAudioRef.current = null;
       playTts();
-    });
+    };
+    audio.src = url;
+    try { audio.load(); } catch {}
 
     audio.play().catch(() => {
-      // play() rejected. Wait one tick — if neither error nor playback fires,
-      // and we're still the current audio and we haven't been stopped, fall to TTS.
+      // play() rejected. Wait one tick — if still paused at 0, fall to TTS.
       setTimeout(() => {
         if (stopped) return;
-        if (voiceAudioRef.current === audio && audio.paused && audio.currentTime === 0) {
-          if (voiceAudioRef.current === audio) voiceAudioRef.current = null;
+        if (audio.paused && audio.currentTime === 0) {
           playTts();
         }
       }, 400);
@@ -719,9 +729,11 @@ function RitualPlayer({ ritual, onClose, onComplete }) {
 
     return () => {
       stopped = true;
+      // DO NOT null voiceAudioRef.current — keep the unlocked element
+      // alive across step changes so auto-advance audio still plays.
+      // It's fully released by the unmount-only effect below.
       try { audio.pause(); } catch {}
-      try { audio.src = ""; } catch {}   // Force release of any in-flight network request
-      if (voiceAudioRef.current === audio) voiceAudioRef.current = null;
+      audio.onerror = null;
       if (usingTts) { try { window.speechSynthesis.cancel(); } catch {} }
     };
   }, [step, voiceEnabled, ritual, totalSteps]);
@@ -1381,21 +1393,6 @@ function Onboarding({ onComplete, authUser }) {
                 textShadow:"0 1px 8px rgba(0,0,0,0.5)",
               }}>
               I have an account
-            </button>
-
-            <button
-              className="rhei-press"
-              onClick={()=>setStep(0)}
-              style={{
-                background:"none", border:"none", cursor:"pointer",
-                color:"rgba(248,242,229,0.5)",
-                fontFamily:SF, fontSize:11, fontWeight:400,
-                letterSpacing:"0.18em", textTransform:"uppercase",
-                padding:"6px",
-                marginTop:4,
-                textShadow:"0 1px 6px rgba(0,0,0,0.5)",
-              }}>
-              Explore first
             </button>
           </div>
         </div>
@@ -2406,7 +2403,12 @@ export default function ObrizApp() {
   };
 
   // ══════════ ONBOARDING ══════════
-  if(!onboarded) {
+  // Account required: every visitor must sign up or sign in before reaching
+  // the app. This closes the previous "Explore first" bypass and also
+  // protects against returning users who land here with a lost session.
+  // When supabaseEnabled is false (no env vars, dev fallback), we let
+  // localStorage onboarding stand on its own.
+  if(!onboarded || (supabaseEnabled && !authUser)) {
     return <Onboarding authUser={authUser} onComplete={(name)=>{setUserName(name);setOnboarded(true);save('onboarded',true);}} />;
   }
 
