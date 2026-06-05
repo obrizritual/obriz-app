@@ -1915,9 +1915,10 @@ export default function ObrizApp() {
   const [isPremium,setIsPremium]=useState(()=>load('isPremium',false));
 
   // ── Free trial ──
-  // 7-day full-access trial. Morning Reset stays free forever; everything
+  // 14-day full-access trial. Morning Reset stays free forever; everything
   // else unlocks during trial, locks again when trial expires + user hasn't paid.
-  const TRIAL_DAYS = 7;
+  // Aligns with Stripe-side TRIAL_DAYS_MONTHLY = 14 in create-checkout-session.js
+  const TRIAL_DAYS = 14;
   const [trialStartedAt,setTrialStartedAt]=useState(()=>load('trialStartedAt',null));
 
   // Initialize trial start on first launch (for new users) AND backfill it
@@ -1941,6 +1942,9 @@ export default function ObrizApp() {
 
   // Navigation
   const [screen,setScreen]=useState("home");
+  // The House sheet (plan management, profile, push, sign out). Opened from
+  // the R. monogram in the top-right corner. Not a screen — a modal overlay.
+  const [houseOpen,setHouseOpen]=useState(false);
   const [activeSession,setActiveSession]=useState(null);
   const [isPlaying,setIsPlaying]=useState(false);
   const [elapsed,setElapsed]=useState(0);
@@ -2442,7 +2446,7 @@ export default function ObrizApp() {
     return (
     <div className="rhei-page" style={{
       position:"relative",
-      padding:"calc(env(safe-area-inset-top, 0px) + 28px) 24px 140px",
+      padding:"calc(env(safe-area-inset-top, 0px) + 86px) 24px 140px",
       minHeight:"100vh",
       background:"linear-gradient(180deg, #2D1B0E 0%, #1A0F06 50%, #0F0905 100%)",
       overflow:"hidden",
@@ -2649,26 +2653,7 @@ export default function ObrizApp() {
           </div>
         </div>
 
-        {/* ── QUIET JOURNEY INDICATOR — discreet, hairline ── */}
-        {(streak > 0 || meditationStreak > 0 || totalSessions > 0) && (
-          <div className="rhei-rise rhei-rise-5" style={{marginBottom:44,paddingTop:32,borderTop:"1px solid rgba(248,242,229,0.06)"}}>
-            <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:"0 0 18px"}}>This week, quietly</p>
-            <div style={{display:"flex",gap:0,alignItems:"baseline"}}>
-              <div style={{flex:1,paddingRight:16}}>
-                <p style={{fontFamily:F,fontSize:32,fontWeight:300,color:B.vellum,margin:"0",letterSpacing:"-0.02em",lineHeight:1,fontVariationSettings:"'opsz' 60"}}>{Math.max(streak, meditationStreak)}</p>
-                <p style={{fontFamily:F,fontSize:11,color:"rgba(248,242,229,0.5)",margin:"6px 0 0",lineHeight:1.4}}>days returning</p>
-              </div>
-              <div style={{width:1,alignSelf:"stretch",background:"rgba(248,242,229,0.08)"}}/>
-              <div style={{flex:1,paddingLeft:16}}>
-                <p style={{fontFamily:F,fontSize:32,fontWeight:300,color:B.vellum,margin:"0",letterSpacing:"-0.02em",lineHeight:1,fontVariationSettings:"'opsz' 60"}}>{totalSessions}</p>
-                <p style={{fontFamily:F,fontSize:11,color:"rgba(248,242,229,0.5)",margin:"6px 0 0",lineHeight:1.4}}>moments kept</p>
-              </div>
-              <button onClick={()=>setScreen("journey")} className="rhei-press" style={{background:"none",border:"none",cursor:"pointer",color:"rgba(248,242,229,0.55)",fontFamily:SF,fontSize:10,fontWeight:400,letterSpacing:"0.18em",textTransform:"uppercase",padding:0,alignSelf:"center"}}>
-                Full journey →
-              </button>
-            </div>
-          </div>
-        )}
+        {/* ── QUIET JOURNEY INDICATOR — removed. Rhei. does not count days or sessions. ── */}
 
         {/* ── PREMIUM WHISPER (only if not member) ── */}
         {!isPremium && !isInTrial && (
@@ -2752,14 +2737,8 @@ export default function ObrizApp() {
               <h2 style={{fontSize:26,color:B.cream,fontWeight:400,margin:"0 0 6px",fontFamily:F}}>You showed up.</h2>
               <p style={{fontSize:14,color:B.muted,margin:"0 0 4px",fontFamily:F}}>{cur.title}</p>
               <p style={{fontSize:11,color:B.goldDim,fontFamily:SF,margin:"0 0 28px",letterSpacing:0.5}}>{Math.ceil(cur.duration/60)} minutes</p>
-              <div style={{display:"flex",gap:8,justifyContent:"center",marginBottom:24}}>
-                {[{v:`${Math.ceil(cur.duration/60)}m`,l:"Duration"},{v:completedToday.length,l:"Today"},{v:streak,l:"Streak"}].map((s,i)=>(
-                  <div key={i} style={{background:B.card,borderRadius:12,padding:"12px 18px",border:`1px solid ${B.border}`}}>
-                    <p style={{fontSize:18,color:B.cream,margin:0,fontFamily:SF,fontWeight:300}}>{s.v}</p>
-                    <p style={{fontSize:9,color:B.muted,margin:"2px 0 0",letterSpacing:1,textTransform:"uppercase",fontFamily:SF}}>{s.l}</p>
-                  </div>
-                ))}
-              </div>
+              {/* Stats row (Duration / Today / Streak) removed — Rhei. does not count. */}
+              <p style={{fontSize:13,color:"rgba(248,242,229,0.62)",fontFamily:F,fontStyle:"italic",margin:"0 0 28px",lineHeight:1.5,maxWidth:280}}>The point was never the count. Only the return.</p>
               <button onClick={exitPlayer} style={{background:B.goldGrad,border:"none",borderRadius:28,padding:"14px 42px",cursor:"pointer",color:B.warmBlack,fontSize:12,fontFamily:SF,letterSpacing:2,fontWeight:700,boxShadow:B.goldGlowSm}} className="rhei-gold-shimmer">Continue</button>
             </div>
           </div>
@@ -2777,7 +2756,7 @@ export default function ObrizApp() {
     return (
     <div style={{
       position:"relative",
-      padding:"calc(env(safe-area-inset-top, 0px) + 32px) 0 140px",
+      padding:"calc(env(safe-area-inset-top, 0px) + 86px) 0 140px",
       minHeight:"100vh",
       background:"linear-gradient(180deg, #0A0604 0%, #100804 38%, #0A0604 100%)",
       overflow:"hidden",
@@ -3063,19 +3042,13 @@ export default function ObrizApp() {
       minHeight:"100vh",
       background:"linear-gradient(180deg, #0A0604 0%, #100804 38%, #0A0604 100%)",
       overflow:"hidden",
-      padding:"calc(env(safe-area-inset-top, 0px) + 32px) 0 140px",
+      padding:"calc(env(safe-area-inset-top, 0px) + 86px) 0 140px",
     }}>
       <DramaticGodRays intensity={1} pierce="50%" />
 
       <div style={{position:"relative", zIndex:1, maxWidth:480, margin:"0 auto", padding:"0 24px"}}>
 
-        {/* Top streak chip */}
-        {meditationStreak>0 && (
-          <div style={{position:"absolute", top:4, right:24, display:"flex", alignItems:"baseline", gap:6, zIndex:2}}>
-            <span style={{fontFamily:F, fontSize:20, fontWeight:300, color:"#F2EBDC", fontVariationSettings:"'opsz' 48"}}>{meditationStreak}</span>
-            <span style={{fontFamily:SF, fontSize:8, letterSpacing:"0.32em", color:"rgba(242,235,220,0.55)", textTransform:"uppercase"}}>day streak</span>
-          </div>
-        )}
+        {/* Top streak chip — removed per brand decision; Rhei. is not a streak app */}
 
         {/* ── HERO: editorial photograph + tight type ── */}
         <div className="rhei-rise rhei-rise-1" style={{
@@ -3407,11 +3380,11 @@ export default function ObrizApp() {
               position:"relative",
             }}>
             {!isPremium && (
-              <div style={{position:"absolute", top:-9, left:"50%", transform:"translateX(-50%)", background:"rgba(180,220,190,0.95)", color:"#0A1F12", padding:"3px 12px", borderRadius:100, fontSize:8, fontWeight:600, letterSpacing:"0.22em", fontFamily:SF, textTransform:"uppercase", whiteSpace:"nowrap"}}>7 days free</div>
+              <div style={{position:"absolute", top:-9, left:"50%", transform:"translateX(-50%)", background:"rgba(180,220,190,0.95)", color:"#0A1F12", padding:"3px 12px", borderRadius:100, fontSize:8, fontWeight:600, letterSpacing:"0.22em", fontFamily:SF, textTransform:"uppercase", whiteSpace:"nowrap"}}>14 days free</div>
             )}
             <PrecisionStamp label="Monthly" color="rgba(248,242,229,0.50)"/>
             <p style={{fontFamily:F, fontSize:36, fontWeight:300, color:"#F8F2E5", margin:"12px 0 0", lineHeight:1, fontVariationSettings:"'opsz' 72", letterSpacing:"-0.02em", fontVariantNumeric:"tabular-nums"}}>
-              €9<span style={{fontSize:18, color:"rgba(248,242,229,0.55)"}}>.99</span>
+              €14<span style={{fontSize:18, color:"rgba(248,242,229,0.55)"}}>.99</span>
             </p>
             <p style={{fontFamily:SF, fontSize:9, color:"rgba(248,242,229,0.45)", margin:"4px 0 14px", letterSpacing:"0.22em", textTransform:"uppercase"}}>per month</p>
             <div style={{borderTop:"1px solid rgba(248,242,229,0.10)", paddingTop:10, fontFamily:SF, fontSize:11, color:"rgba(245,200,120,0.85)", letterSpacing:"0.06em"}}>{isPremium ? "Subscribe" : "Start free trial"}</div>
@@ -3613,17 +3586,11 @@ export default function ObrizApp() {
   );
 
   // ══════════ JOURNEY ══════════
+  // Note: streak/total state (meditationStreak, longestStreak, totalSessions,
+  // completedToday, totalMinutes) is still computed and persisted upstream,
+  // but no longer surfaced in any UI. Kept in state for graceful migration in
+  // case Rhei. ever introduces a private "memory" feature in the future.
   const renderProgress=()=>{
-    const currentStreak = meditationStreak || (completedToday.length>0 ? 1 : 0);
-    const bestStreak = Math.max(longestStreak, meditationStreak, completedToday.length>0 ? 1 : 0);
-    const streakLine =
-      currentStreak===0 && completedToday.length===0 ? "Start today. The smallest return counts." :
-      currentStreak===0 && completedToday.length>0 ? "You showed up today. That's day one." :
-      currentStreak>=1 && currentStreak<=3 ? "You're building the pattern. The first week is the hardest." :
-      currentStreak>=4 && currentStreak<=7 ? "This is becoming a practice. Keep returning." :
-      currentStreak>=8 && currentStreak<=20 ? "You've made it past where most people stop." :
-      "This is who you are now. Quietly consistent.";
-
     return(
       <div style={{
         position:"relative",
@@ -3687,147 +3654,51 @@ export default function ObrizApp() {
 
         <div style={{maxWidth:480, margin:"0 auto", padding:"0 24px"}}>
 
-          {/* THE STREAK — feature panel with the giant numeral */}
+          {/* THE PRACTICE — quiet editorial block replacing the former
+              streak panel, progression bullets, and stats grid. Rhei. does
+              not count days, sessions, or minutes. */}
           <div className="rhei-rise rhei-rise-2" style={{
             position:"relative",
             background:"rgba(248,242,229,0.04)",
             backdropFilter:"blur(14px) saturate(1.1)",
             WebkitBackdropFilter:"blur(14px) saturate(1.1)",
-            border:"1px solid rgba(245,200,120,0.22)",
+            border:"1px solid rgba(245,200,120,0.18)",
             borderRadius:22,
-            padding:"28px 24px 24px",
+            padding:"38px 28px 34px",
             marginBottom:18,
             overflow:"hidden",
+            textAlign:"center",
           }}>
-            {/* Halo behind the numeral */}
-            <div style={{position:"absolute", top:"50%", left:"50%", width:340, height:340, borderRadius:"50%", background:"radial-gradient(circle, rgba(245,200,120,0.20) 0%, rgba(245,200,120,0.05) 40%, transparent 70%)", filter:"blur(30px)", transform:"translate(-50%, -50%)", pointerEvents:"none"}}/>
+            <div style={{position:"absolute", top:"50%", left:"50%", width:340, height:340, borderRadius:"50%", background:"radial-gradient(circle, rgba(245,200,120,0.18) 0%, rgba(245,200,120,0.04) 40%, transparent 70%)", filter:"blur(30px)", transform:"translate(-50%, -50%)", pointerEvents:"none"}}/>
             <CornerBrackets inset={10} size={12} color="rgba(245,200,120,0.30)"/>
 
-            <div style={{position:"relative", zIndex:1, display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14}}>
-              <PrecisionStamp label="Streak" color="rgba(245,200,120,0.75)"/>
-              <PrecisionStamp label="Today" value={completedToday.length>0 ? "✦ Done" : "—"} color={completedToday.length>0 ? "#F5C878" : "rgba(248,242,229,0.45)"}/>
-            </div>
-
-            <div style={{position:"relative", zIndex:1, display:"flex", alignItems:"baseline", gap:10, justifyContent:"center", marginBottom:14}}>
-              <span style={{
-                fontFamily:F, fontSize:"clamp(80px, 22vw, 110px)",
-                fontWeight:300, color:"#F8F2E5",
-                lineHeight:0.9, letterSpacing:"-0.04em",
-                fontVariationSettings:"'opsz' 144",
-                textShadow:"0 4px 30px rgba(245,200,120,0.25)",
-                fontVariantNumeric:"tabular-nums",
+            <div style={{position:"relative", zIndex:1}}>
+              <PrecisionStamp label="The Practice" color="rgba(245,200,120,0.75)"/>
+              <p style={{
+                fontFamily:F,
+                fontSize:21,
+                fontWeight:300,
+                fontStyle:"italic",
+                color:"rgba(248,242,229,0.88)",
+                lineHeight:1.45,
+                margin:"22px auto 18px",
+                maxWidth:320,
+                fontVariationSettings:"'opsz' 60",
+                letterSpacing:"-0.005em",
               }}>
-                {currentStreak}
-              </span>
-              <span style={{
-                fontFamily:SF, fontSize:11, fontWeight:500,
-                letterSpacing:"0.32em", textTransform:"uppercase",
-                color:"rgba(248,242,229,0.55)",
-              }}>
-                day{currentStreak===1?"":"s"}
-              </span>
-            </div>
-
-            <p style={{
-              position:"relative", zIndex:1,
-              fontFamily:F, 
-              fontSize:13, color:"rgba(248,242,229,0.70)",
-              textAlign:"center", lineHeight:1.55, margin:"0 0 18px",
-              maxWidth:320, marginLeft:"auto", marginRight:"auto",
-            }}>
-              {streakLine}
-            </p>
-
-            <Hairline color="rgba(245,200,120,0.18)" margin="0 0 14px"/>
-
-            <div style={{position:"relative", zIndex:1, display:"flex", justifyContent:"space-between", gap:20}}>
-              <div>
-                <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color:"rgba(248,242,229,0.45)", margin:"0 0 4px"}}>Best Ever</p>
-                <p style={{fontFamily:F, fontSize:22, fontWeight:300, color:"#F8F2E5", margin:0, fontVariantNumeric:"tabular-nums", fontVariationSettings:"'opsz' 48"}}>
-                  {bestStreak} <span style={{fontFamily:SF, fontSize:10, color:"rgba(248,242,229,0.50)", letterSpacing:"0.22em"}}>DAY{bestStreak===1?"":"S"}</span>
-                </p>
-              </div>
-              <div style={{textAlign:"right"}}>
-                <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color:"rgba(248,242,229,0.45)", margin:"0 0 4px"}}>Total</p>
-                <p style={{fontFamily:F, fontSize:22, fontWeight:300, color:"#F8F2E5", margin:0, fontVariantNumeric:"tabular-nums", fontVariationSettings:"'opsz' 48"}}>
-                  {totalSessions} <span style={{fontFamily:SF, fontSize:10, color:"rgba(248,242,229,0.50)", letterSpacing:"0.22em"}}>RITUALS</span>
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* PROGRESSION — how the face is changing */}
-          <div className="rhei-rise rhei-rise-3" style={{
-            background:"rgba(248,242,229,0.03)",
-            backdropFilter:"blur(12px)",
-            WebkitBackdropFilter:"blur(12px)",
-            border:"1px solid rgba(248,242,229,0.08)",
-            borderRadius:22,
-            padding:"24px 22px",
-            marginBottom:18,
-          }}>
-            <div style={{display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:18}}>
-              <PrecisionStamp label="The Reading" color="rgba(245,200,120,0.70)"/>
-              <PrecisionStamp label={`Session ${String(totalSessions).padStart(3,"0")}`} color="rgba(248,242,229,0.45)"/>
-            </div>
-            {totalSessions===0 ? (
-              <p style={{fontFamily:F, fontSize:14, color:"rgba(248,242,229,0.65)", lineHeight:1.55, margin:0}}>
-                Complete your first ritual to begin tracking. The change is visible within a week.
+                We don&rsquo;t count days. The point was never the count.
               </p>
-            ) : (
-              <div style={{display:"flex", flexDirection:"column", gap:18}}>
-                {[
-                  { label:"Tension", text: totalSessions>=5 ? "Your jaw is releasing. Less holding between sessions." : totalSessions>=2 ? "Starting to soften." : "Your face is beginning to open.", accent:"#5A8A5A", active:totalSessions>=2 },
-                  { label:"Puffiness", text: totalSessions>=4 ? "Drainage is improving. Mornings look clearer." : "Building your drainage habit.", accent:"#8E9BA0", active:totalSessions>=4 },
-                  { label:"Overall", text: totalSessions>=7 ? "More balanced. More consistent." : totalSessions>=3 ? "A pattern is forming. Keep going." : "The ritual is working. You'll see it this week.", accent:"#F5C878", active:totalSessions>=3 },
-                ].map((item,i)=>(
-                  <div key={i} style={{display:"flex", gap:14, alignItems:"flex-start"}}>
-                    <div style={{flexShrink:0, marginTop:5, width:8, height:8, borderRadius:"50%", background: item.active ? item.accent : "rgba(248,242,229,0.20)", boxShadow: item.active ? `0 0 12px ${item.accent}80` : "none"}}/>
-                    <div style={{flex:1}}>
-                      <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color: item.active ? item.accent : "rgba(248,242,229,0.40)", margin:"0 0 5px"}}>{item.label}</p>
-                      <p style={{fontFamily:F, fontSize:14, color: item.active ? "rgba(248,242,229,0.85)" : "rgba(248,242,229,0.55)", margin:0, lineHeight:1.5}}>{item.text}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* THE STATS GRID — 2x2 with tabular numerals */}
-          <div className="rhei-rise rhei-rise-3" style={{
-            display:"grid", gridTemplateColumns:"1fr 1fr",
-            gap:0, marginBottom:18,
-            border:"1px solid rgba(248,242,229,0.08)",
-            borderRadius:22, overflow:"hidden",
-            background:"rgba(248,242,229,0.02)",
-            backdropFilter:"blur(10px)",
-          }}>
-            {[
-              {v:totalSessions, l:"Rituals", sub:totalSessions===0?"Begin":totalSessions===1?"First":"Consistent"},
-              {v:`${totalMinutes}`, l:"Minutes", sub:"In your face"},
-              {v:currentStreak>0?currentStreak:"—", l:"Streak", sub:bestStreak>currentStreak?`Best ${bestStreak}`:"Active"},
-              {v:completedToday.length>0?"✦":"—", l:"Today", sub:completedToday.length>0?"Showed up":"Waiting"},
-            ].map((s,i)=>(
-              <div key={i} style={{
-                padding:"22px 20px",
-                borderRight: i%2===0 ? "1px solid rgba(248,242,229,0.06)" : "none",
-                borderBottom: i<2 ? "1px solid rgba(248,242,229,0.06)" : "none",
-                position:"relative",
+              <p style={{
+                fontFamily:F,
+                fontSize:13,
+                color:"rgba(248,242,229,0.62)",
+                lineHeight:1.65,
+                margin:"0 auto",
+                maxWidth:320,
               }}>
-                <p style={{
-                  fontFamily:F, fontSize:"clamp(30px, 7vw, 38px)",
-                  fontWeight:300, color:"#F8F2E5",
-                  margin:"0 0 4px", lineHeight:0.95,
-                  fontVariantNumeric:"tabular-nums",
-                  fontVariationSettings:"'opsz' 72",
-                  letterSpacing:"-0.02em",
-                }}>
-                  {s.v}
-                </p>
-                <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color:"rgba(245,200,120,0.70)", margin:"0 0 3px"}}>{s.l}</p>
-                <p style={{fontFamily:SF, fontSize:10, color:"rgba(248,242,229,0.50)", margin:0, letterSpacing:"0.04em"}}>{s.sub}</p>
-              </div>
-            ))}
+                What you build here is invisible from the outside and obvious from within. A softer jaw. A quieter morning. A face that remembers safety. The practice is yours, kept privately.
+              </p>
+            </div>
           </div>
 
           {/* PHOTO JOURNAL — the gallery slot */}
@@ -3845,7 +3716,7 @@ export default function ObrizApp() {
               <PrecisionStamp label="Coming Soon" color="rgba(248,242,229,0.40)"/>
             </div>
             <p style={{fontFamily:F, fontSize:13.5, color:"rgba(248,242,229,0.62)", margin:"0 0 18px", lineHeight:1.55}}>
-              The real measure is your face over time. A weekly self-portrait, kept private.
+              A weekly self-portrait, kept private. For you, not for us.
             </p>
             <div style={{display:"flex", gap:10}}>
               {["Before","After"].map((label, i) => (
@@ -3972,6 +3843,340 @@ export default function ObrizApp() {
       </div>
     );
   };
+
+  // ══════════ THE COLLECTION ══════════
+  // The library, browsable two ways. By practice (four pillar pills — each
+  // routes to the existing pillar screen). By moment (mood-based cards).
+  // Affirmations remain visible both as a named pillar and as mood cards.
+  const renderCollection=()=>(
+    <div style={{
+      position:"relative",
+      minHeight:"100vh",
+      background:"linear-gradient(180deg, #0A0604 0%, #100804 38%, #0A0604 100%)",
+      overflow:"hidden",
+      padding:"calc(env(safe-area-inset-top, 0px) + 86px) 0 140px",
+    }}>
+      <div style={{position:"relative", zIndex:1, maxWidth:480, margin:"0 auto", padding:"0 24px"}}>
+        <div style={{display:"flex", alignItems:"center", gap:10, marginBottom:22}}>
+          <div style={{flex:1, height:1, background:"rgba(248,242,229,0.10)"}}/>
+          <span style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.36em", textTransform:"uppercase", color:"rgba(196,154,75,0.78)"}}>Season &middot; Stillness</span>
+          <div style={{flex:1, height:1, background:"rgba(248,242,229,0.10)"}}/>
+        </div>
+        <h1 style={{fontFamily:F, fontSize:32, fontWeight:300, letterSpacing:"-0.025em", lineHeight:1.05, color:B.cream, margin:"0 0 6px", fontVariationSettings:"'opsz' 144"}}>The Collection</h1>
+        <p style={{fontFamily:F, fontStyle:"italic", fontSize:16, color:"rgba(248,242,229,0.65)", lineHeight:1.55, margin:"0 0 28px"}}>What do you need, today?</p>
+
+        <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.36em", textTransform:"uppercase", color:"rgba(196,154,75,0.65)", margin:"6px 0 12px"}}>By practice</p>
+        <div style={{display:"flex", gap:6, marginBottom:24, overflowX:"auto", paddingBottom:4}}>
+          {[
+            {label:"Meditations", target:"meditations"},
+            {label:"Affirmations", target:"affirmations"},
+            {label:"Face Sculpting", target:"rituals"},
+            {label:"Breathwork", target:"home"},
+          ].map((p,i)=>(
+            <button key={i} onClick={()=>setScreen(p.target)} className="rhei-press" style={{
+              flexShrink:0,
+              background:"rgba(248,242,229,0.04)",
+              border:"1px solid rgba(196,154,75,0.22)",
+              color:"rgba(242,232,217,0.85)",
+              borderRadius:100,
+              padding:"7px 13px",
+              fontFamily:SF, fontSize:9, fontWeight:500,
+              letterSpacing:"0.22em", textTransform:"uppercase",
+              cursor:"pointer", whiteSpace:"nowrap",
+            }}>{p.label}</button>
+          ))}
+        </div>
+
+        <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.36em", textTransform:"uppercase", color:"rgba(196,154,75,0.65)", margin:"6px 0 8px"}}>By moment</p>
+        {/* Editorial menu: no card chrome, no dots, no arrows. Three lines per
+            entry, separated by hairlines. Reads like the contents page of a
+            small book rather than a list of tiles. */}
+        <div style={{borderBottom:"1px solid rgba(248,242,229,0.10)"}}>
+          {[
+            {kicker:"Buccal", title:"For a clenched jaw", meta:"6 minutes", route:()=>setScreen("rituals")},
+            {kicker:"Breath", title:"For a heavy chest", meta:"4 minutes", route:()=>setScreen("home")},
+            {kicker:"Lymphatic + breath", title:"Before bed", meta:"8 minutes", route:()=>setScreen("rituals")},
+            {kicker:"Voice + breath", title:"Before a difficult conversation", meta:"3 minutes", route:()=>setScreen("affirmations")},
+            {kicker:"Soft reset", title:"When the morning is loud", meta:"60 seconds", route:()=>setScreen("home")},
+            {kicker:"Affirmations \u00B7 Self-worth", title:"When you need to hear it from outside yourself", meta:"5 minutes", route:()=>setScreen("affirmations")},
+            {kicker:"Affirmations \u00B7 Abundance", title:"For abundance, said softly", meta:"4 minutes", route:()=>setScreen("affirmations")},
+            {kicker:"Affirmations \u00B7 Body acceptance", title:"For the body you are in", meta:"6 minutes", route:()=>setScreen("affirmations")},
+          ].map((m,i)=>(
+            <button key={i} onClick={m.route} className="rhei-press" style={{
+              background:"none",
+              border:"none",
+              borderTop:"1px solid rgba(248,242,229,0.10)",
+              padding:"26px 0 24px",
+              cursor:"pointer",
+              textAlign:"left",
+              width:"100%",
+              display:"block",
+              transition:"background .25s ease",
+            }}>
+              <p style={{
+                fontFamily:SF, fontSize:9, fontWeight:500,
+                letterSpacing:"0.32em", textTransform:"uppercase",
+                color:"rgba(196,154,75,0.72)",
+                margin:"0 0 10px",
+              }}>{m.kicker}</p>
+              <p style={{
+                fontFamily:F, fontSize:21, fontWeight:300,
+                color:B.cream,
+                lineHeight:1.25,
+                letterSpacing:"-0.015em",
+                margin:"0 0 10px",
+                fontVariationSettings:"'opsz' 72",
+              }}>{m.title}</p>
+              <p style={{
+                fontFamily:SF, fontSize:9.5, fontWeight:500,
+                letterSpacing:"0.36em", textTransform:"uppercase",
+                color:"rgba(248,242,229,0.38)",
+                margin:0,
+              }}>{m.meta}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  // ══════════ THE CABINET ══════════
+  // The room of objects. First object: The Light (red-light therapy ritual).
+  // Anticipation state until the device ships.
+  const renderCabinet=()=>(
+    <div style={{
+      position:"relative",
+      minHeight:"100vh",
+      background:"linear-gradient(180deg, #0A0604 0%, #100804 38%, #0A0604 100%)",
+      overflow:"hidden",
+      padding:"calc(env(safe-area-inset-top, 0px) + 86px) 0 140px",
+    }}>
+      <div style={{position:"relative", zIndex:1, maxWidth:480, margin:"0 auto", padding:"0 24px"}}>
+        <div style={{display:"flex", alignItems:"center", gap:10, marginBottom:22}}>
+          <div style={{flex:1, height:1, background:"rgba(248,242,229,0.10)"}}/>
+          <span style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.36em", textTransform:"uppercase", color:"rgba(196,154,75,0.78)"}}>Season &middot; Stillness</span>
+          <div style={{flex:1, height:1, background:"rgba(248,242,229,0.10)"}}/>
+        </div>
+        <h1 style={{fontFamily:F, fontSize:32, fontWeight:300, letterSpacing:"-0.025em", lineHeight:1.05, color:B.cream, margin:"0 0 6px", fontVariationSettings:"'opsz' 144"}}>The Cabinet</h1>
+        <p style={{fontFamily:F, fontStyle:"italic", fontSize:14, color:"rgba(248,242,229,0.62)", lineHeight:1.55, margin:"0 0 26px"}}>Objects, slowly chosen. The room of the practice that lives in your hands.</p>
+
+        <div style={{
+          position:"relative",
+          background:"linear-gradient(180deg, rgba(196,154,75,0.10) 0%, rgba(45,27,14,0.85) 100%)",
+          border:"1px solid rgba(196,154,75,0.30)",
+          borderRadius:18,
+          overflow:"hidden",
+          marginBottom:28,
+        }}>
+          <div style={{
+            width:"100%", height:230, position:"relative",
+            background:"radial-gradient(circle at 50% 55%, #C49A4B 0%, rgba(196,154,75,0.55) 12%, transparent 35%), radial-gradient(circle at 50% 55%, rgba(196,80,40,0.45) 0%, transparent 50%), linear-gradient(180deg, #2D1B0E 0%, #1A0E06 100%)",
+            overflow:"hidden",
+          }}>
+            <div style={{
+              position:"absolute", top:14, left:14, zIndex:2,
+              background:"rgba(10,6,4,0.55)",
+              backdropFilter:"blur(8px)",
+              border:"1px solid rgba(196,154,75,0.30)",
+              borderRadius:100, padding:"5px 12px",
+              fontFamily:SF, fontSize:8.5, fontWeight:500,
+              letterSpacing:"0.32em", textTransform:"uppercase",
+              color:"rgba(196,154,75,0.95)",
+            }}>Arriving &middot; Late Summer</div>
+          </div>
+          <div style={{padding:"22px 22px"}}>
+            <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.34em", textTransform:"uppercase", color:"rgba(196,154,75,0.80)", margin:"0 0 14px"}}>The First Object</p>
+            <h2 style={{fontFamily:F, fontSize:30, fontWeight:300, letterSpacing:"-0.025em", color:B.cream, lineHeight:1.05, margin:"0 0 8px", fontVariationSettings:"'opsz' 144"}}>The Light</h2>
+            <p style={{fontFamily:F, fontSize:13, color:"rgba(248,242,229,0.62)", lineHeight:1.6, margin:"0 0 18px"}}>A red-light ritual, built for the morning that does not yet have one. Twelve minutes a day, with Lulu&rsquo;s voice walking you through. Sculpted to be held; quiet enough to live on your bedside table. Notify me when it arrives, and you&rsquo;ll be the first to keep one.</p>
+            <button onClick={()=>{ showToast && showToast("You&rsquo;re on the list. We&rsquo;ll write when it&rsquo;s near."); }} className="rhei-press" style={{
+              width:"100%",
+              background:"rgba(248,242,229,0.05)",
+              color:B.cream,
+              border:"1px solid rgba(196,154,75,0.40)",
+              borderRadius:100,
+              padding:"13px 22px",
+              fontFamily:SF, fontSize:10.5, fontWeight:500,
+              letterSpacing:"0.28em", textTransform:"uppercase",
+              cursor:"pointer",
+            }}>Notify me</button>
+          </div>
+        </div>
+
+        <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.36em", textTransform:"uppercase", color:"rgba(196,154,75,0.65)", margin:"0 0 14px"}}>Forthcoming objects</p>
+        <div style={{display:"flex", gap:10}}>
+          {[
+            "A stone, shaped to the jaw.",
+            "A small light, for the room.",
+            "An oil, blended slowly.",
+          ].map((t,i)=>(
+            <div key={i} style={{
+              flex:1, height:110,
+              background:"rgba(248,242,229,0.03)",
+              border:"1px dashed rgba(248,242,229,0.15)",
+              borderRadius:12,
+              padding:"14px 12px",
+              display:"flex", flexDirection:"column", justifyContent:"flex-end",
+            }}>
+              <p style={{fontFamily:F, fontStyle:"italic", fontSize:12, color:"rgba(248,242,229,0.45)", lineHeight:1.3, margin:0}}>{t}</p>
+              <p style={{fontFamily:SF, fontSize:8, fontWeight:500, letterSpacing:"0.32em", textTransform:"uppercase", color:"rgba(196,154,75,0.55)", margin:"6px 0 0"}}>Coming</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  // ══════════ THE ALMANAC ══════════
+  // Editorial layer. The Letter of the Season, past Seasons archived like
+  // back issues of a magazine. Where the customer goes to be inside the
+  // brand world without needing to do anything.
+  const renderAlmanac=()=>(
+    <div style={{
+      position:"relative",
+      minHeight:"100vh",
+      background:"linear-gradient(180deg, #0A0604 0%, #100804 38%, #0A0604 100%)",
+      overflow:"hidden",
+      padding:"calc(env(safe-area-inset-top, 0px) + 86px) 0 140px",
+    }}>
+      <div style={{position:"relative", zIndex:1, maxWidth:480, margin:"0 auto", padding:"0 24px"}}>
+        <div style={{display:"flex", alignItems:"center", gap:10, marginBottom:22}}>
+          <div style={{flex:1, height:1, background:"rgba(248,242,229,0.10)"}}/>
+          <span style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.36em", textTransform:"uppercase", color:"rgba(196,154,75,0.78)"}}>Season &middot; Stillness</span>
+          <div style={{flex:1, height:1, background:"rgba(248,242,229,0.10)"}}/>
+        </div>
+        <h1 style={{fontFamily:F, fontSize:32, fontWeight:300, letterSpacing:"-0.025em", lineHeight:1.05, color:B.cream, margin:"0 0 6px", fontVariationSettings:"'opsz' 144"}}>The Almanac</h1>
+        <p style={{fontFamily:F, fontStyle:"italic", fontSize:14, color:"rgba(248,242,229,0.62)", lineHeight:1.55, margin:"0 0 26px"}}>Letters, notes, and small readings &mdash; sent monthly, kept for as long as you want them.</p>
+
+        <div style={{borderTop:"1px solid rgba(248,242,229,0.10)", paddingTop:24}}>
+          <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.36em", textTransform:"uppercase", color:"rgba(196,154,75,0.78)", margin:"0 0 8px"}}>The Letter &middot; June</p>
+          <h2 style={{fontFamily:F, fontSize:26, fontWeight:300, letterSpacing:"-0.015em", color:B.cream, lineHeight:1.2, margin:"0 0 14px", fontVariationSettings:"'opsz' 96"}}>On Stillness</h2>
+          <p style={{fontFamily:F, fontSize:13, color:"rgba(248,242,229,0.68)", lineHeight:1.65, margin:"0 0 12px"}}>It took me a long time to understand that stillness was not a withdrawal from the world. I had been raised to read it as such &mdash; as a pause in the productive day, a small surrender, a thing that good women earned but did not begin with.</p>
+          <p style={{fontFamily:F, fontSize:13, color:"rgba(248,242,229,0.68)", lineHeight:1.65, margin:"0 0 18px"}}>What changed was the morning I caught myself half-listening to a vagus-nerve podcast at twice the speed, and realized I had turned even my softness into a task. The optimization had eaten its returns; the body had been waiting.</p>
+          <p style={{fontFamily:F, fontStyle:"italic", fontSize:12, color:"rgba(196,154,75,0.75)", margin:0}}>&mdash; Rhea, for the Season of Stillness</p>
+        </div>
+
+        <div style={{marginTop:36}}>
+          <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.36em", textTransform:"uppercase", color:"rgba(196,154,75,0.65)", margin:"0 0 14px"}}>Past Seasons</p>
+          <div style={{display:"flex", gap:10, overflowX:"auto", paddingBottom:6}}>
+            {[
+              {n:"05", name:"Brightening"},
+              {n:"04", name:"Tenderness"},
+              {n:"03", name:"Restoration"},
+              {n:"02", name:"Return"},
+            ].map((s,i)=>(
+              <div key={i} style={{
+                flexShrink:0,
+                width:100, height:130,
+                background:"linear-gradient(180deg, rgba(196,154,75,0.18) 0%, rgba(45,27,14,0.70) 100%)",
+                border:"1px solid rgba(196,154,75,0.22)",
+                borderRadius:10,
+                padding:"14px 12px",
+                display:"flex", flexDirection:"column", justifyContent:"flex-end",
+              }}>
+                <p style={{fontFamily:SF, fontSize:8, fontWeight:500, letterSpacing:"0.34em", color:"rgba(242,232,217,0.45)", margin:"0 0 6px"}}>{s.n}</p>
+                <p style={{fontFamily:F, fontSize:14, color:B.cream, lineHeight:1.1, margin:0, fontVariationSettings:"'opsz' 48"}}>{s.name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ══════════ THE HOUSE — modal sheet ══════════
+  // Plan management, profile, push, sign out. Opened from the R. monogram.
+  const renderHouseSheet=()=>(
+    <div style={{
+      position:"fixed", inset:0, zIndex:90,
+      background:"rgba(8,5,3,0.72)",
+      backdropFilter:"blur(12px)",
+      display:"flex", alignItems:"flex-end",
+    }} onClick={(e)=>{ if(e.target===e.currentTarget) setHouseOpen(false); }}>
+      <div style={{
+        width:"100%", maxWidth:430, margin:"0 auto",
+        background:"linear-gradient(180deg, #2D1B0E 0%, #1A0E06 100%)",
+        borderTopLeftRadius:28, borderTopRightRadius:28,
+        borderTop:"1px solid rgba(196,154,75,0.30)",
+        boxShadow:"0 -20px 60px rgba(0,0,0,0.7)",
+        padding:"26px 24px calc(env(safe-area-inset-bottom, 22px) + 26px)",
+        maxHeight:"80%", overflowY:"auto",
+        position:"relative",
+      }}>
+        <button onClick={()=>setHouseOpen(false)} aria-label="Close" style={{
+          position:"absolute", top:14, right:18,
+          background:"none", border:"none", cursor:"pointer",
+          color:"rgba(248,242,229,0.45)", fontFamily:F, fontSize:22, zIndex:5,
+        }}>&times;</button>
+        <div style={{width:42, height:4, borderRadius:3, background:"rgba(242,232,217,0.18)", margin:"0 auto 18px"}}/>
+        <h3 style={{fontFamily:F, fontSize:24, fontWeight:300, letterSpacing:"-0.015em", color:B.cream, margin:"0 0 6px"}}>The House</h3>
+        <p style={{fontFamily:F, fontStyle:"italic", fontSize:12.5, color:"rgba(248,242,229,0.60)", margin:"0 0 24px"}}>Yours, kept quietly.</p>
+
+        <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px 0", borderBottom:"1px solid rgba(248,242,229,0.08)"}}>
+          <span style={{fontFamily:SF, fontSize:11, fontWeight:500, color:B.cream, letterSpacing:"0.04em"}}>Member</span>
+          <span style={{fontFamily:SF, fontSize:10, fontWeight:500, color:isPremium?"#F5C878":isInTrial?"#F5C878":"rgba(248,242,229,0.45)", letterSpacing:"0.22em", textTransform:"uppercase"}}>
+            {isPremium ? "Active" : isInTrial ? `Trial \u00B7 ${trialDaysLeft}d` : "Not active"}
+          </span>
+        </div>
+        {authUser?.email && (
+          <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px 0", borderBottom:"1px solid rgba(248,242,229,0.08)"}}>
+            <span style={{fontFamily:SF, fontSize:11, fontWeight:500, color:B.cream, letterSpacing:"0.04em"}}>Email</span>
+            <span style={{fontFamily:SF, fontSize:11, color:"rgba(248,242,229,0.60)"}}>{authUser.email}</span>
+          </div>
+        )}
+        {userName && (
+          <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px 0", borderBottom:"1px solid rgba(248,242,229,0.08)"}}>
+            <span style={{fontFamily:SF, fontSize:11, fontWeight:500, color:B.cream, letterSpacing:"0.04em"}}>Name</span>
+            <span style={{fontFamily:SF, fontSize:11, color:"rgba(248,242,229,0.60)"}}>{userName}</span>
+          </div>
+        )}
+        <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", padding:"14px 0", borderBottom:"1px solid rgba(248,242,229,0.08)"}}>
+          <span style={{fontFamily:SF, fontSize:11, fontWeight:500, color:B.cream, letterSpacing:"0.04em"}}>Voice</span>
+          <span style={{fontFamily:SF, fontSize:10, color:"rgba(196,154,75,0.85)", letterSpacing:"0.22em", textTransform:"uppercase"}}>Lulu</span>
+        </div>
+
+        {isPremium ? (
+          <button onClick={()=>{ setHouseOpen(false); openBillingPortal && openBillingPortal(); }} className="rhei-press" style={{
+            width:"100%", marginTop:18,
+            background:"rgba(248,242,229,0.04)",
+            border:"1px solid rgba(248,242,229,0.14)",
+            color:B.cream,
+            borderRadius:14,
+            padding:"14px 16px",
+            fontFamily:SF, fontSize:11, fontWeight:500,
+            letterSpacing:"0.22em", textTransform:"uppercase",
+            cursor:"pointer",
+          }}>Manage plan &middot; Cancel &middot; Switch</button>
+        ) : (
+          <button onClick={()=>{ setHouseOpen(false); setScreen("premium"); }} className="rhei-press" style={{
+            width:"100%", marginTop:18,
+            background:"linear-gradient(135deg, #C49A4B 0%, #D4AD6A 60%, #A07D3A 100%)",
+            border:"none",
+            color:"#1A0F06",
+            borderRadius:14,
+            padding:"14px 16px",
+            fontFamily:SF, fontSize:11, fontWeight:600,
+            letterSpacing:"0.22em", textTransform:"uppercase",
+            cursor:"pointer",
+          }}>See membership</button>
+        )}
+
+        {authUser && (
+          <button onClick={()=>{ setHouseOpen(false); signOut && signOut(); }} style={{
+            width:"100%", marginTop:10,
+            background:"none",
+            border:"1px solid rgba(248,242,229,0.10)",
+            color:"rgba(248,242,229,0.65)",
+            borderRadius:14,
+            padding:"12px 16px",
+            fontFamily:SF, fontSize:10, fontWeight:500,
+            letterSpacing:"0.22em", textTransform:"uppercase",
+            cursor:"pointer",
+            display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+          }}><LogOut size={11}/> Sign out</button>
+        )}
+      </div>
+    </div>
+  );
 
   // ══════════ CHECK-IN MODAL (Redesigned) ══════════
   const renderCheckin=()=>(
@@ -4127,7 +4332,10 @@ export default function ObrizApp() {
       {screen==="meditations"&&renderMeditations()}
       {screen==="premium"&&renderPremium()}
       {screen==="progress"&&renderProgress()}
-      {screen==="affirmations"&&<AffirmationsScreen onBack={()=>setScreen("home")} hasAccess={hasAccess} onUpgrade={()=>setScreen("premium")}/>}
+      {screen==="collection"&&renderCollection()}
+      {screen==="cabinet"&&renderCabinet()}
+      {screen==="almanac"&&renderAlmanac()}
+      {screen==="affirmations"&&<AffirmationsScreen onBack={()=>setScreen("collection")} hasAccess={hasAccess} onUpgrade={()=>setScreen("premium")}/>}
       {screen==="mirror"&&<FaceMirrorMode onClose={()=>setScreen("rituals")} onTransitionToReset={(id)=>startSession(id)} rituals={rituals} isPremium={hasAccess}/>}
       {showCheckin&&renderCheckin()}
       {microActive&&renderMicro()}
@@ -4296,28 +4504,70 @@ export default function ObrizApp() {
         </div>
       )}
 
-      {/* Bottom Nav — luxury glass dock */}
-      <div style={{
-        position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)",
-        width:"100%", maxWidth:430,
-        background:"rgba(10,6,4,0.78)",
-        backdropFilter:"blur(28px) saturate(1.4)",
-        WebkitBackdropFilter:"blur(28px) saturate(1.4)",
-        borderTop:"1px solid rgba(245,200,120,0.14)",
-        boxShadow:"0 -20px 50px -20px rgba(245,200,120,0.06)",
-        display:"flex", justifyContent:"space-around",
-        padding:"12px 0 env(safe-area-inset-bottom, 22px)",
-        paddingBottom:"max(env(safe-area-inset-bottom), 22px)",
-        zIndex:50,
-      }}>
-        {/* Top hairline glow */}
-        <div style={{position:"absolute", top:0, left:"15%", right:"15%", height:1, background:"linear-gradient(90deg, transparent, rgba(245,200,120,0.40), transparent)", pointerEvents:"none"}}/>
-        {navBtn("home",Home,"Today")}
-        {navBtn("rituals",Sparkles,"Rituals")}
-        {navBtn("meditations",Headphones,"Meditate")}
-        {navBtn("affirmations",MessageCircle,"Affirm")}
-        {navBtn("progress",Heart,"Journey")}
-      </div>
+      {/* ══════════ TOP EDITORIAL NAV ══════════
+          Four named rooms — Today, Collection, Cabinet, Almanac — in Inter
+          small caps with a hairline underline marking the active room.
+          The R. monogram in the corner opens the House sheet (plan, account).
+          Hidden during full-screen overlays (player, mirror, premium, checkin,
+          micro intervention, ritual player) so the immersive moments are not
+          framed by nav chrome.
+
+          The Collection nav item also reads as active when the user is inside
+          one of its sub-rooms (rituals, meditations, affirmations, library) so
+          she always knows where she is in the house. */}
+      {!["player","mirror","premium"].includes(screen) && !showCheckin && !microActive && !activeRitual && (
+        <div style={{
+          position:"fixed", top:0, left:"50%", transform:"translateX(-50%)",
+          width:"100%", maxWidth:430,
+          display:"flex", alignItems:"center", justifyContent:"space-between",
+          padding:"calc(env(safe-area-inset-top, 0px) + 18px) 22px 14px",
+          background:"linear-gradient(180deg, rgba(10,6,4,0.92) 0%, rgba(10,6,4,0.70) 65%, rgba(10,6,4,0) 100%)",
+          backdropFilter:"blur(16px) saturate(1.3)",
+          WebkitBackdropFilter:"blur(16px) saturate(1.3)",
+          zIndex:55,
+          pointerEvents:"auto",
+        }}>
+          <div style={{display:"flex", gap:14, alignItems:"baseline"}}>
+            {[
+              {id:"home", label:"Today"},
+              {id:"collection", label:"Collection"},
+              {id:"cabinet", label:"Cabinet"},
+              {id:"almanac", label:"Almanac"},
+            ].map(n => {
+              const active = n.id===screen
+                || (n.id==="collection" && ["rituals","meditations","affirmations","library"].includes(screen));
+              return (
+                <button key={n.id} onClick={()=>setScreen(n.id)} className="rhei-press" style={{
+                  background:"none", border:"none", cursor:"pointer",
+                  padding:"4px 0", position:"relative",
+                  fontFamily:SF, fontSize:8.5, fontWeight:500,
+                  letterSpacing:"0.28em", textTransform:"uppercase",
+                  color: active ? B.gold : "rgba(248,242,229,0.50)",
+                  transition:"color .2s ease",
+                  whiteSpace:"nowrap",
+                }}>
+                  {n.label}
+                  {active && <div style={{position:"absolute", bottom:-3, left:"50%", transform:"translateX(-50%)", width:12, height:1, background:B.gold}}/>}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* The R. monogram — opens The House sheet */}
+          <button onClick={()=>setHouseOpen(true)} className="rhei-press" aria-label="The House" style={{
+            width:30, height:30, borderRadius:"50%",
+            background:"rgba(196,154,75,0.10)",
+            border:"1px solid rgba(196,154,75,0.30)",
+            cursor:"pointer",
+            display:"flex", alignItems:"center", justifyContent:"center",
+            color:B.gold,
+            fontFamily:F, fontSize:13, fontWeight:400,
+            padding:0,
+          }}>R<span style={{fontSize:8, verticalAlign:"super"}}>.</span></button>
+        </div>
+      )}
+
+      {houseOpen && renderHouseSheet()}
     </div>
   );
 }
