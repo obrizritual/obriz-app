@@ -2472,10 +2472,52 @@ export default function ObrizApp() {
         </div>
 
         {/* ── Cinematic hero — greeting + daily message ── */}
-        <div className="rhei-rise rhei-rise-2" style={{marginBottom:52}}>
+        <div className="rhei-rise rhei-rise-2" style={{marginBottom:36}}>
           <p style={{fontFamily:F,fontSize:15,color:"rgba(248,242,229,0.55)",margin:"0 0 16px",letterSpacing:"-0.005em"}}>{greeting}</p>
           <h1 style={{fontFamily:F,fontSize:"clamp(34px, 8.5vw, 44px)",fontWeight:300,color:B.vellum,letterSpacing:"-0.02em",lineHeight:1.05,margin:"0 0 14px",maxWidth:380,fontVariationSettings:"'opsz' 60"}}>{dailyMessage.h}</h1>
           <p style={{fontFamily:F,fontSize:15,fontWeight:400,color:"rgba(248,242,229,0.6)",lineHeight:1.55,margin:0,maxWidth:340}}>{dailyMessage.s}</p>
+        </div>
+
+        {/* ── THE PRACTICE — editorial introduction. Names what Rhei. is and
+            the four practices, so no visitor leaves confused about what the
+            app does. Quiet enough that returning members scroll past on
+            instinct; clear enough that a first-time visitor knows exactly
+            what she has walked into. ── */}
+        <div className="rhei-rise rhei-rise-3" style={{
+          marginBottom:48,
+          paddingBottom:32,
+          borderBottom:"1px solid rgba(248,242,229,0.10)",
+        }}>
+          <p style={{
+            fontFamily:SF, fontSize:9, fontWeight:500,
+            letterSpacing:"0.36em", textTransform:"uppercase",
+            color:"rgba(196,154,75,0.78)",
+            margin:"0 0 14px",
+          }}>The Practice</p>
+          <p style={{
+            fontFamily:F, fontSize:22, fontWeight:300,
+            fontStyle:"italic",
+            color:"rgba(248,242,229,0.92)",
+            lineHeight:1.35,
+            letterSpacing:"-0.01em",
+            margin:"0 0 18px",
+            maxWidth:360,
+            fontVariationSettings:"'opsz' 72",
+          }}>Twelve minutes a day to become yourself again.</p>
+          <p style={{
+            fontFamily:F, fontSize:14, fontWeight:300,
+            color:"rgba(248,242,229,0.65)",
+            lineHeight:1.65,
+            margin:"0 0 14px",
+            maxWidth:360,
+          }}>Rhei. is a daily ritual practice. Four small tools, woven into one morning &mdash; for women who have done enough, and want to remember softness.</p>
+          <p style={{
+            fontFamily:SF, fontSize:10, fontWeight:500,
+            letterSpacing:"0.28em", textTransform:"uppercase",
+            color:"rgba(196,154,75,0.85)",
+            margin:0,
+            lineHeight:1.7,
+          }}>Meditation &middot; Affirmations &middot; Face Sculpting &middot; Breathwork</p>
         </div>
 
         {/* ── PWA install whisper (low priority, easy to dismiss) ── */}
@@ -3970,7 +4012,7 @@ export default function ObrizApp() {
         }}>
           <div style={{
             width:"100%", height:230, position:"relative",
-            background:"radial-gradient(circle at 50% 55%, #C49A4B 0%, rgba(196,154,75,0.55) 12%, transparent 35%), radial-gradient(circle at 50% 55%, rgba(196,80,40,0.45) 0%, transparent 50%), linear-gradient(180deg, #2D1B0E 0%, #1A0E06 100%)",
+            background:"radial-gradient(circle at 50% 55%, rgba(196,154,75,0.85) 0%, rgba(196,80,40,0.28) 20%, transparent 48%), linear-gradient(180deg, #2D1B0E 0%, #1A0E06 100%)",
             overflow:"hidden",
           }}>
             <div style={{
@@ -4521,9 +4563,9 @@ export default function ObrizApp() {
           width:"100%", maxWidth:430,
           display:"flex", alignItems:"center", justifyContent:"space-between",
           padding:"calc(env(safe-area-inset-top, 0px) + 18px) 22px 14px",
-          background:"linear-gradient(180deg, rgba(10,6,4,0.92) 0%, rgba(10,6,4,0.70) 65%, rgba(10,6,4,0) 100%)",
-          backdropFilter:"blur(16px) saturate(1.3)",
-          WebkitBackdropFilter:"blur(16px) saturate(1.3)",
+          background:"linear-gradient(180deg, rgba(10,6,4,0.94) 0%, rgba(10,6,4,0.78) 60%, rgba(10,6,4,0) 100%)",
+          backdropFilter:"blur(8px)",
+          WebkitBackdropFilter:"blur(8px)",
           zIndex:55,
           pointerEvents:"auto",
         }}>
