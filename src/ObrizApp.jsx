@@ -1921,9 +1921,11 @@ export default function ObrizApp() {
   const TRIAL_DAYS = 14;
   const [trialStartedAt,setTrialStartedAt]=useState(()=>load('trialStartedAt',null));
 
-  // Initialize trial start on first launch (for new users) AND backfill it
-  // for existing onboarded users who don't have it yet (grandfather in).
+  // Initialize trial start for non-Supabase (guest/offline) mode only.
+  // When Supabase is enabled, trial_started_at comes from the profiles table
+  // after sign-in — we do not auto-grant a trial to unauthenticated visitors.
   useEffect(() => {
+    if (supabase) return; // Supabase users get trial from the DB
     if (!trialStartedAt) {
       const now = Date.now();
       setTrialStartedAt(now);
@@ -1937,11 +1939,14 @@ export default function ObrizApp() {
   const trialDaysLeft = Math.ceil(trialMsLeft / (24 * 60 * 60 * 1000));
   const isInTrial = trialMsLeft > 0;
   const trialEnded = trialStartedAt && trialMsLeft === 0 && !isPremium;
-  // hasAccess: paid subscriber OR currently inside the trial window
-  const hasAccess = isPremium || isInTrial;
+  // hasAccess: paid subscriber OR currently inside the trial window.
+  // When Supabase is enabled, an unauthenticated visitor has no trial —
+  // they must sign in to get their account-bound 14-day access.
+  const hasAccess = isPremium || (supabase ? (!!authUser && isInTrial) : isInTrial);
 
   // Navigation
   const [screen,setScreen]=useState("home");
+  const [prevScreen,setPrevScreen]=useState(null); // tracks where user came from for back navigation
   // The House sheet (plan management, profile, push, sign out). Opened from
   // the R. monogram in the top-right corner. Not a screen — a modal overlay.
   const [houseOpen,setHouseOpen]=useState(false);
@@ -2033,25 +2038,56 @@ export default function ObrizApp() {
     if(!supabase) { setAuthLoading(false); return; }
     supabase.auth.getSession().then(({data:{session}})=>{
       setAuthUser(session?.user||null);
-      if(session?.user?.email){
-        // Check subscription in Supabase
-        fetchWithRetry('/api/check-subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:session.user.email})})
-          .then(r=>r.json())
-          .then(data=>{ if(data.isPremium){setIsPremium(true);save('isPremium',true);save('premiumPlan',data.plan);} })
+      if(session?.user){
+        const userId=session.user.id;
+        const email=session.user.email;
+        // Load trial start date from the profiles table (account-bound, device-agnostic)
+        supabase.from('profiles').select('trial_started_at').eq('id',userId).single()
+          .then(({data:profile})=>{
+            if(profile?.trial_started_at){
+              const ts=new Date(profile.trial_started_at).getTime();
+              setTrialStartedAt(ts);
+              save('trialStartedAt',ts);
+            }
+          })
           .catch(()=>{});
-        save('customerEmail',session.user.email);
+        if(email){
+          // Check subscription status
+          fetchWithRetry('/api/check-subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})})
+            .then(r=>r.json())
+            .then(data=>{ if(data.isPremium){setIsPremium(true);save('isPremium',true);save('premiumPlan',data.plan);} })
+            .catch(()=>{});
+          save('customerEmail',email);
+        }
         if(!userName && session.user.user_metadata?.name){setUserName(session.user.user_metadata.name);save('userName',session.user.user_metadata.name);}
       }
       setAuthLoading(false);
     });
     const {data:{subscription:authSub}}=supabase.auth.onAuthStateChange((_event,session)=>{
       setAuthUser(session?.user||null);
-      if(session?.user?.email){
-        fetchWithRetry('/api/check-subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:session.user.email})})
-          .then(r=>r.json())
-          .then(data=>{ if(data.isPremium){setIsPremium(true);save('isPremium',true);} })
+      if(session?.user){
+        const userId=session.user.id;
+        const email=session.user.email;
+        // Load account-bound trial date on every sign-in event
+        supabase.from('profiles').select('trial_started_at').eq('id',userId).single()
+          .then(({data:profile})=>{
+            if(profile?.trial_started_at){
+              const ts=new Date(profile.trial_started_at).getTime();
+              setTrialStartedAt(ts);
+              save('trialStartedAt',ts);
+            }
+          })
           .catch(()=>{});
-        save('customerEmail',session.user.email);
+        if(email){
+          fetchWithRetry('/api/check-subscription',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})})
+            .then(r=>r.json())
+            .then(data=>{ if(data.isPremium){setIsPremium(true);save('isPremium',true);} })
+            .catch(()=>{});
+          save('customerEmail',email);
+        }
+      } else {
+        // Signed out — revoke in-memory trial access immediately
+        setTrialStartedAt(null);
       }
     });
     return()=>authSub.unsubscribe();
@@ -2446,272 +2482,161 @@ export default function ObrizApp() {
     return (
     <div className="rhei-page" style={{
       position:"relative",
-      padding:"calc(env(safe-area-inset-top, 0px) + 86px) 24px 140px",
+      padding:"calc(env(safe-area-inset-top, 0px) + 68px) 22px 140px",
       minHeight:"100vh",
-      background:"linear-gradient(180deg, #2D1B0E 0%, #1A0F06 50%, #0F0905 100%)",
+      background:"linear-gradient(180deg, #241509 0%, #1A0F06 55%, #0F0905 100%)",
       overflow:"hidden",
     }}>
-      {/* Cinematic golden-hour stack — the room you walk into */}
-      <GoldenHourAtmosphere top="18%" left="60%" intensity={0.85} />
+      {/* Soft atmospheric warmth */}
+      <div style={{position:"absolute",top:0,right:0,width:280,height:280,borderRadius:"50%",background:"radial-gradient(circle, rgba(196,154,75,0.09) 0%, transparent 65%)",filter:"blur(40px)",pointerEvents:"none"}}/>
 
-      {/* Content sits above atmosphere */}
       <div style={{position:"relative", zIndex:1, maxWidth:430, margin:"0 auto"}}>
 
-        {/* ── Top eyebrow row: precision stamp + premium chip ── */}
-        <div className="rhei-rise rhei-rise-1" style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:48}}>
-          <PrecisionStamp label="RHEI" value={tc === "night" ? "TONIGHT" : tc === "morning" ? "TODAY" : tc === "evening" ? "EVENING" : "NOW"} color="rgba(248,242,229,0.65)"/>
-          <button
-            className="rhei-press"
-            onClick={()=>setScreen("premium")}
-            style={{background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:`1px solid ${isPremium?"rgba(196,154,75,0.35)":isInTrial?"rgba(196,154,75,0.25)":"rgba(248,242,229,0.10)"}`,borderRadius:100,padding:"5px 11px",cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
-            <Crown size={10} color={isPremium||isInTrial?B.polished:"rgba(248,242,229,0.55)"} strokeWidth={1.5}/>
-            <span style={{fontSize:9,color:isPremium||isInTrial?B.polished:"rgba(248,242,229,0.65)",fontFamily:SF,letterSpacing:"0.18em",textTransform:"uppercase",fontWeight:500}}>
-              {isPremium ? "Member" : isInTrial ? `Trial \u00B7 ${trialDaysLeft}d` : "Continue"}
+        {/* ── HEADER — wordmark + greeting + membership chip ── */}
+        <div className="rhei-rise rhei-rise-1" style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:36}}>
+          <div>
+            <h1 style={{fontFamily:F,fontSize:13,letterSpacing:"0.38em",color:B.champagne,fontWeight:400,margin:"0 0 8px",textTransform:"uppercase"}}>Rhei.</h1>
+            <p style={{fontFamily:F,fontSize:26,fontWeight:300,color:B.vellum,margin:0,letterSpacing:"-0.02em",lineHeight:1.1,fontVariationSettings:"'opsz' 48"}}>{greeting}</p>
+          </div>
+          <button onClick={()=>setScreen("premium")} className="rhei-press" style={{background:"rgba(248,242,229,0.04)",border:`1px solid ${isPremium?"rgba(196,154,75,0.35)":isInTrial?"rgba(196,154,75,0.22)":"rgba(248,242,229,0.10)"}`,borderRadius:100,padding:"6px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:5,marginTop:4}}>
+            <Crown size={10} color={isPremium||isInTrial?B.polished:"rgba(248,242,229,0.50)"} strokeWidth={1.5}/>
+            <span style={{fontFamily:SF,fontSize:9,color:isPremium||isInTrial?B.polished:"rgba(248,242,229,0.55)",letterSpacing:"0.18em",textTransform:"uppercase",fontWeight:500}}>
+              {isPremium ? "Member" : isInTrial ? `${trialDaysLeft}d left` : "Unlock"}
             </span>
           </button>
         </div>
 
-        {/* ── Cinematic hero — greeting + daily message ── */}
-        <div className="rhei-rise rhei-rise-2" style={{marginBottom:36}}>
-          <p style={{fontFamily:F,fontSize:15,color:"rgba(248,242,229,0.55)",margin:"0 0 16px",letterSpacing:"-0.005em"}}>{greeting}</p>
-          <h1 style={{fontFamily:F,fontSize:"clamp(34px, 8.5vw, 44px)",fontWeight:300,color:B.vellum,letterSpacing:"-0.02em",lineHeight:1.05,margin:"0 0 14px",maxWidth:380,fontVariationSettings:"'opsz' 60"}}>{dailyMessage.h}</h1>
-          <p style={{fontFamily:F,fontSize:15,fontWeight:400,color:"rgba(248,242,229,0.6)",lineHeight:1.55,margin:0,maxWidth:340}}>{dailyMessage.s}</p>
+        {/* ── Daily editorial line ── */}
+        <div className="rhei-rise rhei-rise-1" style={{marginBottom:36, paddingBottom:28, borderBottom:"1px solid rgba(248,242,229,0.08)"}}>
+          <p style={{fontFamily:F,fontStyle:"italic",fontSize:18,color:"rgba(248,242,229,0.72)",lineHeight:1.45,margin:"0 0 8px",fontWeight:300,letterSpacing:"-0.008em",maxWidth:340}}>{dailyMessage.h}</p>
+          <p style={{fontFamily:F,fontSize:13,color:"rgba(248,242,229,0.42)",lineHeight:1.55,margin:0,maxWidth:300}}>{dailyMessage.s}</p>
         </div>
 
-        {/* ── THE PRACTICE — editorial introduction. Names what Rhei. is and
-            the four practices, so no visitor leaves confused about what the
-            app does. Quiet enough that returning members scroll past on
-            instinct; clear enough that a first-time visitor knows exactly
-            what she has walked into. ── */}
-        <div className="rhei-rise rhei-rise-3" style={{
-          marginBottom:48,
-          paddingBottom:32,
-          borderBottom:"1px solid rgba(248,242,229,0.10)",
-        }}>
-          <p style={{
-            fontFamily:SF, fontSize:9, fontWeight:500,
-            letterSpacing:"0.36em", textTransform:"uppercase",
-            color:"rgba(196,154,75,0.78)",
-            margin:"0 0 14px",
-          }}>The Practice</p>
-          <p style={{
-            fontFamily:F, fontSize:22, fontWeight:300,
-            fontStyle:"italic",
-            color:"rgba(248,242,229,0.92)",
-            lineHeight:1.35,
-            letterSpacing:"-0.01em",
-            margin:"0 0 18px",
-            maxWidth:360,
-            fontVariationSettings:"'opsz' 72",
-          }}>Twelve minutes a day to become yourself again.</p>
-          <p style={{
-            fontFamily:F, fontSize:14, fontWeight:300,
-            color:"rgba(248,242,229,0.65)",
-            lineHeight:1.65,
-            margin:"0 0 14px",
-            maxWidth:360,
-          }}>Rhei. is a daily ritual practice. Four small tools, woven into one morning &mdash; for women who have done enough, and want to remember softness.</p>
-          <p style={{
-            fontFamily:SF, fontSize:10, fontWeight:500,
-            letterSpacing:"0.28em", textTransform:"uppercase",
-            color:"rgba(196,154,75,0.85)",
-            margin:0,
-            lineHeight:1.7,
-          }}>Meditation &middot; Affirmations &middot; Face Sculpting &middot; Breathwork</p>
-        </div>
-
-        {/* ── PWA install whisper (low priority, easy to dismiss) ── */}
+        {/* ── PWA install whisper ── */}
         {showInstallPrompt && !isStandalone && (
-          <div className="rhei-rise rhei-rise-3" style={{background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(248,242,229,0.08)",borderRadius:18,padding:"14px 18px",marginBottom:24,display:"flex",alignItems:"center",gap:14,position:"relative"}}>
-            <button onClick={dismissInstall} style={{position:"absolute",top:10,right:10,background:"none",border:"none",cursor:"pointer",padding:4}}><X size={11} color="rgba(248,242,229,0.4)"/></button>
+          <div className="rhei-rise rhei-rise-2" style={{background:"rgba(248,242,229,0.04)",border:"1px solid rgba(248,242,229,0.08)",borderRadius:16,padding:"13px 16px",marginBottom:22,display:"flex",alignItems:"center",gap:12,position:"relative"}}>
+            <button onClick={dismissInstall} style={{position:"absolute",top:8,right:8,background:"none",border:"none",cursor:"pointer",padding:4}}><X size={11} color="rgba(248,242,229,0.4)"/></button>
             <button onClick={installApp} style={{flex:1,background:"none",border:"none",cursor:"pointer",textAlign:"left",padding:0,paddingRight:18}}>
-              <p style={{fontFamily:F,fontSize:13,color:B.paper,margin:"0 0 2px"}}>Keep RHEI close.</p>
-              <p style={{fontFamily:F,fontSize:11,color:"rgba(248,242,229,0.55)",margin:0}}>Add to home screen.</p>
+              <p style={{fontFamily:F,fontSize:13,color:B.paper,margin:"0 0 2px"}}>Keep Rhei. close.</p>
+              <p style={{fontFamily:F,fontSize:11,color:"rgba(248,242,229,0.50)",margin:0}}>Add to home screen.</p>
             </button>
             <ArrowRight size={13} color={B.polished}/>
           </div>
         )}
 
-        {/* ── Mood pathway OR personalized state echo ── */}
+        {/* ── Mood state echo or check-in nudge ── */}
         {personalizedMsg ? (
-          <div className="rhei-rise rhei-rise-3" style={{marginBottom:36}}>
-            <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:"0 0 14px"}}>For where you are</p>
-            <div style={{background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(196,154,75,0.18)",borderRadius:20,padding:"22px 22px 18px"}}>
-              <p style={{fontFamily:F,fontSize:18,color:B.vellum,lineHeight:1.4,margin:"0 0 16px",fontWeight:300}}>{personalizedMsg}</p>
-              <button
-                className="rhei-press"
-                onClick={()=>{setCheckinDone(false);setCheckinState(null);}}
-                style={{background:"none",border:"none",cursor:"pointer",color:"rgba(248,242,229,0.55)",fontFamily:SF,fontSize:10,fontWeight:400,letterSpacing:"0.18em",textTransform:"uppercase",padding:0}}>
-                Change state →
-              </button>
-            </div>
+          <div className="rhei-rise rhei-rise-2" style={{background:"rgba(196,154,75,0.06)",border:"1px solid rgba(196,154,75,0.16)",borderRadius:16,padding:"18px 18px",marginBottom:30,display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:14}}>
+            <p style={{fontFamily:F,fontStyle:"italic",fontSize:15,color:B.vellum,margin:0,fontWeight:300,lineHeight:1.5,flex:1}}>{personalizedMsg}</p>
+            <button onClick={()=>{setCheckinDone(false);setCheckinState(null);}} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(248,242,229,0.45)",fontFamily:SF,fontSize:9,letterSpacing:"0.18em",textTransform:"uppercase",flexShrink:0,padding:0,marginTop:2}}>Change</button>
           </div>
         ) : (
-          <div className="rhei-rise rhei-rise-3" style={{marginBottom:36}}>
-            <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:"0 0 18px"}}>How you arrive</p>
-            <button
-              className="rhei-press"
-              onClick={()=>setShowCheckin(true)}
-              style={{width:"100%",background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(248,242,229,0.10)",borderRadius:20,padding:"22px 22px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",justifyContent:"space-between",gap:14}}>
+          <div className="rhei-rise rhei-rise-2" style={{marginBottom:30}}>
+            <button className="rhei-press" onClick={()=>setShowCheckin(true)} style={{width:"100%",background:"rgba(248,242,229,0.03)",border:"1px solid rgba(248,242,229,0.09)",borderRadius:16,padding:"18px 18px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
               <div>
-                <p style={{fontFamily:F,fontSize:17,color:B.vellum,margin:"0 0 4px",fontWeight:400,lineHeight:1.3}}>Tell me how you arrived.</p>
-                <p style={{fontFamily:F,fontSize:12,color:"rgba(248,242,229,0.55)",margin:0,lineHeight:1.4}}>Eight ways to begin. Pick the closest.</p>
+                <p style={{fontFamily:F,fontSize:15,color:B.vellum,margin:"0 0 3px",fontWeight:300,lineHeight:1.3}}>How did you arrive today?</p>
+                <p style={{fontFamily:F,fontStyle:"italic",fontSize:12,color:"rgba(248,242,229,0.45)",margin:0}}>Eight states. Pick the closest.</p>
               </div>
-              <ArrowRight size={16} color={B.polished} strokeWidth={1.5}/>
+              <ArrowRight size={14} color="rgba(196,154,75,0.55)" strokeWidth={1.5}/>
             </button>
           </div>
         )}
 
-        {/* ── FEATURED RITUAL — oversized, editorial, the daily anchor ── */}
-        <div className="rhei-rise rhei-rise-4" style={{marginBottom:44}}>
-          <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:18}}>
-            <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:0}}>Today's Ritual</p>
-            <button onClick={()=>setScreen("rituals")} className="rhei-press" style={{background:"none",border:"none",cursor:"pointer",color:"rgba(248,242,229,0.55)",fontFamily:SF,fontSize:10,fontWeight:400,letterSpacing:"0.18em",textTransform:"uppercase",padding:0}}>
+        {/* ── FACE RITUAL — primary action card ── */}
+        <div className="rhei-rise rhei-rise-3" style={{marginBottom:14}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+            <p style={{fontFamily:SF,fontSize:8,fontWeight:600,letterSpacing:"0.36em",textTransform:"uppercase",color:"rgba(196,154,75,0.65)",margin:0}}>Face Ritual</p>
+            <button onClick={()=>setScreen("rituals")} className="rhei-press" style={{background:"none",border:"none",cursor:"pointer",color:"rgba(248,242,229,0.40)",fontFamily:SF,fontSize:9,letterSpacing:"0.16em",textTransform:"uppercase",padding:0}}>
               All →
             </button>
           </div>
           <button
             onClick={()=>{if(ritualLocked){setScreen("premium");}else{setActiveRitual(generateAdaptiveRitual(arc.ritual,checkinState));}}}
             className="rhei-press"
-            style={{width:"100%",background:"linear-gradient(180deg, rgba(58,37,22,0.65) 0%, rgba(36,21,9,0.85) 100%)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(196,154,75,0.22)",borderRadius:24,padding:"24px 22px 22px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",boxShadow:"0 24px 60px -20px rgba(15,9,5,0.7), 0 8px 20px rgba(15,9,5,0.4)"}}>
-            {/* Layered warm light bleed — gives the card editorial atmosphere */}
-            <div style={{position:"absolute",top:"-25%",right:"-15%",width:280,height:280,borderRadius:"50%",background:"radial-gradient(circle, rgba(245,220,170,0.22) 0%, rgba(212,173,106,0.10) 40%, transparent 70%)",filter:"blur(28px)",pointerEvents:"none"}}/>
-            <div style={{position:"absolute",bottom:"-30%",left:"30%",width:200,height:200,borderRadius:"50%",background:"radial-gradient(circle, rgba(196,154,75,0.12) 0%, transparent 65%)",filter:"blur(24px)",pointerEvents:"none"}}/>
-            {/* Refined abstract gold mark in the upper-right — hints at the ritual's gesture */}
-            <svg viewBox="0 0 200 240" style={{position:"absolute",top:0,right:0,width:160,height:200,opacity:0.55,pointerEvents:"none"}}>
-              <defs>
-                <linearGradient id="cardGold" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#F5DCAA" stopOpacity="0.85"/>
-                  <stop offset="60%" stopColor="#C9A472" stopOpacity="0.45"/>
-                  <stop offset="100%" stopColor="#8A6E40" stopOpacity="0.15"/>
-                </linearGradient>
-              </defs>
-              {/* Three nested curves, calligraphic gold sweep */}
-              <path d="M 30 180 Q 100 60, 190 80" fill="none" stroke="url(#cardGold)" strokeWidth="1.5" strokeLinecap="round"/>
-              <path d="M 50 200 Q 120 90, 200 110" fill="none" stroke="url(#cardGold)" strokeWidth="1" strokeLinecap="round" opacity="0.7"/>
-              <path d="M 75 220 Q 145 130, 195 140" fill="none" stroke="url(#cardGold)" strokeWidth="0.8" strokeLinecap="round" opacity="0.45"/>
-              {/* Small accent dot — the still point */}
-              <circle cx="172" cy="78" r="3" fill="#F5DCAA" opacity="0.85"/>
-              <circle cx="172" cy="78" r="9" fill="#F5DCAA" opacity="0.18"/>
-            </svg>
+            style={{width:"100%",background:"linear-gradient(160deg, rgba(58,37,22,0.80) 0%, rgba(26,15,6,0.90) 100%)",border:"1px solid rgba(196,154,75,0.20)",borderRadius:22,padding:"22px 20px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",boxShadow:"0 18px 48px -16px rgba(15,9,5,0.70)"}}>
+            <div style={{position:"absolute",top:"-20%",right:"-10%",width:220,height:220,borderRadius:"50%",background:"radial-gradient(circle, rgba(245,216,160,0.18) 0%, rgba(196,154,75,0.06) 45%, transparent 70%)",filter:"blur(24px)",pointerEvents:"none"}}/>
             {ritualLocked && (
-              <div style={{position:"absolute",top:14,left:14,display:"flex",alignItems:"center",gap:5,background:"rgba(196,154,75,0.14)",backdropFilter:"blur(8px)",padding:"4px 9px",borderRadius:100,border:"1px solid rgba(196,154,75,0.25)"}}>
+              <div style={{position:"absolute",top:14,right:14,display:"flex",alignItems:"center",gap:4,background:"rgba(196,154,75,0.12)",padding:"3px 9px",borderRadius:100,border:"1px solid rgba(196,154,75,0.22)"}}>
                 <Lock size={8} color={B.polished} strokeWidth={2}/>
-                <span style={{fontSize:8,letterSpacing:"0.18em",color:B.polished,fontFamily:SF,textTransform:"uppercase",fontWeight:500}}>Member</span>
+                <span style={{fontFamily:SF,fontSize:8,letterSpacing:"0.16em",color:B.polished,textTransform:"uppercase",fontWeight:500}}>Members</span>
               </div>
             )}
-            <div style={{position:"relative",zIndex:2,maxWidth:"68%"}}>
-              <p style={{fontFamily:SF,fontSize:9,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.8)",margin:"0 0 12px"}}>{arc.ritual.duration}</p>
-              <h2 style={{fontFamily:F,fontSize:"clamp(26px, 7vw, 32px)",fontWeight:300,color:B.vellum,letterSpacing:"-0.018em",lineHeight:1.08,margin:"0 0 8px",fontVariationSettings:"'opsz' 60"}}>{arc.ritual.title}</h2>
-              <p style={{fontFamily:F,fontSize:13,color:"rgba(248,242,229,0.6)",margin:"0 0 22px",lineHeight:1.5}}>{arc.ritual.subtitle}</p>
-              <div style={{display:"inline-flex",alignItems:"center",gap:10,background:B.paper,borderRadius:100,padding:"11px 22px",boxShadow:"0 8px 24px -8px rgba(248,242,229,0.25), 0 4px 12px rgba(15,9,5,0.4)"}}>
-                <span style={{fontFamily:SF,fontSize:13,color:B.espresso,fontWeight:500,letterSpacing:"0.04em"}}>{ritualLocked ? "Enter the collection" : "Begin"}</span>
-                <ArrowRight size={13} color={B.espresso} strokeWidth={2}/>
+            <div style={{position:"relative",zIndex:2,display:"flex",alignItems:"flex-start",gap:14}}>
+              <div style={{width:44,height:44,borderRadius:12,background:"rgba(196,154,75,0.10)",border:"1px solid rgba(196,154,75,0.20)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:2}}>
+                <FaceGuideIllustration zone={ritualZone} size={28}/>
+              </div>
+              <div style={{flex:1}}>
+                <p style={{fontFamily:SF,fontSize:8,fontWeight:600,letterSpacing:"0.26em",textTransform:"uppercase",color:"rgba(196,154,75,0.75)",margin:"0 0 5px"}}>{arc.ritual.duration}</p>
+                <h2 style={{fontFamily:F,fontSize:22,fontWeight:300,color:B.vellum,letterSpacing:"-0.015em",lineHeight:1.12,margin:"0 0 5px",fontVariationSettings:"'opsz' 48"}}>{arc.ritual.title}</h2>
+                <p style={{fontFamily:F,fontStyle:"italic",fontSize:12,color:"rgba(248,242,229,0.52)",margin:"0 0 18px",lineHeight:1.4}}>{arc.ritual.subtitle}</p>
+                <div style={{display:"inline-flex",alignItems:"center",gap:8,background:B.paper,borderRadius:100,padding:"10px 20px",boxShadow:"0 6px 20px -8px rgba(248,242,229,0.22)"}}>
+                  <span style={{fontFamily:SF,fontSize:12,color:B.espresso,fontWeight:600,letterSpacing:"0.04em"}}>{ritualLocked ? "Members only" : "Begin ritual"}</span>
+                  <ArrowRight size={12} color={B.espresso} strokeWidth={2}/>
+                </div>
               </div>
             </div>
           </button>
         </div>
 
-        {/* ── EDITORIAL COLLECTIONS — horizontal scroll ── */}
-        <div className="rhei-rise rhei-rise-4" style={{marginBottom:44}}>
-          <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:18,paddingRight:0}}>
-            <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:0}}>Curated</p>
-            <p style={{fontFamily:F,fontSize:11,color:"rgba(248,242,229,0.45)",margin:0}}>Swipe through</p>
-          </div>
-          <div style={{display:"flex",gap:12,overflowX:"auto",scrollSnapType:"x mandatory",scrollPaddingLeft:0,margin:"0 -24px",padding:"0 24px 8px",WebkitOverflowScrolling:"touch",scrollbarWidth:"none"}}>
-            <style>{`.rhei-collection-strip::-webkit-scrollbar{display:none;}`}</style>
-            {collections.slice(0,6).map((c, i)=>{
-              const firstRitual = rituals.find(r => r.id === c.ritualIds[0]);
-              const locked = firstRitual?.isPremium && !hasAccess;
-              return (
-                <button
-                  key={c.id}
-                  className="rhei-press"
-                  onClick={()=>{if(firstRitual){if(locked){setScreen("premium");}else{setActiveRitual(generateAdaptiveRitual(firstRitual,checkinState));}}}}
-                  style={{flex:"0 0 auto",width:200,scrollSnapAlign:"start",background:`linear-gradient(180deg, ${c.accent}1A 0%, rgba(36,21,9,0.85) 100%)`,backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(248,242,229,0.08)",borderRadius:20,padding:"18px 16px 16px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",minHeight:160,display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
-                  {/* Soft accent glow */}
-                  <div style={{position:"absolute",top:-30,right:-30,width:120,height:120,borderRadius:"50%",background:`radial-gradient(circle, ${c.accent}26 0%, transparent 60%)`,filter:"blur(16px)",pointerEvents:"none"}}/>
-                  <div style={{position:"relative",zIndex:1}}>
-                    <p style={{fontFamily:SF,fontSize:9,fontWeight:500,letterSpacing:"0.22em",textTransform:"uppercase",color:c.accent,margin:"0 0 8px",opacity:0.9}}>{c.ritualIds.length} ritual{c.ritualIds.length>1?"s":""}</p>
-                    <h3 style={{fontFamily:F,fontSize:18,fontWeight:400,color:B.vellum,letterSpacing:"-0.005em",lineHeight:1.15,margin:"0 0 6px"}}>{c.title}</h3>
-                    <p style={{fontFamily:F,fontSize:11.5,color:"rgba(248,242,229,0.55)",lineHeight:1.45,margin:0}}>{c.subtitle}</p>
-                  </div>
-                  <div style={{position:"relative",zIndex:1,display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:14}}>
-                    <span style={{fontFamily:SF,fontSize:10,color:"rgba(248,242,229,0.75)",letterSpacing:"0.04em"}}>Begin</span>
-                    <ArrowRight size={11} color="rgba(248,242,229,0.75)" strokeWidth={1.5}/>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* ── MEDITATION — single elegant row, not a card ── */}
-        <div className="rhei-rise rhei-rise-4" style={{marginBottom:44}}>
-          <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:18}}>
-            <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:0}}>Audio</p>
-            <button onClick={()=>setScreen("meditations")} className="rhei-press" style={{background:"none",border:"none",cursor:"pointer",color:"rgba(248,242,229,0.55)",fontFamily:SF,fontSize:10,fontWeight:400,letterSpacing:"0.18em",textTransform:"uppercase",padding:0}}>
+        {/* ── MEDITATION ── */}
+        <div className="rhei-rise rhei-rise-3" style={{marginBottom:32}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+            <p style={{fontFamily:SF,fontSize:8,fontWeight:600,letterSpacing:"0.36em",textTransform:"uppercase",color:"rgba(196,154,75,0.65)",margin:0}}>Meditation</p>
+            <button onClick={()=>setScreen("meditations")} className="rhei-press" style={{background:"none",border:"none",cursor:"pointer",color:"rgba(248,242,229,0.40)",fontFamily:SF,fontSize:9,letterSpacing:"0.16em",textTransform:"uppercase",padding:0}}>
               All →
             </button>
           </div>
           <button
             className="rhei-press"
             onClick={()=>{const locked=arc.audio.id!==1&&!hasAccess;if(locked){setScreen("premium");}else{startSession(arc.audio.id);}}}
-            style={{width:"100%",background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(248,242,229,0.10)",borderRadius:18,padding:"18px 18px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:16}}>
-            <div style={{width:46,height:46,borderRadius:"50%",background:"linear-gradient(135deg, rgba(212,173,106,0.18), rgba(196,154,75,0.06))",border:"1px solid rgba(196,154,75,0.25)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-              <Play size={14} color={B.polished} fill={B.polished} style={{marginLeft:2}}/>
+            style={{width:"100%",background:"rgba(248,242,229,0.03)",border:"1px solid rgba(248,242,229,0.09)",borderRadius:18,padding:"16px 18px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:14}}>
+            <div style={{width:42,height:42,borderRadius:"50%",background:"linear-gradient(135deg, rgba(196,154,75,0.18), rgba(196,154,75,0.06))",border:"1px solid rgba(196,154,75,0.22)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+              <Play size={13} color={B.polished} fill={B.polished} style={{marginLeft:2}}/>
             </div>
             <div style={{flex:1,minWidth:0}}>
-              <h3 style={{fontFamily:F,fontSize:17,color:B.vellum,margin:"0 0 3px",fontWeight:400,lineHeight:1.25,letterSpacing:"-0.005em"}}>{arc.audio.title}</h3>
-              <p style={{fontFamily:F,fontSize:12,color:"rgba(248,242,229,0.55)",margin:0,lineHeight:1.4}}>{arc.audio.subtitle}</p>
+              <h3 style={{fontFamily:F,fontSize:16,color:B.vellum,margin:"0 0 3px",fontWeight:300,lineHeight:1.25,letterSpacing:"-0.008em"}}>{arc.audio.title}</h3>
+              <p style={{fontFamily:F,fontStyle:"italic",fontSize:11,color:"rgba(248,242,229,0.48)",margin:0,lineHeight:1.4}}>{arc.audio.subtitle}</p>
             </div>
-            <span style={{fontFamily:SF,fontSize:11,color:"rgba(248,242,229,0.45)",letterSpacing:"0.04em",flexShrink:0}}>{Math.ceil(arc.audio.duration/60)} min</span>
+            <span style={{fontFamily:SF,fontSize:10,color:"rgba(248,242,229,0.38)",flexShrink:0}}>{Math.ceil(arc.audio.duration/60)} min</span>
           </button>
         </div>
 
-        {/* ── QUIET RELIEF — editorial grid, new copy ── */}
-        <div className="rhei-rise rhei-rise-5" style={{marginBottom:44}}>
-          <div style={{display:"flex",alignItems:"baseline",justifyContent:"space-between",marginBottom:18}}>
-            <p style={{fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.7)",margin:0}}>Quiet Relief</p>
-            <p style={{fontFamily:F,fontSize:11,color:"rgba(248,242,229,0.45)",margin:0}}>Under two minutes</p>
+        {/* ── Hairline divider ── */}
+        <div className="rhei-rise rhei-rise-4" style={{height:1,background:"rgba(196,154,75,0.10)",marginBottom:28}}/>
+
+        {/* ── QUIET RELIEF — 2×2 grid ── */}
+        <div className="rhei-rise rhei-rise-4" style={{marginBottom:32}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14}}>
+            <p style={{fontFamily:SF,fontSize:8,fontWeight:600,letterSpacing:"0.36em",textTransform:"uppercase",color:"rgba(196,154,75,0.65)",margin:0}}>Quick Relief</p>
+            <p style={{fontFamily:F,fontStyle:"italic",fontSize:11,color:"rgba(248,242,229,0.35)",margin:0}}>Under two minutes</p>
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>
             {microInterventions.map(mi=>(
-              <button
-                key={mi.id}
-                className="rhei-press"
-                onClick={()=>openMicro(mi.id)}
-                style={{background:"rgba(248,242,229,0.04)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(248,242,229,0.08)",borderRadius:16,padding:"16px 14px",cursor:"pointer",textAlign:"left",minHeight:118,display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
+              <button key={mi.id} className="rhei-press" onClick={()=>openMicro(mi.id)}
+                style={{background:"rgba(248,242,229,0.03)",border:"1px solid rgba(248,242,229,0.08)",borderRadius:16,padding:"15px 14px",cursor:"pointer",textAlign:"left",minHeight:110,display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
                 <div>
-                  <p style={{fontFamily:F,fontSize:15,color:B.vellum,margin:"0 0 4px",fontWeight:400,lineHeight:1.25,letterSpacing:"-0.005em"}}>{mi.title}</p>
-                  <p style={{fontFamily:F,fontSize:11,color:"rgba(248,242,229,0.5)",margin:"0 0 8px",lineHeight:1.4}}>{mi.secondary}</p>
+                  <span style={{fontFamily:SF,fontSize:8,color:"rgba(196,154,75,0.80)",letterSpacing:"0.18em",textTransform:"uppercase",fontWeight:600,background:"rgba(196,154,75,0.10)",padding:"2px 7px",borderRadius:4,display:"inline-block",marginBottom:9}}>{mi.badge}</span>
+                  <p style={{fontFamily:F,fontSize:14,color:B.vellum,margin:"0 0 3px",fontWeight:300,lineHeight:1.25,letterSpacing:"-0.005em"}}>{mi.title}</p>
+                  <p style={{fontFamily:F,fontStyle:"italic",fontSize:11,color:"rgba(248,242,229,0.44)",margin:0,lineHeight:1.4}}>{mi.desc}</p>
                 </div>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:8}}>
-                  <span style={{fontFamily:SF,fontSize:9,color:"rgba(196,154,75,0.85)",letterSpacing:"0.18em",textTransform:"uppercase",fontWeight:500}}>{mi.badge}</span>
-                  <ArrowRight size={10} color="rgba(248,242,229,0.4)" strokeWidth={1.5}/>
-                </div>
+                <ArrowRight size={10} color="rgba(196,154,75,0.38)" strokeWidth={1.5} style={{marginTop:8}}/>
               </button>
             ))}
           </div>
         </div>
 
-        {/* ── QUIET JOURNEY INDICATOR — removed. Rhei. does not count days or sessions. ── */}
-
-        {/* ── PREMIUM WHISPER (only if not member) ── */}
-        {!isPremium && !isInTrial && (
+        {/* ── Membership whisper (trial ended only) ── */}
+        {!hasAccess && (
           <div className="rhei-rise rhei-rise-5" style={{marginBottom:24}}>
-            <button
-              className="rhei-press"
-              onClick={()=>setScreen("premium")}
-              style={{width:"100%",background:"linear-gradient(180deg, rgba(212,173,106,0.10) 0%, rgba(36,21,9,0.85) 100%)",backdropFilter:"blur(20px) saturate(1.2)",WebkitBackdropFilter:"blur(20px) saturate(1.2)",border:"1px solid rgba(196,154,75,0.22)",borderRadius:22,padding:"24px 22px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden"}}>
-              <div style={{position:"absolute",top:-30,right:-30,width:160,height:160,borderRadius:"50%",background:"radial-gradient(circle, rgba(212,173,106,0.18) 0%, transparent 65%)",filter:"blur(20px)",pointerEvents:"none"}}/>
+            <button className="rhei-press" onClick={()=>setScreen("premium")}
+              style={{width:"100%",background:"linear-gradient(160deg, rgba(196,154,75,0.10) 0%, rgba(26,15,6,0.88) 100%)",border:"1px solid rgba(196,154,75,0.20)",borderRadius:20,padding:"22px 20px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",top:-24,right:-24,width:140,height:140,borderRadius:"50%",background:"radial-gradient(circle, rgba(212,173,106,0.16) 0%, transparent 65%)",filter:"blur(18px)",pointerEvents:"none"}}/>
               <div style={{position:"relative",zIndex:1}}>
-                <p style={{fontFamily:SF,fontSize:9,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:B.polished,margin:"0 0 12px"}}>Membership</p>
-                <h3 style={{fontFamily:F,fontSize:22,fontWeight:300,color:B.vellum,letterSpacing:"-0.015em",lineHeight:1.15,margin:"0 0 8px",maxWidth:300,fontVariationSettings:"'opsz' 60"}}>Enter the full collection.</h3>
-                <p style={{fontFamily:F,fontSize:13,color:"rgba(248,242,229,0.6)",margin:"0 0 18px",lineHeight:1.5,maxWidth:340}}>Every ritual, every meditation. The whole practice, open to you.</p>
-                <div style={{display:"inline-flex",alignItems:"center",gap:8}}>
-                  <span style={{fontFamily:SF,fontSize:11,color:B.polished,letterSpacing:"0.18em",textTransform:"uppercase",fontWeight:500}}>See what's inside</span>
-                  <ArrowRight size={12} color={B.polished} strokeWidth={1.5}/>
+                <p style={{fontFamily:SF,fontSize:8,fontWeight:600,letterSpacing:"0.34em",textTransform:"uppercase",color:B.polished,margin:"0 0 10px"}}>Membership · €14.99/mo</p>
+                <h3 style={{fontFamily:F,fontSize:21,fontWeight:300,color:B.vellum,letterSpacing:"-0.015em",lineHeight:1.2,margin:"0 0 8px",maxWidth:300,fontVariationSettings:"'opsz' 60"}}>The full practice, open to you.</h3>
+                <p style={{fontFamily:F,fontStyle:"italic",fontSize:13,color:"rgba(248,242,229,0.55)",margin:"0 0 16px",lineHeight:1.5}}>Every ritual. Every meditation. Unlocked.</p>
+                <div style={{display:"inline-flex",alignItems:"center",gap:7}}>
+                  <span style={{fontFamily:SF,fontSize:10,color:B.polished,letterSpacing:"0.18em",textTransform:"uppercase",fontWeight:500}}>Begin →</span>
                 </div>
               </div>
             </button>
@@ -2806,6 +2731,19 @@ export default function ObrizApp() {
       <DramaticGodRays intensity={0.95} pierce="50%" />
 
       <div style={{position:"relative", zIndex:1, maxWidth:480, margin:"0 auto", padding:"0 24px"}}>
+
+        {/* Back to Collection */}
+        {prevScreen === "collection" && (
+          <button onClick={()=>{setPrevScreen(null);setScreen("collection");}} style={{
+            background:"none", border:"none", cursor:"pointer",
+            display:"flex", alignItems:"center", gap:6,
+            color:"rgba(248,242,229,0.55)", fontFamily:SF, fontSize:10,
+            fontWeight:500, letterSpacing:"0.18em", textTransform:"uppercase",
+            padding:"0 0 22px", marginTop:-16,
+          }}>
+            <ChevronLeft size={12}/> The Collection
+          </button>
+        )}
 
         {/* ── HERO: editorial photo + tight typography ── */}
         <div className="rhei-rise rhei-rise-1" style={{ marginBottom:44, marginTop:8 }}>
@@ -3090,7 +3028,18 @@ export default function ObrizApp() {
 
       <div style={{position:"relative", zIndex:1, maxWidth:480, margin:"0 auto", padding:"0 24px"}}>
 
-        {/* Top streak chip — removed per brand decision; Rhei. is not a streak app */}
+        {/* Back to Collection — shown when navigated from collection page */}
+        {prevScreen === "collection" && (
+          <button onClick={()=>{setPrevScreen(null);setScreen("collection");}} style={{
+            background:"none", border:"none", cursor:"pointer",
+            display:"flex", alignItems:"center", gap:6,
+            color:"rgba(248,242,229,0.55)", fontFamily:SF, fontSize:10,
+            fontWeight:500, letterSpacing:"0.18em", textTransform:"uppercase",
+            padding:"0 0 22px", marginTop:-16,
+          }}>
+            <ChevronLeft size={12}/> The Collection
+          </button>
+        )}
 
         {/* ── HERO: editorial photograph + tight type ── */}
         <div className="rhei-rise rhei-rise-1" style={{
@@ -3887,97 +3836,159 @@ export default function ObrizApp() {
   };
 
   // ══════════ THE COLLECTION ══════════
-  // The library, browsable two ways. By practice (four pillar pills — each
-  // routes to the existing pillar screen). By moment (mood-based cards).
-  // Affirmations remain visible both as a named pillar and as mood cards.
+  // The Collection — four practice rooms + editorial "by moment" menu.
+  // Design: full-bleed atmospheric header, oversized practice tiles with
+  // accent glows, and an editorial contents-page list — all in the dark
+  // warm-black palette with champagne gold.
   const renderCollection=()=>(
-    <div style={{
+    <div className="rhei-page" style={{
       position:"relative",
       minHeight:"100vh",
-      background:"linear-gradient(180deg, #0A0604 0%, #100804 38%, #0A0604 100%)",
+      background:"#060301",
       overflow:"hidden",
-      padding:"calc(env(safe-area-inset-top, 0px) + 86px) 0 140px",
+      padding:"calc(env(safe-area-inset-top, 0px) + 86px) 0 160px",
     }}>
-      <div style={{position:"relative", zIndex:1, maxWidth:480, margin:"0 auto", padding:"0 24px"}}>
-        <div style={{display:"flex", alignItems:"center", gap:10, marginBottom:22}}>
-          <div style={{flex:1, height:1, background:"rgba(248,242,229,0.10)"}}/>
-          <span style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.36em", textTransform:"uppercase", color:"rgba(196,154,75,0.78)"}}>Season &middot; Stillness</span>
-          <div style={{flex:1, height:1, background:"rgba(248,242,229,0.10)"}}/>
-        </div>
-        <h1 style={{fontFamily:F, fontSize:32, fontWeight:300, letterSpacing:"-0.025em", lineHeight:1.05, color:B.cream, margin:"0 0 6px", fontVariationSettings:"'opsz' 144"}}>The Collection</h1>
-        <p style={{fontFamily:F, fontStyle:"italic", fontSize:16, color:"rgba(248,242,229,0.65)", lineHeight:1.55, margin:"0 0 28px"}}>What do you need, today?</p>
+      {/* Deep atmospheric crown — warm gold spill from above */}
+      <div style={{position:"absolute",top:0,left:0,right:0,height:"55vh",background:"linear-gradient(180deg, rgba(196,154,75,0.10) 0%, transparent 100%)",pointerEvents:"none"}}/>
+      <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:"130%",height:480,background:"radial-gradient(ellipse at 50% -5%, rgba(196,154,75,0.18) 0%, rgba(196,154,75,0.04) 38%, transparent 62%)",pointerEvents:"none"}}/>
+      <div style={{position:"absolute",top:120,right:-80,width:380,height:380,borderRadius:"50%",background:"radial-gradient(circle, rgba(196,154,75,0.06) 0%, transparent 60%)",filter:"blur(50px)",pointerEvents:"none"}}/>
 
-        <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.36em", textTransform:"uppercase", color:"rgba(196,154,75,0.65)", margin:"6px 0 12px"}}>By practice</p>
-        <div style={{display:"flex", gap:6, marginBottom:24, overflowX:"auto", paddingBottom:4}}>
-          {[
-            {label:"Meditations", target:"meditations"},
-            {label:"Affirmations", target:"affirmations"},
-            {label:"Face Sculpting", target:"rituals"},
-            {label:"Breathwork", target:"home"},
-          ].map((p,i)=>(
-            <button key={i} onClick={()=>setScreen(p.target)} className="rhei-press" style={{
-              flexShrink:0,
-              background:"rgba(248,242,229,0.04)",
-              border:"1px solid rgba(196,154,75,0.22)",
-              color:"rgba(242,232,217,0.85)",
-              borderRadius:100,
-              padding:"7px 13px",
-              fontFamily:SF, fontSize:9, fontWeight:500,
-              letterSpacing:"0.22em", textTransform:"uppercase",
-              cursor:"pointer", whiteSpace:"nowrap",
-            }}>{p.label}</button>
-          ))}
+      <div style={{position:"relative", zIndex:1, maxWidth:480, margin:"0 auto"}}>
+
+        {/* ── TITLE — centered, large, breathing ── */}
+        <div style={{padding:"0 24px 56px", textAlign:"center"}}>
+          <p style={{fontFamily:SF, fontSize:8, fontWeight:500, letterSpacing:"0.52em", textTransform:"uppercase", color:"rgba(196,154,75,0.50)", margin:"0 0 26px"}}>Season &middot; Stillness</p>
+          <h1 style={{fontFamily:F, fontSize:"clamp(54px, 13vw, 70px)", fontWeight:300, letterSpacing:"-0.04em", lineHeight:0.86, color:B.vellum, margin:"0 0 22px", fontVariationSettings:"'opsz' 144"}}>The<br/>Collection</h1>
+          <p style={{fontFamily:F, fontStyle:"italic", fontSize:15, color:"rgba(248,242,229,0.40)", lineHeight:1.6, margin:"0 auto", maxWidth:260, letterSpacing:"0.004em"}}>Four rooms. Enter the one calling you.</p>
         </div>
 
-        <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.36em", textTransform:"uppercase", color:"rgba(196,154,75,0.65)", margin:"6px 0 8px"}}>By moment</p>
-        {/* Editorial menu: no card chrome, no dots, no arrows. Three lines per
-            entry, separated by hairlines. Reads like the contents page of a
-            small book rather than a list of tiles. */}
-        <div style={{borderBottom:"1px solid rgba(248,242,229,0.10)"}}>
+        {/* ── ROOMS — asymmetric editorial layout ── */}
+        <div style={{padding:"0 18px", display:"flex", flexDirection:"column", gap:10, marginBottom:68}}>
+
+          {/* ①  Face Sculpting — featured, tall, primary room */}
+          <button onClick={()=>{setPrevScreen("collection"); setScreen("rituals");}} className="rhei-press" style={{
+            width:"100%",
+            background:"linear-gradient(150deg, rgba(191,160,120,0.18) 0%, rgba(120,90,55,0.08) 45%, rgba(6,3,1,0.96) 100%)",
+            border:"1px solid rgba(191,160,120,0.22)",
+            borderRadius:24, padding:"30px 26px 26px",
+            cursor:"pointer", textAlign:"left",
+            position:"relative", overflow:"hidden", minHeight:190,
+            display:"flex", flexDirection:"column", justifyContent:"space-between",
+          }}>
+            <div style={{position:"absolute",top:-50,right:-40,width:300,height:300,borderRadius:"50%",background:"radial-gradient(circle, rgba(191,160,120,0.24) 0%, transparent 58%)",filter:"blur(35px)",pointerEvents:"none"}}/>
+            <div style={{position:"absolute",bottom:0,left:0,right:0,height:"45%",background:"linear-gradient(0deg, rgba(6,3,1,0.75) 0%, transparent 100%)",pointerEvents:"none"}}/>
+            <div style={{position:"relative",zIndex:2}}>
+              <p style={{fontFamily:SF,fontSize:8,fontWeight:600,letterSpacing:"0.44em",textTransform:"uppercase",color:"rgba(191,160,120,0.65)",margin:"0 0 18px"}}>Face Sculpting</p>
+              <h2 style={{fontFamily:F,fontSize:"clamp(26px,6.5vw,34px)",fontWeight:300,letterSpacing:"-0.025em",lineHeight:1.08,color:B.vellum,margin:0,fontVariationSettings:"'opsz' 96",maxWidth:280}}>Seven hands-on rituals for the face.</h2>
+            </div>
+            <div style={{position:"relative",zIndex:2,display:"flex",alignItems:"center",justifyContent:"space-between",marginTop:20}}>
+              <span style={{fontFamily:SF,fontSize:8.5,fontWeight:400,letterSpacing:"0.18em",color:"rgba(248,242,229,0.28)",fontStyle:"normal"}}>Gua sha &middot; Buccal &middot; Lift &middot; Drain</span>
+              <div style={{width:34,height:34,borderRadius:"50%",background:"rgba(191,160,120,0.11)",border:"1px solid rgba(191,160,120,0.28)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                <ArrowRight size={14} color="rgba(191,160,120,0.85)" strokeWidth={1.5}/>
+              </div>
+            </div>
+          </button>
+
+          {/* ②  Meditations + Affirmations — side by side, shorter */}
+          <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:10}}>
+            <button onClick={()=>{setPrevScreen("collection"); setScreen("meditations");}} className="rhei-press" style={{
+              background:"linear-gradient(150deg, rgba(138,155,175,0.16) 0%, rgba(6,3,1,0.95) 100%)",
+              border:"1px solid rgba(138,155,175,0.20)",
+              borderRadius:20, padding:"22px 18px 20px",
+              cursor:"pointer", textAlign:"left",
+              position:"relative", overflow:"hidden",
+              minHeight:168, display:"flex", flexDirection:"column", justifyContent:"space-between",
+            }}>
+              <div style={{position:"absolute",top:-18,right:-18,width:130,height:130,borderRadius:"50%",background:"radial-gradient(circle, rgba(138,155,175,0.20) 0%, transparent 65%)",filter:"blur(20px)",pointerEvents:"none"}}/>
+              <div style={{position:"relative",zIndex:1}}>
+                <p style={{fontFamily:SF,fontSize:8,fontWeight:600,letterSpacing:"0.40em",textTransform:"uppercase",color:"rgba(138,155,175,0.70)",margin:"0 0 16px"}}>Meditations</p>
+                <p style={{fontFamily:F,fontStyle:"italic",fontSize:14,color:"rgba(248,242,229,0.50)",margin:0,lineHeight:1.45,fontVariationSettings:"'opsz' 48"}}>Lie down.<br/>Press play.</p>
+              </div>
+              <div style={{width:30,height:30,borderRadius:"50%",background:"rgba(138,155,175,0.10)",border:"1px solid rgba(138,155,175,0.22)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                <ArrowRight size={12} color="rgba(138,155,175,0.80)" strokeWidth={1.5}/>
+              </div>
+            </button>
+
+            <button onClick={()=>{setPrevScreen("collection"); setScreen("affirmations");}} className="rhei-press" style={{
+              background:"linear-gradient(150deg, rgba(196,154,75,0.16) 0%, rgba(6,3,1,0.95) 100%)",
+              border:"1px solid rgba(196,154,75,0.20)",
+              borderRadius:20, padding:"22px 18px 20px",
+              cursor:"pointer", textAlign:"left",
+              position:"relative", overflow:"hidden",
+              minHeight:168, display:"flex", flexDirection:"column", justifyContent:"space-between",
+            }}>
+              <div style={{position:"absolute",top:-18,right:-18,width:130,height:130,borderRadius:"50%",background:"radial-gradient(circle, rgba(196,154,75,0.20) 0%, transparent 65%)",filter:"blur(20px)",pointerEvents:"none"}}/>
+              <div style={{position:"relative",zIndex:1}}>
+                <p style={{fontFamily:SF,fontSize:8,fontWeight:600,letterSpacing:"0.40em",textTransform:"uppercase",color:"rgba(196,154,75,0.70)",margin:"0 0 16px"}}>Affirmations</p>
+                <p style={{fontFamily:F,fontStyle:"italic",fontSize:14,color:"rgba(248,242,229,0.50)",margin:0,lineHeight:1.45,fontVariationSettings:"'opsz' 48"}}>Spoken.<br/>Heard. Felt.</p>
+              </div>
+              <div style={{width:30,height:30,borderRadius:"50%",background:"rgba(196,154,75,0.10)",border:"1px solid rgba(196,154,75,0.22)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                <ArrowRight size={12} color="rgba(196,154,75,0.80)" strokeWidth={1.5}/>
+              </div>
+            </button>
+          </div>
+
+          {/* ③  Breathwork — full-width, minimal horizontal strip */}
+          <button onClick={()=>{setPrevScreen("collection"); setScreen("home");}} className="rhei-press" style={{
+            width:"100%",
+            background:"linear-gradient(135deg, rgba(110,122,108,0.13) 0%, rgba(6,3,1,0.95) 100%)",
+            border:"1px solid rgba(110,122,108,0.18)",
+            borderRadius:18, padding:"18px 22px 18px 24px",
+            cursor:"pointer", textAlign:"left",
+            display:"flex", alignItems:"center", justifyContent:"space-between", gap:16,
+          }}>
+            <div>
+              <p style={{fontFamily:SF,fontSize:8,fontWeight:600,letterSpacing:"0.40em",textTransform:"uppercase",color:"rgba(110,122,108,0.70)",margin:"0 0 7px"}}>Breathwork</p>
+              <p style={{fontFamily:F,fontSize:17,fontWeight:300,color:B.vellum,letterSpacing:"-0.012em",lineHeight:1.2,margin:0,fontVariationSettings:"'opsz' 48"}}>Under two minutes.</p>
+            </div>
+            <div style={{flexShrink:0,display:"flex",alignItems:"center",gap:12}}>
+              <span style={{fontFamily:F,fontStyle:"italic",fontSize:11,color:"rgba(248,242,229,0.28)"}}>Quick relief</span>
+              <div style={{width:32,height:32,borderRadius:"50%",background:"rgba(110,122,108,0.10)",border:"1px solid rgba(110,122,108,0.20)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                <ArrowRight size={12} color="rgba(110,122,108,0.75)" strokeWidth={1.5}/>
+              </div>
+            </div>
+          </button>
+
+        </div>
+
+        {/* ── DIVIDER — italic editorial, not uppercase caps ── */}
+        <div style={{margin:"0 24px 32px", display:"flex", alignItems:"center", gap:18}}>
+          <div style={{flex:1, height:"1px", background:"linear-gradient(90deg, transparent, rgba(196,154,75,0.15))"}}/>
+          <span style={{fontFamily:F, fontStyle:"italic", fontSize:12, color:"rgba(248,242,229,0.28)", letterSpacing:"0.03em"}}>by moment</span>
+          <div style={{flex:1, height:"1px", background:"linear-gradient(90deg, rgba(196,154,75,0.15), transparent)"}}/>
+        </div>
+
+        {/* ── BY MOMENT — clean editorial list, no intro prose ── */}
+        <div style={{padding:"0 24px"}}>
           {[
-            {kicker:"Buccal", title:"For a clenched jaw", meta:"6 minutes", route:()=>setScreen("rituals")},
-            {kicker:"Breath", title:"For a heavy chest", meta:"4 minutes", route:()=>setScreen("home")},
-            {kicker:"Lymphatic + breath", title:"Before bed", meta:"8 minutes", route:()=>setScreen("rituals")},
-            {kicker:"Voice + breath", title:"Before a difficult conversation", meta:"3 minutes", route:()=>setScreen("affirmations")},
-            {kicker:"Soft reset", title:"When the morning is loud", meta:"60 seconds", route:()=>setScreen("home")},
-            {kicker:"Affirmations \u00B7 Self-worth", title:"When you need to hear it from outside yourself", meta:"5 minutes", route:()=>setScreen("affirmations")},
-            {kicker:"Affirmations \u00B7 Abundance", title:"For abundance, said softly", meta:"4 minutes", route:()=>setScreen("affirmations")},
-            {kicker:"Affirmations \u00B7 Body acceptance", title:"For the body you are in", meta:"6 minutes", route:()=>setScreen("affirmations")},
+            {kicker:"Face Sculpting",  title:"For a clenched jaw",                             meta:"6 min",  route:()=>{setPrevScreen("collection");setScreen("rituals");}},
+            {kicker:"Breathwork",      title:"For a heavy chest",                              meta:"4 min",  route:()=>{setPrevScreen("collection");setScreen("home");}},
+            {kicker:"Lymphatic",       title:"Before bed",                                     meta:"8 min",  route:()=>{setPrevScreen("collection");setScreen("rituals");}},
+            {kicker:"Affirmations",    title:"Before a difficult conversation",                meta:"3 min",  route:()=>{setPrevScreen("collection");setScreen("affirmations");}},
+            {kicker:"Breathwork",      title:"When the morning is loud",                       meta:"60 sec", route:()=>{setPrevScreen("collection");setScreen("home");}},
+            {kicker:"Self-worth",      title:"When you need to hear it from outside yourself", meta:"5 min",  route:()=>{setPrevScreen("collection");setScreen("affirmations");}},
+            {kicker:"Affirmations",    title:"For abundance, said softly",                     meta:"4 min",  route:()=>{setPrevScreen("collection");setScreen("affirmations");}},
+            {kicker:"Affirmations",    title:"For the body you are in",                        meta:"6 min",  route:()=>{setPrevScreen("collection");setScreen("affirmations");}},
           ].map((m,i)=>(
             <button key={i} onClick={m.route} className="rhei-press" style={{
-              background:"none",
-              border:"none",
-              borderTop:"1px solid rgba(248,242,229,0.10)",
-              padding:"26px 0 24px",
-              cursor:"pointer",
-              textAlign:"left",
-              width:"100%",
-              display:"block",
-              transition:"background .25s ease",
+              background:"none", border:"none",
+              borderTop:"1px solid rgba(196,154,75,0.08)",
+              padding:"22px 0", cursor:"pointer", textAlign:"left", width:"100%",
+              display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:16,
             }}>
-              <p style={{
-                fontFamily:SF, fontSize:9, fontWeight:500,
-                letterSpacing:"0.32em", textTransform:"uppercase",
-                color:"rgba(196,154,75,0.72)",
-                margin:"0 0 10px",
-              }}>{m.kicker}</p>
-              <p style={{
-                fontFamily:F, fontSize:21, fontWeight:300,
-                color:B.cream,
-                lineHeight:1.25,
-                letterSpacing:"-0.015em",
-                margin:"0 0 10px",
-                fontVariationSettings:"'opsz' 72",
-              }}>{m.title}</p>
-              <p style={{
-                fontFamily:SF, fontSize:9.5, fontWeight:500,
-                letterSpacing:"0.36em", textTransform:"uppercase",
-                color:"rgba(248,242,229,0.38)",
-                margin:0,
-              }}>{m.meta}</p>
+              <div style={{flex:1}}>
+                <p style={{fontFamily:SF,fontSize:8,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.52)",margin:"0 0 8px"}}>{m.kicker}</p>
+                <p style={{fontFamily:F,fontSize:21,fontWeight:300,color:B.vellum,lineHeight:1.2,letterSpacing:"-0.016em",margin:0,fontVariationSettings:"'opsz' 72"}}>{m.title}</p>
+              </div>
+              <div style={{flexShrink:0, textAlign:"right", paddingTop:2}}>
+                <span style={{fontFamily:SF,fontSize:9,fontWeight:400,letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(248,242,229,0.22)",display:"block",marginBottom:10}}>{m.meta}</span>
+                <ArrowRight size={12} color="rgba(196,154,75,0.38)" strokeWidth={1.5}/>
+              </div>
             </button>
           ))}
+          <div style={{height:1, background:"rgba(196,154,75,0.08)"}}/>
         </div>
+
       </div>
     </div>
   );
@@ -4094,7 +4105,7 @@ export default function ObrizApp() {
           <h2 style={{fontFamily:F, fontSize:26, fontWeight:300, letterSpacing:"-0.015em", color:B.cream, lineHeight:1.2, margin:"0 0 14px", fontVariationSettings:"'opsz' 96"}}>On Stillness</h2>
           <p style={{fontFamily:F, fontSize:13, color:"rgba(248,242,229,0.68)", lineHeight:1.65, margin:"0 0 12px"}}>It took me a long time to understand that stillness was not a withdrawal from the world. I had been raised to read it as such &mdash; as a pause in the productive day, a small surrender, a thing that good women earned but did not begin with.</p>
           <p style={{fontFamily:F, fontSize:13, color:"rgba(248,242,229,0.68)", lineHeight:1.65, margin:"0 0 18px"}}>What changed was the morning I caught myself half-listening to a vagus-nerve podcast at twice the speed, and realized I had turned even my softness into a task. The optimization had eaten its returns; the body had been waiting.</p>
-          <p style={{fontFamily:F, fontStyle:"italic", fontSize:12, color:"rgba(196,154,75,0.75)", margin:0}}>&mdash; Rhea, for the Season of Stillness</p>
+          <p style={{fontFamily:F, fontStyle:"italic", fontSize:12, color:"rgba(196,154,75,0.75)", margin:0}}>&mdash; for the Season of Stillness</p>
         </div>
 
         <div style={{marginTop:36}}>
@@ -4374,9 +4385,31 @@ export default function ObrizApp() {
       {screen==="meditations"&&renderMeditations()}
       {screen==="premium"&&renderPremium()}
       {screen==="progress"&&renderProgress()}
-      {screen==="collection"&&renderCollection()}
+      {screen==="collection"&&(hasAccess?renderCollection():(
+        <div style={{position:"relative",minHeight:"100vh",background:"linear-gradient(180deg,#080402 0%,#0F0704 40%,#080402 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"calc(env(safe-area-inset-top,0px) + 86px) 24px 160px"}}>
+          <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",height:360,background:"radial-gradient(ellipse at 50% 0%,rgba(196,154,75,0.10) 0%,transparent 70%)",pointerEvents:"none"}}/>
+          <div style={{position:"relative",zIndex:1,maxWidth:360,width:"100%",textAlign:"center"}}>
+            <p style={{fontFamily:SF,fontSize:8,fontWeight:600,letterSpacing:"0.44em",textTransform:"uppercase",color:"rgba(196,154,75,0.55)",margin:"0 0 18px"}}>The Collection</p>
+            <h1 style={{fontFamily:F,fontSize:"clamp(40px,10vw,52px)",fontWeight:300,letterSpacing:"-0.03em",lineHeight:0.95,color:B.vellum,margin:"0 0 28px",fontVariationSettings:"'opsz' 144"}}>Four rooms.<br/>Locked.</h1>
+            <p style={{fontFamily:F,fontStyle:"italic",fontSize:15,color:"rgba(248,242,229,0.52)",lineHeight:1.6,margin:"0 0 40px",letterSpacing:"-0.005em"}}>Your trial has ended. Continue your practice with a membership — the rituals, the meditations, the library, all of it.</p>
+            <button onClick={()=>setScreen("premium")} style={{background:B.goldGrad,border:"none",borderRadius:100,padding:"16px 40px",fontFamily:SF,fontSize:12,fontWeight:600,letterSpacing:"0.14em",textTransform:"uppercase",color:B.warmBlack,cursor:"pointer",boxShadow:`0 6px 32px rgba(196,154,75,0.28)`,width:"100%",maxWidth:280,display:"block",margin:"0 auto 16px"}}>Continue with Rhei. &middot; €14.99/mo</button>
+            <button onClick={()=>setScreen("home")} style={{background:"none",border:"none",cursor:"pointer",fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.18em",textTransform:"uppercase",color:"rgba(248,242,229,0.30)",padding:"8px 0"}}>Back to home</button>
+          </div>
+        </div>
+      ))}
       {screen==="cabinet"&&renderCabinet()}
-      {screen==="almanac"&&renderAlmanac()}
+      {screen==="almanac"&&(hasAccess?renderAlmanac():(
+        <div style={{position:"relative",minHeight:"100vh",background:"linear-gradient(180deg,#0A0604 0%,#100804 38%,#0A0604 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"calc(env(safe-area-inset-top,0px) + 86px) 24px 140px"}}>
+          <div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:"100%",height:320,background:"radial-gradient(ellipse at 50% 0%,rgba(196,154,75,0.08) 0%,transparent 68%)",pointerEvents:"none"}}/>
+          <div style={{position:"relative",zIndex:1,maxWidth:360,width:"100%",textAlign:"center"}}>
+            <p style={{fontFamily:SF,fontSize:8,fontWeight:600,letterSpacing:"0.44em",textTransform:"uppercase",color:"rgba(196,154,75,0.55)",margin:"0 0 18px"}}>The Almanac</p>
+            <h1 style={{fontFamily:F,fontSize:"clamp(34px,9vw,44px)",fontWeight:300,letterSpacing:"-0.025em",lineHeight:1.0,color:B.cream,margin:"0 0 22px",fontVariationSettings:"'opsz' 144"}}>Letters.<br/>Locked.</h1>
+            <p style={{fontFamily:F,fontStyle:"italic",fontSize:15,color:"rgba(248,242,229,0.52)",lineHeight:1.6,margin:"0 0 40px"}}>The Almanac holds seasonal letters and small readings. Members receive a new letter each month — to sit with, not rush through.</p>
+            <button onClick={()=>setScreen("premium")} style={{background:B.goldGrad,border:"none",borderRadius:100,padding:"16px 40px",fontFamily:SF,fontSize:12,fontWeight:600,letterSpacing:"0.14em",textTransform:"uppercase",color:B.warmBlack,cursor:"pointer",boxShadow:`0 6px 32px rgba(196,154,75,0.28)`,width:"100%",maxWidth:280,display:"block",margin:"0 auto 16px"}}>Continue with Rhei. &middot; €14.99/mo</button>
+            <button onClick={()=>setScreen("home")} style={{background:"none",border:"none",cursor:"pointer",fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.18em",textTransform:"uppercase",color:"rgba(248,242,229,0.30)",padding:"8px 0"}}>Back to home</button>
+          </div>
+        </div>
+      ))}
       {screen==="affirmations"&&<AffirmationsScreen onBack={()=>setScreen("collection")} hasAccess={hasAccess} onUpgrade={()=>setScreen("premium")}/>}
       {screen==="mirror"&&<FaceMirrorMode onClose={()=>setScreen("rituals")} onTransitionToReset={(id)=>startSession(id)} rituals={rituals} isPremium={hasAccess}/>}
       {showCheckin&&renderCheckin()}
@@ -4579,7 +4612,7 @@ export default function ObrizApp() {
               const active = n.id===screen
                 || (n.id==="collection" && ["rituals","meditations","affirmations","library"].includes(screen));
               return (
-                <button key={n.id} onClick={()=>setScreen(n.id)} className="rhei-press" style={{
+                <button key={n.id} onClick={()=>{setPrevScreen(null);setScreen(n.id);}} className="rhei-press" style={{
                   background:"none", border:"none", cursor:"pointer",
                   padding:"4px 0", position:"relative",
                   fontFamily:SF, fontSize:8.5, fontWeight:500,
