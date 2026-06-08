@@ -2495,7 +2495,7 @@ export default function ObrizApp() {
         {/* ── HEADER — wordmark + greeting + membership chip ── */}
         <div className="rhei-rise rhei-rise-1" style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:36}}>
           <div>
-            <h1 style={{fontFamily:F,fontSize:13,letterSpacing:"0.38em",color:B.champagne,fontWeight:400,margin:"0 0 8px",textTransform:"uppercase"}}>Rhei.</h1>
+            <h1 style={{fontFamily:F,fontSize:15,letterSpacing:"0.06em",color:B.champagne,fontWeight:400,margin:"0 0 8px"}}>Rhei.</h1>
             <p style={{fontFamily:F,fontSize:26,fontWeight:300,color:B.vellum,margin:0,letterSpacing:"-0.02em",lineHeight:1.1,fontVariationSettings:"'opsz' 48"}}>{greeting}</p>
           </div>
           <button onClick={()=>setScreen("premium")} className="rhei-press" style={{background:"rgba(248,242,229,0.04)",border:`1px solid ${isPremium?"rgba(196,154,75,0.35)":isInTrial?"rgba(196,154,75,0.22)":"rgba(248,242,229,0.10)"}`,borderRadius:100,padding:"6px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:5,marginTop:4}}>
@@ -3984,7 +3984,7 @@ export default function ObrizApp() {
               <div style={{position:"absolute",left:0,top:"18%",bottom:"18%",width:1.5,background:"linear-gradient(180deg,transparent,rgba(196,154,75,0.5) 40%,rgba(196,154,75,0.5) 60%,transparent)"}}/>
               <div style={{flex:1}}>
                 <p style={{fontFamily:SF,fontSize:7.5,fontWeight:500,letterSpacing:"0.38em",textTransform:"uppercase",color:"rgba(196,154,75,0.60)",margin:"0 0 6px"}}>{m.kicker}</p>
-                <p style={{fontFamily:F,fontSize:22,fontWeight:300,fontStyle:"italic",color:B.vellum,lineHeight:1.18,letterSpacing:"-0.02em",margin:0,fontVariationSettings:"'opsz' 72"}}>{m.title}</p>
+                <p style={{fontFamily:F,fontSize:21,fontWeight:300,color:B.vellum,lineHeight:1.18,letterSpacing:"-0.025em",margin:0,fontVariationSettings:"'opsz' 144"}}>{m.title}</p>
               </div>
               <div style={{flexShrink:0, display:"flex", flexDirection:"column", alignItems:"flex-end", gap:10}}>
                 <span style={{fontFamily:SF,fontSize:7.5,letterSpacing:"0.18em",textTransform:"uppercase",color:"rgba(248,242,229,0.28)",background:"rgba(196,154,75,0.07)",border:"1px solid rgba(196,154,75,0.14)",borderRadius:100,padding:"3px 9px",whiteSpace:"nowrap"}}>{m.meta}</span>
@@ -4146,6 +4146,139 @@ export default function ObrizApp() {
     </div>
   );
 
+  // ══════════ FAQ + LEGAL SCREEN ══════════
+  const renderFAQ=()=>{
+    const faqSections=[
+      {
+        heading:"What is Rhei.",
+        items:[
+          {q:"What is Rhei.?", a:"Rhei. is a daily wellness practice built around four rituals: breathwork, meditation, face sculpting, and affirmations. It exists for women who move through demanding lives and need tools that are precise, beautiful, and brief."},
+          {q:"Who is it for?", a:"Women who want a quiet anchor in the day — without the noise of most wellness apps. Rhei. assumes you already know you need to take care of yourself. It simply gives you the tools to do it, with intention."},
+        ]
+      },
+      {
+        heading:"The practices",
+        items:[
+          {q:"What do the four practices include?", a:"Breathwork to settle the nervous system. Guided meditations for mental clarity and presence. Face sculpting sequences — rooted in lymphatic drainage and buccal technique — to release tension and return tone to the face. Affirmations spoken with intention, in a voice that does not perform."},
+          {q:"Do I need prior experience?", a:"No. Every practice begins where you are. Sessions run from 60 seconds to 12 minutes. There is nothing to learn before starting."},
+        ]
+      },
+      {
+        heading:"Trial & membership",
+        items:[
+          {q:"How does the trial work?", a:"Every new account begins with a 14-day free trial — full access, no charge, no card required. Your trial is tied to your account and follows you across devices. It does not reset."},
+          {q:"What happens when the trial ends?", a:"The Collection and Almanac lock. You can still access The Light and the home screen. A membership reopens everything."},
+          {q:"How much is a membership?", a:"€14.99 per month, billed monthly. Cancel at any time with no penalty."},
+        ]
+      },
+      {
+        heading:"Billing & cancellation",
+        items:[
+          {q:"Can I cancel?", a:"Yes, at any time. Your access continues through the end of the billing period you have already paid for. No partial charges, no fees."},
+          {q:"Are refunds available?", a:"We offer refunds within 7 days of any charge. Write to hello@rheihouse.com. After that window, we do not issue refunds for time already elapsed."},
+          {q:"Where is billing managed?", a:"Through your Rhei. account settings, under Manage plan. Payments are processed securely via Stripe."},
+        ]
+      },
+      {
+        heading:"Privacy & data",
+        items:[
+          {q:"Is my data private?", a:"Your account information — email, name, and practice history — is held with us and is never sold or shared with third parties. We use it only to run your experience inside Rhei."},
+          {q:"Can I delete my account?", a:"Yes. Write to hello@rheihouse.com with the subject 'Delete my account' and we will remove your data within 30 days."},
+          {q:"How do I reach you?", a:"hello@rheihouse.com. We read every message."},
+        ]
+      },
+    ];
+
+    const tosItems=[
+      "These Terms govern your use of Rhei. ('the App') operated by Rhei House ('we', 'us').",
+      "Trial. New accounts receive a 14-day free trial beginning at registration. The trial is account-bound and may not be reset.",
+      "Subscription. After the trial, access to the Collection and Almanac requires a paid membership at €14.99 per month, billed monthly and auto-renewed until cancelled.",
+      "Cancellation. You may cancel at any time via the App settings. Cancellation takes effect at the end of the current billing period. No partial refunds are issued except within the 7-day refund window described below.",
+      "Refunds. We offer a full refund of the most recent charge if requested within 7 days of that charge. Email hello@rheihouse.com to request one.",
+      "Intellectual property. All content within the App — audio, text, design, and code — is the exclusive property of Rhei House. You may not reproduce, distribute, or create derivative works without written permission.",
+      "Privacy. Our Privacy Policy governs the collection and use of your personal data. By using the App, you agree to that policy.",
+      "Disclaimers. Rhei. is a wellness tool, not a medical product. It does not diagnose, treat, or prevent any condition. Consult a qualified professional before beginning any new health practice.",
+      "Governing law. These Terms are governed by the laws of Portugal. Any dispute shall be resolved in the courts of Lisbon.",
+      "Contact. hello@rheihouse.com.",
+    ];
+
+    return(
+      <div style={{
+        position:"relative", minHeight:"100vh",
+        background:"linear-gradient(180deg, #0E0905 0%, #080402 50%, #060300 100%)",
+        overflowY:"auto", overflowX:"hidden",
+      }}>
+        {/* Atmospheric glow */}
+        <div style={{position:"fixed",top:0,left:"50%",width:"140vmin",height:"140vmin",borderRadius:"50%",background:"radial-gradient(circle, rgba(196,154,75,0.06) 0%, transparent 60%)",filter:"blur(60px)",transform:"translateX(-50%)",pointerEvents:"none",zIndex:0}}/>
+        <div className="rhei-grain" style={{position:"fixed",zIndex:0}}/>
+
+        <div style={{position:"relative",zIndex:1,maxWidth:430,margin:"0 auto",padding:"calc(env(safe-area-inset-top,0px) + 22px) 24px 100px"}}>
+
+          {/* Back */}
+          <button onClick={()=>setScreen("home")} style={{
+            background:"none", border:"none", cursor:"pointer",
+            display:"flex", alignItems:"center", gap:8,
+            color:"rgba(248,242,229,0.40)", padding:"0 0 32px",
+          }}>
+            <span style={{fontFamily:SF,fontSize:9,fontWeight:500,letterSpacing:"0.28em",textTransform:"uppercase"}}>← Back</span>
+          </button>
+
+          {/* Title */}
+          <p style={{fontFamily:SF,fontSize:8,fontWeight:500,letterSpacing:"0.44em",textTransform:"uppercase",color:"rgba(196,154,75,0.55)",margin:"0 0 10px"}}>The House</p>
+          <h2 style={{fontFamily:F,fontSize:"clamp(32px,9vw,40px)",fontWeight:300,letterSpacing:"-0.025em",color:B.vellum,margin:"0 0 6px",lineHeight:1.0,fontVariationSettings:"'opsz' 144"}}>Questions</h2>
+          <p style={{fontFamily:F,fontStyle:"italic",fontSize:12.5,color:"rgba(248,242,229,0.45)",margin:"0 0 48px"}}>& what you should know</p>
+
+          {/* FAQ sections */}
+          {faqSections.map((section,si)=>(
+            <div key={si} style={{marginBottom:40}}>
+              <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20}}>
+                <div style={{height:"1px",width:28,background:"rgba(196,154,75,0.35)"}}/>
+                <p style={{fontFamily:SF,fontSize:8,fontWeight:500,letterSpacing:"0.44em",textTransform:"uppercase",color:"rgba(196,154,75,0.60)",margin:0}}>{section.heading}</p>
+              </div>
+              {section.items.map((item,ii)=>(
+                <div key={ii} style={{marginBottom:24,paddingBottom:24,borderBottom:"1px solid rgba(248,242,229,0.05)"}}>
+                  <p style={{fontFamily:SF,fontSize:12,fontWeight:500,color:B.cream,margin:"0 0 8px",lineHeight:1.4,letterSpacing:"-0.005em"}}>{item.q}</p>
+                  <p style={{fontFamily:SF,fontSize:12,fontWeight:400,color:"rgba(248,242,229,0.52)",margin:0,lineHeight:1.7,letterSpacing:"0"}}>{item.a}</p>
+                </div>
+              ))}
+            </div>
+          ))}
+
+          {/* Divider */}
+          <div style={{display:"flex",alignItems:"center",gap:16,margin:"8px 0 36px"}}>
+            <div style={{flex:1,height:"1px",background:"linear-gradient(90deg,transparent,rgba(196,154,75,0.18))"}}/>
+            <span style={{fontFamily:SF,fontSize:7.5,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(248,242,229,0.22)"}}>Legal</span>
+            <div style={{flex:1,height:"1px",background:"linear-gradient(90deg,rgba(196,154,75,0.18),transparent)"}}/>
+          </div>
+
+          {/* Terms heading */}
+          <h3 style={{fontFamily:F,fontSize:20,fontWeight:300,letterSpacing:"-0.015em",color:B.cream,margin:"0 0 6px",fontVariationSettings:"'opsz' 72"}}>Terms of Service</h3>
+          <p style={{fontFamily:SF,fontSize:10,color:"rgba(248,242,229,0.30)",margin:"0 0 24px",letterSpacing:"0.01em"}}>Last updated June 2026</p>
+
+          {tosItems.map((item,i)=>(
+            <p key={i} style={{fontFamily:SF,fontSize:11.5,fontWeight:400,color:"rgba(248,242,229,0.42)",lineHeight:1.75,margin:"0 0 16px",letterSpacing:0}}>{item}</p>
+          ))}
+
+          {/* Privacy Policy heading */}
+          <h3 style={{fontFamily:F,fontSize:20,fontWeight:300,letterSpacing:"-0.015em",color:B.cream,margin:"40px 0 6px",fontVariationSettings:"'opsz' 72"}}>Privacy Policy</h3>
+          <p style={{fontFamily:SF,fontSize:10,color:"rgba(248,242,229,0.30)",margin:"0 0 24px",letterSpacing:"0.01em"}}>Last updated June 2026</p>
+
+          {[
+            "We collect your email address, name (if provided), and encrypted authentication credentials when you create an account. We also record your in-app activity — sessions started and completed — to personalise your experience.",
+            "We do not sell, rent, or share your personal data with any third party for marketing purposes. Data is shared only with the service providers strictly necessary to run the App (Supabase for authentication and database, Stripe for payment processing, Vercel for hosting).",
+            "Your data is stored securely and encrypted at rest. Payment data is handled entirely by Stripe — we never see or store your card details.",
+            "You may request a full copy or deletion of your data at any time by writing to hello@rheihouse.com.",
+            "We may update this policy from time to time. Continued use of the App after any update constitutes acceptance of the revised policy.",
+            "Questions: hello@rheihouse.com.",
+          ].map((item,i)=>(
+            <p key={i} style={{fontFamily:SF,fontSize:11.5,fontWeight:400,color:"rgba(248,242,229,0.42)",lineHeight:1.75,margin:"0 0 16px",letterSpacing:0}}>{item}</p>
+          ))}
+
+        </div>
+      </div>
+    );
+  };
+
   // ══════════ THE HOUSE — modal sheet ══════════
   // Plan management, profile, push, sign out. Opened from the R. monogram.
   const renderHouseSheet=()=>(
@@ -4222,6 +4355,32 @@ export default function ObrizApp() {
             cursor:"pointer",
           }}>See membership</button>
         )}
+
+        {/* FAQ + Legal links */}
+        <div style={{display:"flex",gap:8,marginTop:18}}>
+          <button onClick={()=>{ setHouseOpen(false); setScreen("faq"); }} className="rhei-press" style={{
+            flex:1,
+            background:"none",
+            border:"1px solid rgba(248,242,229,0.10)",
+            color:"rgba(248,242,229,0.50)",
+            borderRadius:12,
+            padding:"11px 10px",
+            fontFamily:SF, fontSize:9, fontWeight:500,
+            letterSpacing:"0.22em", textTransform:"uppercase",
+            cursor:"pointer",
+          }}>FAQ</button>
+          <button onClick={()=>{ setHouseOpen(false); setScreen("faq"); }} className="rhei-press" style={{
+            flex:1,
+            background:"none",
+            border:"1px solid rgba(248,242,229,0.10)",
+            color:"rgba(248,242,229,0.50)",
+            borderRadius:12,
+            padding:"11px 10px",
+            fontFamily:SF, fontSize:9, fontWeight:500,
+            letterSpacing:"0.22em", textTransform:"uppercase",
+            cursor:"pointer",
+          }}>Terms &amp; Privacy</button>
+        </div>
 
         {authUser && (
           <button onClick={()=>{ setHouseOpen(false); signOut && signOut(); }} style={{
@@ -4421,6 +4580,7 @@ export default function ObrizApp() {
         </div>
       ))}
       {screen==="affirmations"&&<AffirmationsScreen onBack={()=>setScreen("collection")} hasAccess={hasAccess} onUpgrade={()=>setScreen("premium")}/>}
+      {screen==="faq"&&renderFAQ()}
       {screen==="mirror"&&<FaceMirrorMode onClose={()=>setScreen("rituals")} onTransitionToReset={(id)=>startSession(id)} rituals={rituals} isPremium={hasAccess}/>}
       {showCheckin&&renderCheckin()}
       {microActive&&renderMicro()}
