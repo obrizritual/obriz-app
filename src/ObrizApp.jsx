@@ -3958,8 +3958,8 @@ export default function ObrizApp() {
           <div style={{flex:1, height:"1px", background:"linear-gradient(90deg, rgba(196,154,75,0.15), transparent)"}}/>
         </div>
 
-        {/* ── BY MOMENT — clean editorial list, no intro prose ── */}
-        <div style={{padding:"0 24px"}}>
+        {/* ── BY MOMENT — luxury editorial list ── */}
+        <div style={{padding:"0 20px"}}>
           {[
             {kicker:"Face Sculpting",  title:"For a clenched jaw",                             meta:"6 min",  route:()=>{setPrevScreen("collection");setScreen("rituals");}},
             {kicker:"Breathwork",      title:"For a heavy chest",                              meta:"4 min",  route:()=>{setPrevScreen("collection");setScreen("home");}},
@@ -3971,22 +3971,27 @@ export default function ObrizApp() {
             {kicker:"Affirmations",    title:"For the body you are in",                        meta:"6 min",  route:()=>{setPrevScreen("collection");setScreen("affirmations");}},
           ].map((m,i)=>(
             <button key={i} onClick={m.route} className="rhei-press" style={{
-              background:"none", border:"none",
-              borderTop:"1px solid rgba(196,154,75,0.08)",
-              padding:"22px 0", cursor:"pointer", textAlign:"left", width:"100%",
-              display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:16,
+              position:"relative",
+              background:"linear-gradient(135deg, rgba(196,154,75,0.045) 0%, rgba(14,8,3,0) 60%)",
+              border:"none",
+              borderBottom:"1px solid rgba(196,154,75,0.09)",
+              padding:"20px 16px 20px 22px",
+              cursor:"pointer", textAlign:"left", width:"100%",
+              display:"flex", alignItems:"center", justifyContent:"space-between", gap:14,
+              overflow:"hidden",
             }}>
+              {/* Left gold accent line */}
+              <div style={{position:"absolute",left:0,top:"18%",bottom:"18%",width:1.5,background:"linear-gradient(180deg,transparent,rgba(196,154,75,0.5) 40%,rgba(196,154,75,0.5) 60%,transparent)"}}/>
               <div style={{flex:1}}>
-                <p style={{fontFamily:SF,fontSize:8,fontWeight:500,letterSpacing:"0.32em",textTransform:"uppercase",color:"rgba(196,154,75,0.52)",margin:"0 0 8px"}}>{m.kicker}</p>
-                <p style={{fontFamily:F,fontSize:21,fontWeight:300,color:B.vellum,lineHeight:1.2,letterSpacing:"-0.016em",margin:0,fontVariationSettings:"'opsz' 72"}}>{m.title}</p>
+                <p style={{fontFamily:SF,fontSize:7.5,fontWeight:500,letterSpacing:"0.38em",textTransform:"uppercase",color:"rgba(196,154,75,0.60)",margin:"0 0 6px"}}>{m.kicker}</p>
+                <p style={{fontFamily:F,fontSize:22,fontWeight:300,fontStyle:"italic",color:B.vellum,lineHeight:1.18,letterSpacing:"-0.02em",margin:0,fontVariationSettings:"'opsz' 72"}}>{m.title}</p>
               </div>
-              <div style={{flexShrink:0, textAlign:"right", paddingTop:2}}>
-                <span style={{fontFamily:SF,fontSize:9,fontWeight:400,letterSpacing:"0.14em",textTransform:"uppercase",color:"rgba(248,242,229,0.22)",display:"block",marginBottom:10}}>{m.meta}</span>
-                <ArrowRight size={12} color="rgba(196,154,75,0.38)" strokeWidth={1.5}/>
+              <div style={{flexShrink:0, display:"flex", flexDirection:"column", alignItems:"flex-end", gap:10}}>
+                <span style={{fontFamily:SF,fontSize:7.5,letterSpacing:"0.18em",textTransform:"uppercase",color:"rgba(248,242,229,0.28)",background:"rgba(196,154,75,0.07)",border:"1px solid rgba(196,154,75,0.14)",borderRadius:100,padding:"3px 9px",whiteSpace:"nowrap"}}>{m.meta}</span>
+                <ArrowRight size={11} color="rgba(196,154,75,0.40)" strokeWidth={1.5}/>
               </div>
             </button>
           ))}
-          <div style={{height:1, background:"rgba(196,154,75,0.08)"}}/>
         </div>
 
       </div>
@@ -4040,8 +4045,13 @@ export default function ObrizApp() {
           <div style={{padding:"22px 22px"}}>
             <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.34em", textTransform:"uppercase", color:"rgba(196,154,75,0.80)", margin:"0 0 14px"}}>The First Object</p>
             <h2 style={{fontFamily:F, fontSize:30, fontWeight:300, letterSpacing:"-0.025em", color:B.cream, lineHeight:1.05, margin:"0 0 8px", fontVariationSettings:"'opsz' 144"}}>The Light</h2>
-            <p style={{fontFamily:F, fontSize:13, color:"rgba(248,242,229,0.62)", lineHeight:1.6, margin:"0 0 18px"}}>A red-light ritual, built for the morning that does not yet have one. Twelve minutes a day, with Lulu&rsquo;s voice walking you through. Sculpted to be held; quiet enough to live on your bedside table. Notify me when it arrives, and you&rsquo;ll be the first to keep one.</p>
-            <button onClick={()=>{ showToast && showToast("You&rsquo;re on the list. We&rsquo;ll write when it&rsquo;s near."); }} className="rhei-press" style={{
+            <p style={{fontFamily:F, fontSize:13, color:"rgba(248,242,229,0.62)", lineHeight:1.6, margin:"0 0 18px"}}>A precision ensemble of devices built for your daily ritual. Red-light therapy and EMS technology, designed to stimulate collagen, sculpt the face, and return the body to quiet. Each piece is weighted and warm in the hand — shaped to be used in the practices, and sculpted to live on your bedside table.</p>
+            <button onClick={async()=>{
+              if(supabase && authUser){
+                await supabase.from('profiles').update({notify_light:true}).eq('id',authUser.id).catch(()=>{});
+              }
+              showToast("You\u2019re on the list. We\u2019ll write when it\u2019s near.");
+            }} className="rhei-press" style={{
               width:"100%",
               background:"rgba(248,242,229,0.05)",
               color:B.cream,
