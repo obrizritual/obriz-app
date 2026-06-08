@@ -1694,13 +1694,13 @@ function Onboarding({ onComplete, authUser }) {
   const explainerSteps = [
     {
       numeral: "I",
-      heading: "There is nothing to fix.",
-      body: "This is not a goal. It's a place to come back to.",
+      heading: "Four rituals for the body you are in.",
+      body: "Face sculpting. Breathwork. Meditation. Affirmations. Each practice takes between 60 seconds and 12 minutes — built for the day you are actually having.",
     },
     {
       numeral: "II",
-      heading: "Your face is the surface of your nervous system.",
-      body: "Working with the surface is one of the fastest ways to settle what's underneath.",
+      heading: "Move the way you feel.",
+      body: "Today suggests one ritual for right now. The Collection is sorted by mood and moment. The Library holds every practice, ready when you want it. The R\u00B7 in the corner is yours.",
     },
     {
       numeral: "III",
