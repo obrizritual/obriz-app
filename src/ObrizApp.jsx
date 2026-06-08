@@ -1914,6 +1914,10 @@ export default function ObrizApp() {
   const [userName,setUserName]=useState(()=>load('userName',''));
   const [isPremium,setIsPremium]=useState(()=>load('isPremium',false));
 
+  // Auth state (Supabase) — declared HERE so hasAccess can reference authUser below
+  const [authUser,setAuthUser]=useState(null);
+  const [authLoading,setAuthLoading]=useState(!!supabase);
+
   // ── Free trial ──
   // 14-day full-access trial. Morning Reset stays free forever; everything
   // else unlocks during trial, locks again when trial expires + user hasn't paid.
@@ -1988,9 +1992,7 @@ export default function ObrizApp() {
   const [checkoutLoading,setCheckoutLoading]=useState(false);
   const [portalLoading,setPortalLoading]=useState(false);
 
-  // Auth state (Supabase)
-  const [authUser,setAuthUser]=useState(null);
-  const [authLoading,setAuthLoading]=useState(!!supabase);
+  // Auth state (continued)
   const [authEmail,setAuthEmail]=useState('');
   const [authSent,setAuthSent]=useState(false);
   const [authError,setAuthError]=useState('');
@@ -4544,6 +4546,37 @@ export default function ObrizApp() {
   };
 
   // ══════════ RENDER ══════════
+  // While Supabase resolves the auth session (typically <400ms), show a smooth
+  // breathing screen so the app never jumps from the CSS splash into the UI cold.
+  if (supabase && authLoading) {
+    return (
+      <div style={{
+        position:"fixed", inset:0,
+        background:"linear-gradient(180deg,#2D1B0E 0%,#0F0905 100%)",
+        display:"flex", alignItems:"center", justifyContent:"center",
+      }}>
+        <div style={{
+          position:"absolute", top:"50%", left:"50%",
+          width:"55vmin", height:"55vmin",
+          borderRadius:"50%",
+          background:"radial-gradient(ellipse at center, rgba(196,154,75,0.12) 0%, transparent 70%)",
+          transform:"translate(-50%,-50%)",
+          animation:"rhei-atmosphere-1 3.5s ease-in-out infinite",
+        }}/>
+        <h1 style={{
+          fontFamily:"'Fraunces', Georgia, serif",
+          fontSize:"3.2rem",
+          fontWeight:400,
+          letterSpacing:"-0.01em",
+          color:"#F2E8D9",
+          margin:0,
+          position:"relative",
+          animation:"rhei-splash-breath 2.4s cubic-bezier(0.22,0.61,0.36,1) infinite alternate",
+        }}>Rhei.</h1>
+      </div>
+    );
+  }
+
   return(
     <div style={container}>
       <style>{GLOBAL_CSS}</style>
