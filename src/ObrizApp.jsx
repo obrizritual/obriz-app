@@ -1913,6 +1913,7 @@ export default function ObrizApp() {
   const [onboarded,setOnboarded]=useState(()=>load('onboarded',false));
   const [userName,setUserName]=useState(()=>load('userName',''));
   const [isPremium,setIsPremium]=useState(()=>load('isPremium',false));
+  const [isGifted,setIsGifted]=useState(false); // true = comped access (influencers, partners, press)
 
   // Auth state (Supabase) — declared HERE so hasAccess can reference authUser below
   const [authUser,setAuthUser]=useState(null);
@@ -1946,7 +1947,7 @@ export default function ObrizApp() {
   // hasAccess: paid subscriber OR currently inside the trial window.
   // When Supabase is enabled, an unauthenticated visitor has no trial —
   // they must sign in to get their account-bound 14-day access.
-  const hasAccess = isPremium || (supabase ? (!!authUser && isInTrial) : isInTrial);
+  const hasAccess = isPremium || isGifted || (supabase ? (!!authUser && isInTrial) : isInTrial);
 
   // Navigation
   const [screen,setScreen]=useState("home");
@@ -2043,14 +2044,15 @@ export default function ObrizApp() {
       if(session?.user){
         const userId=session.user.id;
         const email=session.user.email;
-        // Load trial start date from the profiles table (account-bound, device-agnostic)
-        supabase.from('profiles').select('trial_started_at').eq('id',userId).single()
+        // Load trial start date + gifted flag from the profiles table (account-bound, device-agnostic)
+        supabase.from('profiles').select('trial_started_at,gifted').eq('id',userId).single()
           .then(({data:profile})=>{
             if(profile?.trial_started_at){
               const ts=new Date(profile.trial_started_at).getTime();
               setTrialStartedAt(ts);
               save('trialStartedAt',ts);
             }
+            if(profile?.gifted) setIsGifted(true);
           })
           .catch(()=>{});
         if(email){
@@ -2070,14 +2072,15 @@ export default function ObrizApp() {
       if(session?.user){
         const userId=session.user.id;
         const email=session.user.email;
-        // Load account-bound trial date on every sign-in event
-        supabase.from('profiles').select('trial_started_at').eq('id',userId).single()
+        // Load account-bound trial date + gifted flag on every sign-in event
+        supabase.from('profiles').select('trial_started_at,gifted').eq('id',userId).single()
           .then(({data:profile})=>{
             if(profile?.trial_started_at){
               const ts=new Date(profile.trial_started_at).getTime();
               setTrialStartedAt(ts);
               save('trialStartedAt',ts);
             }
+            if(profile?.gifted) setIsGifted(true);
           })
           .catch(()=>{});
         if(email){
@@ -2088,8 +2091,9 @@ export default function ObrizApp() {
           save('customerEmail',email);
         }
       } else {
-        // Signed out — revoke in-memory trial access immediately
+        // Signed out — revoke in-memory trial/gifted access immediately
         setTrialStartedAt(null);
+        setIsGifted(false);
       }
     });
     return()=>authSub.unsubscribe();
@@ -2500,7 +2504,7 @@ export default function ObrizApp() {
             <h1 style={{fontFamily:F,fontSize:15,letterSpacing:"0.06em",color:B.champagne,fontWeight:400,margin:"0 0 8px"}}>Rhei.</h1>
             <p style={{fontFamily:F,fontSize:26,fontWeight:300,color:B.vellum,margin:0,letterSpacing:"-0.02em",lineHeight:1.1,fontVariationSettings:"'opsz' 48"}}>{greeting}</p>
           </div>
-          <button onClick={()=>setScreen("premium")} className="rhei-press" style={{background:"rgba(248,242,229,0.04)",border:`1px solid ${isPremium?"rgba(196,154,75,0.35)":isInTrial?"rgba(196,154,75,0.22)":"rgba(248,242,229,0.10)"}`,borderRadius:100,padding:"6px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:5,marginTop:4}}>
+          <button onClick={()=>{setPrevScreen(screen);setScreen("premium");}} className="rhei-press" style={{background:"rgba(248,242,229,0.04)",border:`1px solid ${isPremium?"rgba(196,154,75,0.35)":isInTrial?"rgba(196,154,75,0.22)":"rgba(248,242,229,0.10)"}`,borderRadius:100,padding:"6px 12px",cursor:"pointer",display:"flex",alignItems:"center",gap:5,marginTop:4}}>
             <Crown size={10} color={isPremium||isInTrial?B.polished:"rgba(248,242,229,0.50)"} strokeWidth={1.5}/>
             <span style={{fontFamily:SF,fontSize:9,color:isPremium||isInTrial?B.polished:"rgba(248,242,229,0.55)",letterSpacing:"0.18em",textTransform:"uppercase",fontWeight:500}}>
               {isPremium ? "Member" : isInTrial ? `${trialDaysLeft}d left` : "Unlock"}
@@ -2553,7 +2557,7 @@ export default function ObrizApp() {
             </button>
           </div>
           <button
-            onClick={()=>{if(ritualLocked){setScreen("premium");}else{setActiveRitual(generateAdaptiveRitual(arc.ritual,checkinState));}}}
+            onClick={()=>{if(ritualLocked){setPrevScreen(screen);setScreen("premium");}else{setActiveRitual(generateAdaptiveRitual(arc.ritual,checkinState));}}}
             className="rhei-press"
             style={{width:"100%",background:"linear-gradient(160deg, rgba(58,37,22,0.80) 0%, rgba(26,15,6,0.90) 100%)",border:"1px solid rgba(196,154,75,0.20)",borderRadius:22,padding:"22px 20px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden",boxShadow:"0 18px 48px -16px rgba(15,9,5,0.70)"}}>
             <div style={{position:"absolute",top:"-20%",right:"-10%",width:220,height:220,borderRadius:"50%",background:"radial-gradient(circle, rgba(245,216,160,0.18) 0%, rgba(196,154,75,0.06) 45%, transparent 70%)",filter:"blur(24px)",pointerEvents:"none"}}/>
@@ -2590,7 +2594,7 @@ export default function ObrizApp() {
           </div>
           <button
             className="rhei-press"
-            onClick={()=>{const locked=arc.audio.id!==1&&!hasAccess;if(locked){setScreen("premium");}else{startSession(arc.audio.id);}}}
+            onClick={()=>{const locked=arc.audio.id!==1&&!hasAccess;if(locked){setPrevScreen(screen);setScreen("premium");}else{startSession(arc.audio.id);}}}
             style={{width:"100%",background:"rgba(248,242,229,0.03)",border:"1px solid rgba(248,242,229,0.09)",borderRadius:18,padding:"16px 18px",cursor:"pointer",textAlign:"left",display:"flex",alignItems:"center",gap:14}}>
             <div style={{width:42,height:42,borderRadius:"50%",background:"linear-gradient(135deg, rgba(196,154,75,0.18), rgba(196,154,75,0.06))",border:"1px solid rgba(196,154,75,0.22)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
               <Play size={13} color={B.polished} fill={B.polished} style={{marginLeft:2}}/>
@@ -2630,7 +2634,7 @@ export default function ObrizApp() {
         {/* ── Membership whisper (trial ended only) ── */}
         {!hasAccess && (
           <div className="rhei-rise rhei-rise-5" style={{marginBottom:24}}>
-            <button className="rhei-press" onClick={()=>setScreen("premium")}
+            <button className="rhei-press" onClick={()=>{setPrevScreen(screen);setScreen("premium");}}
               style={{width:"100%",background:"linear-gradient(160deg, rgba(196,154,75,0.10) 0%, rgba(26,15,6,0.88) 100%)",border:"1px solid rgba(196,154,75,0.20)",borderRadius:20,padding:"22px 20px",cursor:"pointer",textAlign:"left",position:"relative",overflow:"hidden"}}>
               <div style={{position:"absolute",top:-24,right:-24,width:140,height:140,borderRadius:"50%",background:"radial-gradient(circle, rgba(212,173,106,0.16) 0%, transparent 65%)",filter:"blur(18px)",pointerEvents:"none"}}/>
               <div style={{position:"relative",zIndex:1}}>
@@ -2855,7 +2859,7 @@ export default function ObrizApp() {
             return (
               <button
                 key={r.id}
-                onClick={()=>{if(locked){setScreen("premium");}else{setActiveRitual(generateAdaptiveRitual(r,checkinState));}}}
+                onClick={()=>{if(locked){setPrevScreen(screen);setScreen("premium");}else{setActiveRitual(generateAdaptiveRitual(r,checkinState));}}}
                 className="rhei-press"
                 style={{
                   width:"100%",
@@ -2990,7 +2994,7 @@ export default function ObrizApp() {
                 Every tool. Every audio room. The whole practice.
               </p>
               <button
-                onClick={()=>setScreen("premium")}
+                onClick={()=>{setPrevScreen(screen);setScreen("premium");}}
                 className="rhei-press"
                 style={{
                   background:"rgba(248,242,229,0.95)",
@@ -3134,7 +3138,7 @@ export default function ObrizApp() {
             return (
               <button
                 key={s.id}
-                onClick={()=>{if(locked){setScreen("premium");}else{startSession(s.id);}}}
+                onClick={()=>{if(locked){setPrevScreen(screen);setScreen("premium");}else{startSession(s.id);}}}
                 className="rhei-press"
                 style={{
                   width:"100%",
@@ -3280,7 +3284,7 @@ export default function ObrizApp() {
                 Pre-meeting, evening melt, post-conflict, and quick return. All yours.
               </p>
               <button
-                onClick={()=>setScreen("premium")}
+                onClick={()=>{setPrevScreen(screen);setScreen("premium");}}
                 className="rhei-press"
                 style={{
                   background:"rgba(248,242,229,0.95)",
@@ -3296,7 +3300,7 @@ export default function ObrizApp() {
                 Continue
               </button>
               <p style={{fontFamily:SF, fontSize:11, color:"rgba(248,242,229,0.45)", margin:"18px 0 0", letterSpacing:"0.04em"}}>
-                or <button onClick={()=>setScreen("premium")} style={{background:"none", border:"none", color:"rgba(248,242,229,0.70)", fontFamily:SF, fontSize:11, cursor:"pointer", textDecoration:"underline", textUnderlineOffset:3, padding:0}}>see what's inside</button>
+                or <button onClick={()=>{setPrevScreen(screen);setScreen("premium");}} style={{background:"none", border:"none", color:"rgba(248,242,229,0.70)", fontFamily:SF, fontSize:11, cursor:"pointer", textDecoration:"underline", textUnderlineOffset:3, padding:0}}>see what's inside</button>
               </p>
             </div>
           </div>
@@ -3317,8 +3321,6 @@ export default function ObrizApp() {
       <DramaticGodRays intensity={1.05} pierce="50%" />
 
       <div style={{position:"relative", zIndex:1, maxWidth:480, margin:"0 auto", padding:"0 24px"}}>
-
-        
 
         {/* Back button */}
         <button
@@ -3438,24 +3440,26 @@ export default function ObrizApp() {
         }}>
           <div style={{display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:18}}>
             <PrecisionStamp label="Manifest" color="rgba(245,200,120,0.75)"/>
-            <PrecisionStamp label="15 Items" color="rgba(248,242,229,0.45)"/>
+            <PrecisionStamp label="17 Items" color="rgba(248,242,229,0.45)"/>
           </div>
           {[
-            {text:"Morning Reset", note:"audio · free forever", free:true},
-            {text:"Pre-Meeting Reset", note:"audio", free:false},
-            {text:"End of Day Reset", note:"audio", free:false},
-            {text:"After Conflict Reset", note:"audio", free:false},
-            {text:"Quick Reset", note:"audio", free:false},
-            {text:"Physiological Sigh · Jaw · Grounding · Tap", note:"techniques", free:true},
-            {text:"Gua Sha Sculpt", note:"ritual", free:true},
-            {text:"Lymphatic Drainage", note:"ritual", free:true},
-            {text:"Face Lifting", note:"ritual", free:true},
-            {text:"Buccal Release", note:"ritual", free:true},
-            {text:"Pre-Event Glow", note:"ritual", free:false},
-            {text:"Eye Revival", note:"ritual", free:false},
-            {text:"NS Score · Daily Tracking", note:"insights", free:true},
-            {text:"All future rituals & resets", note:"on release", free:false},
-            {text:"Priority access to new rooms", note:"first", free:false},
+            {text:"The Morning Reset",    note:"3 min · audio · free forever",          free:true},
+            {text:"Sculpt & Define",       note:"Gua Sha · 6 min · free ritual",          free:true},
+            {text:"Breathwork Tools",      note:"Sigh · Jaw · Ground · Tap · always",     free:true},
+            {text:"Before the Room",       note:"3 min · audio",                          free:false},
+            {text:"Coming Home",           note:"4 min · audio",                          free:false},
+            {text:"After Words",           note:"3 min · audio",                          free:false},
+            {text:"Return to Self",        note:"3 min · audio",                          free:false},
+            {text:"Depuff & Restore Glow", note:"Lymphatic Drainage · 6 min",             free:false},
+            {text:"Lift & Firm",           note:"Face Yoga · 7 min",                      free:false},
+            {text:"Release & Decompress",  note:"Buccal Massage · 5 min",                 free:false},
+            {text:"Show Up Glowing",       note:"Pre-Event Ritual · 4 min",               free:false},
+            {text:"Brighten & Open",       note:"Eye Revival · 5 min",                    free:false},
+            {text:"Soften the Belly",      note:"Abdominal Drainage · 6 min",             free:false},
+            {text:"Affirmations",          note:"Lulu · voice",                           free:false},
+            {text:"The Collection",        note:"Sorted by mood & moment",                free:false},
+            {text:"The Almanac",           note:"Monthly letters · members first",         free:false},
+            {text:"All future practices",  note:"On release · no extra cost",              free:false},
           ].map((f,i)=>(
             <div key={i} style={{display:"flex", alignItems:"center", gap:14, padding:"10px 0", borderTop: i===0 ? "none" : "1px solid rgba(248,242,229,0.05)"}}>
               <span style={{flexShrink:0, width:22, fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.22em", color:"rgba(248,242,229,0.40)", fontVariantNumeric:"tabular-nums"}}>
@@ -4355,7 +4359,7 @@ export default function ObrizApp() {
             cursor:"pointer",
           }}>Manage plan &middot; Cancel &middot; Switch</button>
         ) : (
-          <button onClick={()=>{ setHouseOpen(false); setScreen("premium"); }} className="rhei-press" style={{
+          <button onClick={()=>{ setHouseOpen(false); setPrevScreen(screen); setScreen("premium"); }} className="rhei-press" style={{
             width:"100%", marginTop:18,
             background:"linear-gradient(135deg, #C49A4B 0%, #D4AD6A 60%, #A07D3A 100%)",
             border:"none",
@@ -4604,7 +4608,7 @@ export default function ObrizApp() {
             <p style={{fontFamily:SF,fontSize:8,fontWeight:600,letterSpacing:"0.44em",textTransform:"uppercase",color:"rgba(196,154,75,0.55)",margin:"0 0 18px"}}>The Collection</p>
             <h1 style={{fontFamily:F,fontSize:"clamp(40px,10vw,52px)",fontWeight:300,letterSpacing:"-0.03em",lineHeight:0.95,color:B.vellum,margin:"0 0 28px",fontVariationSettings:"'opsz' 144"}}>Four rooms.<br/>Locked.</h1>
             <p style={{fontFamily:F,fontStyle:"italic",fontSize:15,color:"rgba(248,242,229,0.52)",lineHeight:1.6,margin:"0 0 40px",letterSpacing:"-0.005em"}}>Your trial has ended. Continue your practice with a membership — the rituals, the meditations, the library, all of it.</p>
-            <button onClick={()=>setScreen("premium")} style={{background:B.goldGrad,border:"none",borderRadius:100,padding:"16px 40px",fontFamily:SF,fontSize:12,fontWeight:600,letterSpacing:"0.14em",textTransform:"uppercase",color:B.warmBlack,cursor:"pointer",boxShadow:`0 6px 32px rgba(196,154,75,0.28)`,width:"100%",maxWidth:280,display:"block",margin:"0 auto 16px"}}>Continue with Rhei. &middot; €14.99/mo</button>
+            <button onClick={()=>{setPrevScreen(screen);setScreen("premium");}} style={{background:B.goldGrad,border:"none",borderRadius:100,padding:"16px 40px",fontFamily:SF,fontSize:12,fontWeight:600,letterSpacing:"0.14em",textTransform:"uppercase",color:B.warmBlack,cursor:"pointer",boxShadow:`0 6px 32px rgba(196,154,75,0.28)`,width:"100%",maxWidth:280,display:"block",margin:"0 auto 16px"}}>Continue with Rhei. &middot; €14.99/mo</button>
             <button onClick={()=>setScreen("home")} style={{background:"none",border:"none",cursor:"pointer",fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.18em",textTransform:"uppercase",color:"rgba(248,242,229,0.30)",padding:"8px 0"}}>Back to home</button>
           </div>
         </div>
@@ -4617,12 +4621,12 @@ export default function ObrizApp() {
             <p style={{fontFamily:SF,fontSize:8,fontWeight:600,letterSpacing:"0.44em",textTransform:"uppercase",color:"rgba(196,154,75,0.55)",margin:"0 0 18px"}}>The Almanac</p>
             <h1 style={{fontFamily:F,fontSize:"clamp(34px,9vw,44px)",fontWeight:300,letterSpacing:"-0.025em",lineHeight:1.0,color:B.cream,margin:"0 0 22px",fontVariationSettings:"'opsz' 144"}}>Letters.<br/>Locked.</h1>
             <p style={{fontFamily:F,fontStyle:"italic",fontSize:15,color:"rgba(248,242,229,0.52)",lineHeight:1.6,margin:"0 0 40px"}}>The Almanac holds seasonal letters and small readings. Members receive a new letter each month — to sit with, not rush through.</p>
-            <button onClick={()=>setScreen("premium")} style={{background:B.goldGrad,border:"none",borderRadius:100,padding:"16px 40px",fontFamily:SF,fontSize:12,fontWeight:600,letterSpacing:"0.14em",textTransform:"uppercase",color:B.warmBlack,cursor:"pointer",boxShadow:`0 6px 32px rgba(196,154,75,0.28)`,width:"100%",maxWidth:280,display:"block",margin:"0 auto 16px"}}>Continue with Rhei. &middot; €14.99/mo</button>
+            <button onClick={()=>{setPrevScreen(screen);setScreen("premium");}} style={{background:B.goldGrad,border:"none",borderRadius:100,padding:"16px 40px",fontFamily:SF,fontSize:12,fontWeight:600,letterSpacing:"0.14em",textTransform:"uppercase",color:B.warmBlack,cursor:"pointer",boxShadow:`0 6px 32px rgba(196,154,75,0.28)`,width:"100%",maxWidth:280,display:"block",margin:"0 auto 16px"}}>Continue with Rhei. &middot; €14.99/mo</button>
             <button onClick={()=>setScreen("home")} style={{background:"none",border:"none",cursor:"pointer",fontFamily:SF,fontSize:10,fontWeight:500,letterSpacing:"0.18em",textTransform:"uppercase",color:"rgba(248,242,229,0.30)",padding:"8px 0"}}>Back to home</button>
           </div>
         </div>
       ))}
-      {screen==="affirmations"&&<AffirmationsScreen onBack={()=>setScreen("collection")} hasAccess={hasAccess} onUpgrade={()=>setScreen("premium")}/>}
+      {screen==="affirmations"&&<AffirmationsScreen onBack={()=>setScreen("collection")} hasAccess={hasAccess} onUpgrade={()=>{setPrevScreen(screen);setScreen("premium");}}/>}
       {screen==="faq"&&renderFAQ()}
       {screen==="mirror"&&<FaceMirrorMode onClose={()=>setScreen("rituals")} onTransitionToReset={(id)=>startSession(id)} rituals={rituals} isPremium={hasAccess}/>}
       {showCheckin&&renderCheckin()}
