@@ -3318,6 +3318,16 @@ export default function ObrizApp() {
 
       <div style={{position:"relative", zIndex:1, maxWidth:480, margin:"0 auto", padding:"0 24px"}}>
 
+        
+
+        {/* Back button */}
+        <button
+          onClick={()=>setScreen(prevScreen||"home")}
+          style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:5,color:"rgba(248,242,229,0.45)",fontFamily:SF,fontSize:11,letterSpacing:"0.06em",padding:"0 0 20px",marginLeft:-4}}
+        >
+          <ChevronLeft size={14}/><span>Back</span>
+        </button>
+
         {/* Top stamp row */}
         <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:24}}>
           <PrecisionStamp label="RHEI" value={isPremium ? "MEMBER" : isInTrial ? "TRIAL" : "MEMBERSHIP"} color="rgba(242,235,220,0.85)"/>
@@ -3402,9 +3412,9 @@ export default function ObrizApp() {
             <div style={{position:"absolute", top:-9, left:"50%", transform:"translateX(-50%)", background:"rgba(248,242,229,0.95)", color:"#1A0F06", padding:"3px 12px", borderRadius:100, fontSize:8, fontWeight:500, letterSpacing:"0.22em", fontFamily:SF, textTransform:"uppercase"}}>A year ahead</div>
             <PrecisionStamp label="Yearly" color="rgba(245,200,120,0.85)"/>
             <p style={{fontFamily:F, fontSize:36, fontWeight:300, color:"#F8F2E5", margin:"12px 0 0", lineHeight:1, fontVariationSettings:"'opsz' 72", letterSpacing:"-0.02em", fontVariantNumeric:"tabular-nums"}}>
-              €79
+              €129
             </p>
-            <p style={{fontFamily:SF, fontSize:9, color:"rgba(248,242,229,0.55)", margin:"4px 0 14px", letterSpacing:"0.22em", textTransform:"uppercase"}}>per year</p>
+            <p style={{fontFamily:SF, fontSize:9, color:"rgba(248,242,229,0.55)", margin:"4px 0 14px", letterSpacing:"0.22em", textTransform:"uppercase"}}>per year · €10.75/mo</p>
             <div style={{borderTop:"1px solid rgba(245,200,120,0.30)", paddingTop:10, fontFamily:SF, fontSize:10, color:"#F5C878", letterSpacing:"0.22em", fontWeight:500, textTransform:"uppercase"}}>The full practice</div>
           </button>
         </div>
