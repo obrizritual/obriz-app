@@ -12,7 +12,7 @@
 
 const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 const FROM    = 'Rhei. <hello@rheihouse.com>';
-const RHEA    = 'rheihouse@gmail.com';
+const RHEA    = 'hello@rheihouse.com';
 
 function isValidEmail(v) {
   if (typeof v !== 'string') return false;
@@ -154,7 +154,7 @@ export default async function handler(req, res) {
       sendViaResend({
         from: FROM,
         to: [to],
-        reply_to: RHEA,
+        reply_to: 'hello@rheihouse.com',
         subject: `You're on the list. — Rhei.`,
         html: USER_HTML,
         text: USER_PLAIN,
