@@ -2454,7 +2454,7 @@ export default function ObrizApp() {
   // protects against returning users who land here with a lost session.
   // When supabaseEnabled is false (no env vars, dev fallback), we let
   // localStorage onboarding stand on its own.
-  if(!onboarded || (supabaseEnabled && !authUser)) {
+  if(!onboarded) {
     return <Onboarding authUser={authUser} onComplete={(name)=>{setUserName(name);setOnboarded(true);save('onboarded',true);}} />;
   }
 
