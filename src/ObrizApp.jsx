@@ -4071,17 +4071,15 @@ export default function ObrizApp() {
             <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.34em", textTransform:"uppercase", color:"rgba(196,154,75,0.80)", margin:"0 0 14px"}}>The First Object</p>
             <h2 style={{fontFamily:F, fontSize:30, fontWeight:300, letterSpacing:"-0.025em", color:B.cream, lineHeight:1.05, margin:"0 0 8px", fontVariationSettings:"'opsz' 144"}}>The Light</h2>
             <p style={{fontFamily:F, fontSize:14, color:"rgba(248,242,229,0.72)", lineHeight:1.72, margin:"0 0 20px"}}>Light, held in the hand. A quiet current beneath the surface. The first object from Rhei. — red-light therapy and EMS in a single ensemble, weighted to feel deliberate, shaped to be used and then rested somewhere beautiful.</p>
-            <button onClick={async()=>{
+            <button onClick={()=>{
               if(notifiedLight) return;
+              setNotifiedLight(true);
+              save('notifiedLight',true);
+              showToast("You\u2019re on the list. We\u2019ll write when it\u2019s near.");
               if(supabase && authUser){
                 supabase.from('profiles').update({notify_light:true}).eq('id',authUser.id).catch(()=>{});
-                if(authUser.email){
-                  fetch('/api/notify-light',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:authUser.email})}).catch(()=>{});
-                }
+                if(authUser.email) fetch('/api/notify-light',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:authUser.email})}).catch(()=>{});
               }
-              save('notifiedLight',true);
-              setNotifiedLight(true);
-              showToast("You\u2019re on the list. We\u2019ll write when it\u2019s near.");
             }} className="rhei-press" style={{
               width:"100%",
               background: notifiedLight ? "rgba(196,154,75,0.12)" : "rgba(248,242,229,0.05)",
