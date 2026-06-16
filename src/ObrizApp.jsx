@@ -4075,7 +4075,6 @@ export default function ObrizApp() {
               if(notifiedLight) return;
               setNotifiedLight(true);
               save('notifiedLight',true);
-              showToast("You\u2019re on the list. We\u2019ll write when it\u2019s near.");
               if(supabase && authUser){
                 supabase.from('profiles').update({notify_light:true}).eq('id',authUser.id).catch(()=>{});
                 if(authUser.email) fetch('/api/notify-light',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:authUser.email})}).catch(()=>{});
