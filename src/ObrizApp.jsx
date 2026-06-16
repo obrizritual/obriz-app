@@ -4003,7 +4003,7 @@ export default function ObrizApp() {
               <div style={{position:"absolute",left:0,top:"18%",bottom:"18%",width:1.5,background:"linear-gradient(180deg,transparent,rgba(196,154,75,0.5) 40%,rgba(196,154,75,0.5) 60%,transparent)"}}/>
               <div style={{flex:1}}>
                 <p style={{fontFamily:SF,fontSize:7.5,fontWeight:500,letterSpacing:"0.38em",textTransform:"uppercase",color:"rgba(196,154,75,0.60)",margin:"0 0 6px"}}>{m.kicker}</p>
-                <p style={{fontFamily:F,fontSize:21,fontWeight:300,color:B.vellum,lineHeight:1.18,letterSpacing:"-0.025em",margin:0,fontVariationSettings:"'opsz' 144"}}>{m.title}</p>
+                <p style={{fontFamily:F,fontSize:17,fontWeight:400,color:B.cream,lineHeight:1.32,letterSpacing:"-0.01em",margin:0,fontVariationSettings:"'opsz' 72"}}>{m.title}</p>
               </div>
               <div style={{flexShrink:0, display:"flex", flexDirection:"column", alignItems:"flex-end", gap:10}}>
                 <span style={{fontFamily:SF,fontSize:7.5,letterSpacing:"0.18em",textTransform:"uppercase",color:"rgba(248,242,229,0.28)",background:"rgba(196,154,75,0.07)",border:"1px solid rgba(196,154,75,0.14)",borderRadius:100,padding:"3px 9px",whiteSpace:"nowrap"}}>{m.meta}</span>
