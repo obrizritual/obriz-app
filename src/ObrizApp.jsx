@@ -1914,6 +1914,7 @@ export default function ObrizApp() {
   const [userName,setUserName]=useState(()=>load('userName',''));
   const [isPremium,setIsPremium]=useState(()=>load('isPremium',false));
   const [isGifted,setIsGifted]=useState(false); // true = comped access (influencers, partners, press)
+  const [notifiedLight,setNotifiedLight]=useState(()=>!!load('notifiedLight')); // true = user already requested The Light notification
 
   // Auth state (Supabase) — declared HERE so hasAccess can reference authUser below
   const [authUser,setAuthUser]=useState(null);
@@ -2045,7 +2046,7 @@ export default function ObrizApp() {
         const userId=session.user.id;
         const email=session.user.email;
         // Load trial start date + gifted flag from the profiles table (account-bound, device-agnostic)
-        supabase.from('profiles').select('trial_started_at,gifted').eq('id',userId).single()
+        supabase.from('profiles').select('trial_started_at,gifted,notify_light').eq('id',userId).single()
           .then(({data:profile})=>{
             if(profile?.trial_started_at){
               const ts=new Date(profile.trial_started_at).getTime();
@@ -2053,6 +2054,7 @@ export default function ObrizApp() {
               save('trialStartedAt',ts);
             }
             if(profile?.gifted) setIsGifted(true);
+            if(profile?.notify_light){setNotifiedLight(true);save('notifiedLight',true);}
           })
           .catch(()=>{});
         if(email){
@@ -2073,7 +2075,7 @@ export default function ObrizApp() {
         const userId=session.user.id;
         const email=session.user.email;
         // Load account-bound trial date + gifted flag on every sign-in event
-        supabase.from('profiles').select('trial_started_at,gifted').eq('id',userId).single()
+        supabase.from('profiles').select('trial_started_at,gifted,notify_light').eq('id',userId).single()
           .then(({data:profile})=>{
             if(profile?.trial_started_at){
               const ts=new Date(profile.trial_started_at).getTime();
@@ -2081,6 +2083,7 @@ export default function ObrizApp() {
               save('trialStartedAt',ts);
             }
             if(profile?.gifted) setIsGifted(true);
+            if(profile?.notify_light){setNotifiedLight(true);save('notifiedLight',true);}
           })
           .catch(()=>{});
         if(email){
@@ -4061,23 +4064,30 @@ export default function ObrizApp() {
           <div style={{padding:"22px 22px"}}>
             <p style={{fontFamily:SF, fontSize:9, fontWeight:500, letterSpacing:"0.34em", textTransform:"uppercase", color:"rgba(196,154,75,0.80)", margin:"0 0 14px"}}>The First Object</p>
             <h2 style={{fontFamily:F, fontSize:30, fontWeight:300, letterSpacing:"-0.025em", color:B.cream, lineHeight:1.05, margin:"0 0 8px", fontVariationSettings:"'opsz' 144"}}>The Light</h2>
-            <p style={{fontFamily:F, fontSize:13, color:"rgba(248,242,229,0.62)", lineHeight:1.6, margin:"0 0 18px"}}>A precision ensemble of devices built for your daily ritual. Red-light therapy and EMS technology, designed to stimulate collagen, sculpt the face, and return the body to quiet. Each piece is weighted and warm in the hand — shaped to be used in the practices, and sculpted to live on your bedside table.</p>
+            <p style={{fontFamily:F, fontSize:14, color:"rgba(248,242,229,0.72)", lineHeight:1.72, margin:"0 0 20px"}}>Light, held in the hand. A quiet current beneath the surface. The first object from Rhei. — red-light therapy and EMS in a single ensemble, weighted to feel deliberate, shaped to be used and then rested somewhere beautiful.</p>
             <button onClick={async()=>{
+              if(notifiedLight) return;
               if(supabase && authUser){
-                await supabase.from('profiles').update({notify_light:true}).eq('id',authUser.id).catch(()=>{});
+                supabase.from('profiles').update({notify_light:true}).eq('id',authUser.id).catch(()=>{});
+                if(authUser.email){
+                  fetch('/api/notify-light',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:authUser.email})}).catch(()=>{});
+                }
               }
+              save('notifiedLight',true);
+              setNotifiedLight(true);
               showToast("You\u2019re on the list. We\u2019ll write when it\u2019s near.");
             }} className="rhei-press" style={{
               width:"100%",
-              background:"rgba(248,242,229,0.05)",
-              color:B.cream,
-              border:"1px solid rgba(196,154,75,0.40)",
+              background: notifiedLight ? "rgba(196,154,75,0.12)" : "rgba(248,242,229,0.05)",
+              color: notifiedLight ? "rgba(196,154,75,0.90)" : B.cream,
+              border: notifiedLight ? "1px solid rgba(196,154,75,0.55)" : "1px solid rgba(196,154,75,0.40)",
               borderRadius:100,
               padding:"13px 22px",
               fontFamily:SF, fontSize:10.5, fontWeight:500,
               letterSpacing:"0.28em", textTransform:"uppercase",
-              cursor:"pointer",
-            }}>Notify me</button>
+              cursor: notifiedLight ? "default" : "pointer",
+              transition:"all 0.35s ease",
+            }}>{notifiedLight ? "You\u2019re on the list" : "Notify me"}</button>
           </div>
         </div>
 
