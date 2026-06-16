@@ -1916,6 +1916,7 @@ function Onboarding({ onComplete, authUser, isReturning, savedName }) {
 export default function ObrizApp() {
   // Onboarding
   const [onboarded,setOnboarded]=useState(()=>load('onboarded',false));
+  const [signedOut,setSignedOut]=useState(false); // true only after an explicit sign-out
   const [userName,setUserName]=useState(()=>load('userName',''));
   const [isPremium,setIsPremium]=useState(()=>load('isPremium',false));
   const [isGifted,setIsGifted]=useState(false); // true = comped access (influencers, partners, press)
@@ -2120,6 +2121,7 @@ export default function ObrizApp() {
   const signOut=()=>{
     if(!supabase)return;
     setAuthUser(null);
+    setSignedOut(true);
     supabase.auth.signOut().catch(()=>{});
   };
 
@@ -2462,9 +2464,9 @@ export default function ObrizApp() {
   // protects against returning users who land here with a lost session.
   // When supabaseEnabled is false (no env vars, dev fallback), we let
   // localStorage onboarding stand on its own.
-  if(!onboarded || (supabaseEnabled && !authUser)) {
-    const _isReturning = !!load('onboarded') && !!load('userName');
-    return <Onboarding authUser={authUser} isReturning={_isReturning} savedName={load('userName')||''} onComplete={(name)=>{setUserName(name);setOnboarded(true);save('onboarded',true);}} />;
+  if(!onboarded || signedOut) {
+    const _isReturning = signedOut && !!load('userName');
+    return <Onboarding authUser={authUser} isReturning={_isReturning} savedName={load('userName')||''} onComplete={(name)=>{setUserName(name);setOnboarded(true);setSignedOut(false);save('onboarded',true);}} />;
   }
 
   // ══════════ TODAY ══════════
