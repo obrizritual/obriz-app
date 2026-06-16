@@ -2114,12 +2114,7 @@ export default function ObrizApp() {
   };
   const signOut=()=>{
     if(!supabase)return;
-    // Clear UI immediately — don't wait for the network round-trip
     setAuthUser(null);
-    setIsPremium(false);
-    setIsGifted(false);
-    setTrialStartedAt(null);
-    setNotifiedLight(false);
     supabase.auth.signOut().catch(()=>{});
   };
 
