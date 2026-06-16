@@ -2112,10 +2112,15 @@ export default function ObrizApp() {
       else setAuthSent(true);
     }catch(e){setAuthError('Connection error. Try again.');}
   };
-  const signOut=async()=>{
+  const signOut=()=>{
     if(!supabase)return;
-    await supabase.auth.signOut();
+    // Clear UI immediately — don't wait for the network round-trip
     setAuthUser(null);
+    setIsPremium(false);
+    setIsGifted(false);
+    setTrialStartedAt(null);
+    setNotifiedLight(false);
+    supabase.auth.signOut().catch(()=>{});
   };
 
   // Reflect whether the device is already subscribed to push (e.g. user
