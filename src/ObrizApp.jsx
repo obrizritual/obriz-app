@@ -1163,7 +1163,7 @@ function Starburst({ size = 28, color = "#F5C878" }) {
 // ══════════════════════════════════
 // ONBOARDING COMPONENT
 // ══════════════════════════════════
-function Onboarding({ onComplete, authUser }) {
+function Onboarding({ onComplete, authUser, isReturning, savedName }) {
   const [name,setName]=useState("");
   // step: "splash" | "email" | "linkSent" | 0 | 1 | 2 | 3
   // 0-2 are the existing explainer screens, 3 is the name input
@@ -1177,10 +1177,15 @@ function Onboarding({ onComplete, authUser }) {
   const [showPassword,setShowPassword]=useState(false);
   const [resetSent,setResetSent]=useState(false);
 
-  // Advance to explainer screens once the user is signed in
+  // Once signed in, returning users skip straight back to the app.
+  // New users see the explainer screens then enter their name.
   useEffect(() => {
     if (authUser && (step === "splash" || step === "email" || step === "linkSent")) {
-      setStep(0);
+      if (isReturning && savedName) {
+        onComplete(savedName);
+      } else {
+        setStep(0);
+      }
     }
   }, [authUser]);
 
@@ -2457,8 +2462,9 @@ export default function ObrizApp() {
   // protects against returning users who land here with a lost session.
   // When supabaseEnabled is false (no env vars, dev fallback), we let
   // localStorage onboarding stand on its own.
-  if(!onboarded) {
-    return <Onboarding authUser={authUser} onComplete={(name)=>{setUserName(name);setOnboarded(true);save('onboarded',true);}} />;
+  if(!onboarded || (supabaseEnabled && !authUser)) {
+    const _isReturning = !!load('onboarded') && !!load('userName');
+    return <Onboarding authUser={authUser} isReturning={_isReturning} savedName={load('userName')||''} onComplete={(name)=>{setUserName(name);setOnboarded(true);save('onboarded',true);}} />;
   }
 
   // ══════════ TODAY ══════════
