@@ -4086,7 +4086,6 @@ export default function ObrizApp() {
               fontFamily:SF, fontSize:10.5, fontWeight:500,
               letterSpacing:"0.28em", textTransform:"uppercase",
               cursor: notifiedLight ? "default" : "pointer",
-              transition:"all 0.35s ease",
             }}>{notifiedLight ? "You\u2019re on the list" : "Notify me"}</button>
           </div>
         </div>
