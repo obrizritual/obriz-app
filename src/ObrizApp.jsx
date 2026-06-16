@@ -4381,8 +4381,23 @@ export default function ObrizApp() {
           }}>See membership</button>
         )}
 
+        {authUser && (
+          <button onClick={()=>{ setHouseOpen(false); signOut(); }} style={{
+            width:"100%", marginTop:18,
+            background:"none",
+            border:"1px solid rgba(248,242,229,0.10)",
+            color:"rgba(248,242,229,0.65)",
+            borderRadius:14,
+            padding:"12px 16px",
+            fontFamily:SF, fontSize:10, fontWeight:500,
+            letterSpacing:"0.22em", textTransform:"uppercase",
+            cursor:"pointer",
+            display:"flex", alignItems:"center", justifyContent:"center", gap:8,
+          }}><LogOut size={11}/> Sign out</button>
+        )}
+
         {/* FAQ + Legal links */}
-        <div style={{display:"flex",gap:8,marginTop:18}}>
+        <div style={{display:"flex",gap:8,marginTop:10}}>
           <button onClick={()=>{ setHouseOpen(false); setScreen("faq"); }} className="rhei-press" style={{
             flex:1,
             background:"none",
@@ -4406,21 +4421,6 @@ export default function ObrizApp() {
             cursor:"pointer",
           }}>Terms &amp; Privacy</button>
         </div>
-
-        {authUser && (
-          <button onClick={()=>{ setHouseOpen(false); signOut && signOut(); }} style={{
-            width:"100%", marginTop:10,
-            background:"none",
-            border:"1px solid rgba(248,242,229,0.10)",
-            color:"rgba(248,242,229,0.65)",
-            borderRadius:14,
-            padding:"12px 16px",
-            fontFamily:SF, fontSize:10, fontWeight:500,
-            letterSpacing:"0.22em", textTransform:"uppercase",
-            cursor:"pointer",
-            display:"flex", alignItems:"center", justifyContent:"center", gap:8,
-          }}><LogOut size={11}/> Sign out</button>
-        )}
       </div>
     </div>
   );
