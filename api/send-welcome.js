@@ -22,7 +22,7 @@ const RESEND_ENDPOINT = 'https://api.resend.com/emails';
 
 const FROM = 'Rhei. <hello@rheihouse.com>';
 const REPLY_TO = 'rheihouse@gmail.com';
-const SUBJECT = 'Welcome home. Your seven days begin.';
+const SUBJECT = 'Welcome home. Your fourteen days begin.';
 
 // Static HTML template — inlined to avoid runtime filesystem reads and to
 // keep this function zero-dependency.
@@ -70,7 +70,7 @@ const WELCOME_HTML = `<!DOCTYPE html>
 </head>
 <body style="margin:0;padding:0;background:#1A0F06;font-family:Georgia,'Times New Roman',serif;color:#F8F2E5 !important;">
   <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#1A0F06;opacity:0;">
-    Welcome home. Your nervous system practice begins now.
+    Welcome home. Your fourteen-day practice begins now.
   </div>
 
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#1A0F06;padding:48px 16px;">
@@ -98,7 +98,7 @@ const WELCOME_HTML = `<!DOCTYPE html>
                 You've just stepped into a quieter way of caring for yourself — grounded in the science of the nervous system, expressed through rituals that fit between everything else.
               </p>
               <p style="margin:0 0 18px 0;font-size:15px;line-height:1.65;color:#F8F2E5 !important;">
-                For the next seven days, you have full access. Move through it at your own pace. Notice what changes.
+                For the next fourteen days, you have full access. Move through it at your own pace. Notice what changes.
               </p>
               <p style="margin:0 0 28px 0;font-size:15px;line-height:1.65;color:#F8F2E5 !important;">
                 If you only do one thing today, do this:
@@ -109,7 +109,7 @@ const WELCOME_HTML = `<!DOCTYPE html>
                   <td style="padding:22px 24px;">
                     <p style="margin:0 0 8px 0;font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:500;letter-spacing:0.28em;text-transform:uppercase;color:#E4C38A !important;">Begin here</p>
                     <p style="margin:0;font-family:Georgia,'Times New Roman',serif;font-size:19px;font-weight:300;line-height:1.35;color:#F8F2E5 !important;letter-spacing:-0.01em;">
-                      The Morning Reset. Three minutes. Anywhere you are.
+                      The Morning Reset. Four minutes. Anywhere you are.
                     </p>
                   </td>
                 </tr>
@@ -131,7 +131,7 @@ const WELCOME_HTML = `<!DOCTYPE html>
                 </tr>
               </table>
 
-              <p style="margin:0 0 14px 0;font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:500;letter-spacing:0.28em;text-transform:uppercase;color:rgba(228,195,138,0.85) !important;">Your seven days</p>
+              <p style="margin:0 0 14px 0;font-family:Helvetica,Arial,sans-serif;font-size:10px;font-weight:500;letter-spacing:0.28em;text-transform:uppercase;color:rgba(228,195,138,0.85) !important;">Your fourteen days</p>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td style="padding:8px 0;border-top:1px solid rgba(228,195,138,0.22);font-family:Georgia,'Times New Roman',serif;font-size:14px;line-height:1.55;color:#F8F2E5 !important;">
@@ -184,14 +184,14 @@ const PLAIN_TEXT_FALLBACK = `Welcome home.
 
 You've just stepped into a quieter way of caring for yourself — grounded in the science of the nervous system, expressed through rituals that fit between everything else.
 
-For the next seven days, you have full access. Move through it at your own pace. Notice what changes.
+For the next fourteen days, you have full access. Move through it at your own pace. Notice what changes.
 
 If you only do one thing today, do this:
-The Morning Reset. Three minutes. Anywhere you are.
+The Morning Reset. Four minutes. Anywhere you are.
 
 Open Rhei: https://www.rheihouse.com
 
-Your seven days:
+Your fourteen days:
 - Every guided ritual — Gua Sha, Lymphatic Flow, Buccal, Face Lift, Eye Revival.
 - Live Mirror Mode — your face, your camera, gold gesture overlays in real time.
 - Resets, affirmations, breath — the full sound library.
