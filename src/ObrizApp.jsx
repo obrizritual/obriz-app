@@ -2208,11 +2208,20 @@ export default function ObrizApp() {
     try{
       const userEmail=authUser?.email||load('customerEmail','');
       const res=await fetchWithRetry('/api/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan,email:userEmail||undefined})});
-      const data=await res.json();
-      if(data.url){window.location.href=data.url;}
-      else{showToast("Checkout couldn't open. Tap subscribe to retry.");setCheckoutLoading(false);}
+      // Read body once as text so we can surface the real error even if the response is not JSON
+      const raw=await res.text();
+      let data={};
+      try{ data=raw?JSON.parse(raw):{}; }catch(_){ /* non-JSON response (e.g. 404 HTML) */ }
+      if(res.ok && data.url){window.location.href=data.url;return;}
+      // Surface the real failure: log full diagnostics to console, show a meaningful toast.
+      console.error('[checkout]', {status:res.status, plan, body:raw});
+      const reason = data.error || (res.status===404 ? "Checkout endpoint not deployed" : `Stripe error (HTTP ${res.status})`);
+      showToast(`${reason}. Tap subscribe to retry.`);
+      setCheckoutLoading(false);
     }catch(err){
-      showToast("Connection issue. Tap subscribe to retry.");setCheckoutLoading(false);
+      console.error('[checkout] network error', err);
+      showToast("Connection issue. Tap subscribe to retry.");
+      setCheckoutLoading(false);
     }
   };
 
@@ -3534,8 +3543,10 @@ export default function ObrizApp() {
           </div>
         </div>
 
-        {/* RESTORE / SIGN-IN */}
-        {supabase && !authUser ? (
+        {/* RESTORE / SIGN-IN — hidden for anyone who already has access (paid OR comped).
+            Members shouldn't be nagged to "sign in with the email used at checkout" — comped
+            members never had a checkout, and paid members are already in. */}
+        {!isPremium && (supabase && !authUser ? (
           <div className="rhei-rise rhei-rise-4" style={{
             background:"rgba(248,242,229,0.02)",
             backdropFilter:"blur(10px)",
@@ -3562,10 +3573,16 @@ export default function ObrizApp() {
               } else {setIsPremium(true);save('isPremium',true);}
             }} style={{background:"none", border:"none", color:"rgba(248,242,229,0.55)", fontSize:11, fontFamily:SF, cursor:"pointer", padding:8, letterSpacing:"0.04em", textDecoration:"underline", textUnderlineOffset:3}}>Already purchased? Restore access</button>
           </div>
-        )}
+        ))}
 
-        {/* MANAGE PLAN — Stripe Customer Portal (cancel · switch monthly↔yearly · update card) */}
-        {isPremium && (
+        {/* MANAGE PLAN — Stripe Customer Portal (cancel · switch monthly↔yearly · update card).
+            Only shown for real paying members. We use the presence of `premiumPlan` in
+            localStorage as the signal: it is set ONLY by the Stripe success/verify path,
+            so its absence means the member is comped/founder/gifted and has no Stripe
+            customer record to manage. Showing them this button would open the portal
+            endpoint, which would correctly return "No subscription found for this email."
+            For comped members we render the Complimentary block below instead. */}
+        {isPremium && load('premiumPlan','') && (
           <div className="rhei-rise rhei-rise-4" style={{
             background:"rgba(248,242,229,0.03)",
             backdropFilter:"blur(12px)",
@@ -3596,6 +3613,31 @@ export default function ObrizApp() {
             </button>
             <p style={{fontFamily:F, fontSize:11.5, color:"rgba(248,242,229,0.55)", margin:"12px 0 0", lineHeight:1.5}}>
               Change billing, switch monthly ↔ yearly, or cancel at any time. Your practice carries on.
+            </p>
+          </div>
+        )}
+
+        {/* COMPLIMENTARY ACCESS — comped / founder / influencer members.
+            They have isPremium=true but no Stripe subscription (no `premiumPlan` saved),
+            so there is nothing to bill or cancel. This block replaces the Manage Plan
+            card and never touches Stripe — they get a clean, branded "your access is on
+            the house" experience indistinguishable in polish from a paid member. */}
+        {isPremium && !load('premiumPlan','') && (
+          <div className="rhei-rise rhei-rise-4" style={{
+            background:"rgba(248,242,229,0.03)",
+            backdropFilter:"blur(12px)",
+            border:"1px solid rgba(245,200,120,0.18)",
+            borderRadius:22, padding:"22px 22px", marginTop:18, marginBottom:8,
+          }}>
+            <div style={{display:"flex", alignItems:"baseline", justifyContent:"space-between", marginBottom:12}}>
+              <PrecisionStamp label="Membership" color="rgba(245,200,120,0.75)"/>
+              <PrecisionStamp label="Complimentary" color="rgba(245,200,120,0.85)"/>
+            </div>
+            <p style={{fontFamily:F, fontStyle:"italic", fontSize:13.5, color:"rgba(248,242,229,0.82)", margin:"4px 0 8px", lineHeight:1.55, letterSpacing:"-0.005em"}}>
+              Yours, with our compliments.
+            </p>
+            <p style={{fontFamily:F, fontSize:11.5, color:"rgba(248,242,229,0.55)", margin:"0", lineHeight:1.55}}>
+              Full access to the House — the meditations, the rituals, the library. No billing on file. Continue at your pace.
             </p>
           </div>
         )}
